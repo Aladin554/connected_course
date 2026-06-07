@@ -58,6 +58,21 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function userCategoryEnrollments()
+    {
+        return $this->hasMany(UserCategoryEnrollment::class);
+    }
+
+    public function userLessonProgress()
+    {
+        return $this->hasMany(UserLessonProgress::class);
+    }
+
+    public function userModuleProgress()
+    {
+        return $this->hasMany(UserModuleProgress::class);
+    }
+
     // CORRECT createToken() for Laravel 12 + Sanctum 4
     public function createToken(string $name = 'auth_token', array $abilities = ['*']): NewAccessToken
     {
