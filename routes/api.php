@@ -2,16 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AdminAllowedIpController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CommonDepartmentController;
-use App\Http\Controllers\DepartmentController;
-use App\Http\Controllers\IndustryController;
-use App\Http\Controllers\IntroductionContentController;
+
 use App\Http\Controllers\RoleController;
-use App\Http\Controllers\SubCommonDepartmentController;
-use App\Http\Controllers\SubDepartmentController;
 use App\Http\Controllers\UserController;
 
 // ==================================================================

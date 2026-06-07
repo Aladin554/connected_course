@@ -1,6 +1,11 @@
+// src/App.tsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Full App.tsx with Introduction import added for the user learning flow.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css"; // required CSS
+import "react-toastify/dist/ReactToastify.css";
 
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -28,100 +33,83 @@ import RootRedirect from "./components/RootRedirect";
 import Home from "./pages/Dashboard/Home";
 import AdminUsers from "./pages/Admin/AdminUsers";
 import AdminUserForm from "./pages/Admin/AdminUserForm";
-import Industry from "./pages/Admin/Industry/Industry.tsx";
-import IndustryForm from "./pages/Admin/Industry/IndustryForm.tsx";
-import Introduction from "./pages/User/pages/Introduction";
-
-import AdminDepartments from "./pages/Admin/Department/AdminDepartments.tsx";
-import AdminDepartmentForm from "./pages/Admin/Department/AdminDepartmentForm.tsx";
-import Departments from "./pages/Admin/CommonDepartment/Departments.tsx";
-import DepartmentForm from "./pages/Admin/CommonDepartment/DepartmentForm.tsx";
-import AdminSubDepartments from "./pages/Admin/SubDepartment/AdminSubDepartments.tsx";
-import AdminSubDepartmentForm from "./pages/Admin/SubDepartment/AdminSubDepartmentForm.tsx";
 import ChooseDashboard from "./components/auth/ChooseDashboard.tsx";
 import AdminAllowedIps from "./pages/Admin/Security/AdminAllowedIps.tsx";
 
+// ✅ User learning flow — entry point that manages all sub-pages internally
+import Introduction from "./pages/User/pages/Introduction";
 
 export default function App() {
   return (
     <Router>
       <ScrollToTop />
 
-      {/* ToastContainer added at root so toast shows on any page */}
+      {/* ToastContainer at root so toasts show on any page */}
       <ToastContainer
-  position="top-right"
-  autoClose={3000}
-  hideProgressBar
-  toastStyle={{ zIndex: 100000 }} // <-- make it very high
-/>
-
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar
+        toastStyle={{ zIndex: 100000 }}
+      />
 
       <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
+        {/* ── Public routes ── */}
+        <Route path="/"                element={<RootRedirect />} />
+        <Route path="/signin"          element={<SignIn />} />
+        <Route path="/signup"          element={<SignUp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/choose-dashboard" element={<ProtectedRoute allowedRoles={[2]}><ChooseDashboard /></ProtectedRoute>}/>
+        <Route path="/reset-password"  element={<ResetPassword />} />
 
-        {/* User routes */}
-        <Route path="/profile" element={<Navigate to="/introduction" replace />} />
-        <Route path="/introduction" element={<ProtectedRoute allowedRoles={[2, 3]} requireActivePanel={true}><Introduction /></ProtectedRoute>} />
-        <Route path="/user-dashboard" element={<Navigate to="/introduction" replace />} />
-        <Route path="/industry-data" element={<Navigate to="/introduction" replace />} />
-        <Route path="/my-report" element={<Navigate to="/introduction" replace />} />
-        <Route path="/instructions" element={<Navigate to="/introduction" replace />} />
-        <Route path="/tip" element={<Navigate to="/introduction" replace />} />
-        <Route path="/sort-cards" element={<Navigate to="/introduction" replace />} />
-        <Route path="/pick-top" element={<Navigate to="/introduction" replace />} />
-        <Route path="/sort-three-challenge-card" element={<Navigate to="/introduction" replace />} />
-        <Route path="/selected-three-challenge-card" element={<Navigate to="/introduction" replace />} />
-        <Route path="/phases-instructions" element={<Navigate to="/introduction" replace />} />
-        <Route path="/select-specific-sort-three-challenge-card" element={<Navigate to="/introduction" replace />} />
-        <Route path="/success-page" element={<Navigate to="/introduction" replace />} />
-        <Route path="/first-phases" element={<Navigate to="/introduction" replace />} />
-        <Route path="/secound-phases" element={<Navigate to="/introduction" replace />} />
-        <Route path="/selected-data" element={<Navigate to="/introduction" replace />} />
-        <Route path="/qa-instructions" element={<Navigate to="/introduction" replace />} />
-        <Route path="/process-done" element={<Navigate to="/introduction" replace />} />
-        <Route path="/questionnaire" element={<Navigate to="/introduction" replace />} />
+        <Route
+          path="/choose-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={[2]}>
+              <ChooseDashboard />
+            </ProtectedRoute>
+          }
+        />
 
-        {/* Admin dashboard routes */}
-        <Route path="/dashboard/*" element={<ProtectedRoute allowedRoles={[1, 2]}><AppLayout /></ProtectedRoute>}>
-          <Route index element={<Home />} />
-          <Route path="profile" element={<UserProfiles />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="blank" element={<Blank />} />
+        {/* ── User learning flow ── */}
+        {/*
+          Introduction is the single entry point.
+          It internally manages: Home → Welcome → Course → Module → Lesson
+          via its own page state — no extra routes needed.
+        */}
+        <Route
+          path="/introduction"
+          element={
+            <ProtectedRoute allowedRoles={[2, 3]} requireActivePanel={true}>
+              <Introduction />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ── Admin / dashboard routes ── */}
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute allowedRoles={[1, 2]}>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index                element={<Home />} />
+          <Route path="profile"       element={<UserProfiles />} />
+          <Route path="calendar"      element={<Calendar />} />
+          <Route path="blank"         element={<Blank />} />
           <Route path="form-elements" element={<FormElements />} />
-          <Route path="basic-tables" element={<BasicTables />} />
-          <Route path="alerts" element={<Alerts />} />
-          <Route path="avatars" element={<Avatars />} />
-          <Route path="badges" element={<Badges />} />
-          <Route path="buttons" element={<Buttons />} />
-          <Route path="images" element={<Images />} />
-          <Route path="videos" element={<Videos />} />
-          <Route path="line-chart" element={<LineChart />} />
-          <Route path="bar-chart" element={<BarChart />} />
-          <Route path="admin-users" element={<AdminUsers />} />
-          <Route path="admin-users/add" element={<AdminUserForm />} />
-          <Route path="admin-users/:id/edit" element={<AdminUserForm />} />
-          <Route path="users-report" element={<Navigate to="/dashboard" replace />} />
-          <Route path="reports/:id" element={<Navigate to="/dashboard" replace />} />
-          {/* Categories (Previously Departments) */}
-          <Route path="categories" element={<AdminDepartments />} />
-          <Route path="categories/add" element={<AdminDepartmentForm />} />
-          <Route path="categories/:id/edit" element={<AdminDepartmentForm />} />
-
-          {/* Departments (Previously Sub-Departments) */}
-          <Route path="departments" element={<AdminSubDepartments />} />
-          <Route path="departments/add" element={<AdminSubDepartmentForm />} />
-          <Route path="departments/:id/edit" element={<AdminSubDepartmentForm />} />
-
-
-
-          <Route path="common-departments" element={<Departments />} />
-          <Route path="common-departments/add" element={<DepartmentForm />} />
-          <Route path="common-departments/:id/edit" element={<DepartmentForm />} />
+          <Route path="basic-tables"  element={<BasicTables />} />
+          <Route path="alerts"        element={<Alerts />} />
+          <Route path="avatars"       element={<Avatars />} />
+          <Route path="badges"        element={<Badges />} />
+          <Route path="buttons"       element={<Buttons />} />
+          <Route path="images"        element={<Images />} />
+          <Route path="videos"        element={<Videos />} />
+          <Route path="line-chart"    element={<LineChart />} />
+          <Route path="bar-chart"     element={<BarChart />} />
+          <Route path="admin-users"           element={<AdminUsers />} />
+          <Route path="admin-users/add"       element={<AdminUserForm />} />
+          <Route path="admin-users/:id/edit"  element={<AdminUserForm />} />
           <Route
             path="admin-allowed-ips"
             element={
@@ -130,12 +118,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
-          <Route path="industry" element={<Industry />} />
-          <Route path="industry/add" element={<IndustryForm />} />
-          <Route path="industry/:id/edit" element={<IndustryForm />} />
         </Route>
 
+        {/* ── Catch-all ── */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
