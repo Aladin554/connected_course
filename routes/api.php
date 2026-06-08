@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CategoryController;
 
 // ==================================================================
 // 1. PUBLIC ROUTES – No auth, no IP restriction
@@ -27,6 +28,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/profile', [UserController::class, 'updateProfile']);
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/my-categories', [CategoryController::class, 'myCategories']);
+    Route::get('/categories/{category}/welcome-slides', [CategoryController::class, 'welcomeSlides']);
 
 });
 
@@ -49,6 +52,10 @@ Route::middleware(['auth:sanctum', 'admin.ip'])->group(function () {
     // Roles
     Route::get('/roles', [RoleController::class, 'index']);
     Route::get('/show-ip', fn (Request $request) => $request->ip());
+
+    // Learning categories
+    Route::get('/categories/active', [CategoryController::class, 'active']);
+    Route::apiResource('/categories', CategoryController::class);
 
 });
 Route::get('/show-ip', function (Request $request) {

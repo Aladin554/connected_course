@@ -41,14 +41,25 @@ class UserController extends Controller
     protected function filterUsersForAuth()
     {
         if ($this->isSuperAdmin()) {
-            return User::with('role');
+            return User::with(['role', 'categories']);
         }
 
         if ($this->isAdmin()) {
-            return User::with('role')->whereHas('role', fn($q) => $q->where('name', 'user'));
+            return User::with(['role', 'categories'])->whereHas('role', fn($q) => $q->where('name', 'user'));
         }
 
         return User::whereRaw('0 = 1');
+    }
+
+    protected function syncCategories(User $user, array $categoryIds): void
+    {
+        $syncData = [];
+
+        foreach (array_unique($categoryIds) as $categoryId) {
+            $syncData[$categoryId] = ['enrolled_at' => now()];
+        }
+
+        $user->categories()->sync($syncData);
     }
 
     // --- Centralized Validation Rules ---
@@ -63,6 +74,8 @@ class UserController extends Controller
             'password'   => $isUpdate ? 'sometimes|min:6' : 'required|min:6',
             'role_id'    => $isUpdate ? 'sometimes|exists:roles,id' : 'required|exists:roles,id',
             'max_cards'  => 'sometimes|nullable|integer|min:0', // NEW
+            'category_ids' => 'sometimes|array',
+            'category_ids.*' => 'integer|exists:categories,id',
         ];
     }
 
@@ -98,6 +111,8 @@ class UserController extends Controller
                 'max_cards'  => $maxCards, // NEW
             ]);
 
+            $this->syncCategories($user, $request->input('category_ids', []));
+
             $token = app('auth.password.broker')->createToken($user);
 
             $resetUrl = env('FRONTEND_URL') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
@@ -108,7 +123,7 @@ class UserController extends Controller
 
             return response()->json([
                 'message' => 'User created & email sent successfully',
-                'user'    => $user->load('role'),
+                'user'    => $user->load(['role', 'categories']),
             ], 201);
 
         } catch (\Exception $e) {
@@ -120,7 +135,7 @@ class UserController extends Controller
     // --- Show Single User ---
     public function show(int $id): JsonResponse
     {
-        $user = User::with('role')->find($id);
+        $user = User::with(['role', 'categories'])->find($id);
 
         if (!$user) return response()->json(['message' => 'User not found'], 404);
         if (!$this->canManage($user)) return response()->json(['message' => 'Forbidden'], 403);
@@ -160,9 +175,13 @@ class UserController extends Controller
 
         try {
             $user->save();
+            if ($request->has('category_ids')) {
+                $this->syncCategories($user, $request->input('category_ids', []));
+            }
+
             return response()->json([
                 'message' => 'User updated successfully',
-                'user'    => $user->load('role'),
+                'user'    => $user->load(['role', 'categories']),
             ]);
         } catch (\Exception $e) {
             Log::error($e->getMessage());

@@ -21,7 +21,7 @@ export default function SignInForm() {
     const roleId = sessionStorage.getItem("role_id");
     if (token) {
       if (roleId && parseInt(roleId, 10) === 3) {
-        navigate("/user-dashboard", { replace: true });
+        navigate("/introduction", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }
@@ -53,7 +53,7 @@ export default function SignInForm() {
       // Redirect based on role
       // inside handleSignIn
 if (user.role_id === 3) {
-  navigate("/user-dashboard", { replace: true });
+  navigate("/introduction", { replace: true });
 } else if (user.role_id === 2) {
   if (user.panel_status) {
     navigate("/choose-dashboard", { replace: true }); // panel active

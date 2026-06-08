@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useEffect } from "react";
 
-import { GlobalStyles, Page } from "./shared";
+import { GlobalStyles, LearningCategory, Page } from "./shared";
 import HomePage           from "./HomePage";
 import WelcomePage        from "./WelcomePage";
 import CourseOverviewPage from "./CourseOverviewPage";
@@ -20,6 +20,7 @@ import LessonDetailPage   from "./LessonDetailPage";
 export default function Introduction() {
   const [page, setPage]       = useState<Page>("home");
   const [tab,  setTab]        = useState("Home");
+  const [selectedCategory, setSelectedCategory] = useState<LearningCategory | null>(null);
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 768 : false
   );
@@ -39,6 +40,7 @@ export default function Introduction() {
           onBack   ={() => setPage("home")}
           onFinish ={() => setPage("course")}
           isDesktop={isDesktop}
+          category ={selectedCategory}
         />
       ) : page === "course" ? (
         <CourseOverviewPage
@@ -62,7 +64,11 @@ export default function Introduction() {
         <HomePage
           tab       ={tab}
           setTab    ={setTab}
-          onContinue={() => setPage("welcome")}
+          onContinue={(category) => {
+            if (!category) return;
+            setSelectedCategory(category);
+            setPage("welcome");
+          }}
         />
       )}
     </>

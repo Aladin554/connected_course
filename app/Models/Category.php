@@ -14,6 +14,7 @@ class Category extends Model
         'flag_emoji',
         'description',
         'thumbnail_image',
+        'background_color',
         'is_active',
         'sort_order',
     ];
@@ -26,6 +27,11 @@ class Category extends Model
     public function welcomeSlides()
     {
         return $this->hasMany(WelcomeSlide::class)->where('is_active', true)->orderBy('slide_order');
+    }
+
+    public function allWelcomeSlides()
+    {
+        return $this->hasMany(WelcomeSlide::class)->orderBy('slide_order');
     }
 
     public function courseModules()

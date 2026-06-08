@@ -6,12 +6,20 @@ import React, { ReactElement } from "react";
 
 /* ── Types ── */
 export type Page = "home" | "welcome" | "course" | "module" | "lesson";
+export interface LearningCategory {
+  id: number;
+  title: string;
+  flag_emoji?: string | null;
+  description?: string | null;
+  thumbnail_image?: string | null;
+  background_color?: string | null;
+}
 export interface IconProps  { active: boolean }
 export interface BarProps   { value: number; light?: boolean }
 export interface SectionHeaderProps { title: string; action?: string }
-export interface HeroCardProps { height?: number; onContinue: () => void }
+export interface HeroCardProps { height?: number; onContinue: () => void; category?: LearningCategory | null }
 export interface HelpBoxProps  { desktop: boolean }
-export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: () => void }
+export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: (category?: LearningCategory) => void }
 
 /* ════════ ICONS ════════ */
 export const HomeIcon = ({ active }: IconProps) => (
@@ -231,19 +239,31 @@ export const SectionHeader = ({ title, action }: SectionHeaderProps) => (
   </div>
 );
 
-export const HeroCard = ({ height = 190, onContinue }: HeroCardProps) => (
-  <div style={{ borderRadius: 16, overflow: "hidden", position: "relative", height, boxShadow: "0 4px 24px rgba(0,0,0,0.18)" }}>
-    <img src="https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=800&q=80" alt="Big Ben"
-      style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+export const categoryImage = (category?: LearningCategory | null, size = 800) => {
+  if (!category?.thumbnail_image) {
+    return null;
+  }
+
+  return category.thumbnail_image.startsWith("http")
+    ? category.thumbnail_image
+    : `/storage/${category.thumbnail_image}`;
+};
+
+export const HeroCard = ({ height = 190, onContinue, category }: HeroCardProps) => (
+  <div style={{ borderRadius: 16, overflow: "hidden", position: "relative", height, boxShadow: "0 4px 24px rgba(0,0,0,0.18)", background: category?.background_color || "#071224" }}>
+    {categoryImage(category) && (
+      <img src={categoryImage(category) || ""} alt={category?.title || "Category"}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+    )}
     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(95deg,rgba(4,12,28,0.95) 0%,rgba(4,12,28,0.78) 42%,rgba(4,12,28,0.08) 100%)" }} />
     <div style={{ position: "relative", zIndex: 1, padding: "16px 18px", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.13)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🏛️</div>
-          <span style={{ color: "#22c55e", fontSize: 11, fontWeight: 700 }}>Module 4</span>
+          <span style={{ color: "#22c55e", fontSize: 11, fontWeight: 700 }}>Learning Category</span>
         </div>
-        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>UK Interview Training</div>
-        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.5)" }}>Financial Questions</div>
+        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>{category?.title || "UK Interview Training"}</div>
+        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.5)" }}>{category?.description || "Financial Questions"}</div>
       </div>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>

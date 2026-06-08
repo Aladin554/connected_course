@@ -8,6 +8,12 @@ interface Role {
   name: string;
 }
 
+interface Category {
+  id: number;
+  title: string;
+  flag_emoji?: string | null;
+}
+
 interface CurrentUser {
   role_id: number;
   can_create_users: number;
@@ -25,6 +31,7 @@ export default function AdminUserForm() {
     email: "",
     roleId: isEdit ? "" : "3",
     password: "",
+    categoryIds: [] as number[],
   });
   const [errors, setErrors] = useState({
     first_name: "",
@@ -35,6 +42,7 @@ export default function AdminUserForm() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     api.get("/profile")
@@ -69,6 +77,14 @@ export default function AdminUserForm() {
   }, [navigate]);
 
   useEffect(() => {
+    api.get("/categories/active")
+      .then((res) => setCategories(Array.isArray(res.data) ? res.data : []))
+      .catch(() =>
+        navigate("/dashboard/admin-users", { state: { message: "Failed to fetch categories", type: "error" } })
+      );
+  }, [navigate]);
+
+  useEffect(() => {
     if (isEdit && id) {
       api.get(`/users/${id}`)
         .then((res) => {
@@ -78,6 +94,9 @@ export default function AdminUserForm() {
             email: res.data.email || "",
             roleId: res.data.role_id?.toString() || res.data.role?.id?.toString() || "",
             password: "",
+            categoryIds: Array.isArray(res.data.categories)
+              ? res.data.categories.map((category: Category) => category.id)
+              : [],
           });
         })
         .catch(() =>
@@ -112,6 +131,7 @@ export default function AdminUserForm() {
         last_name: form.last_name,
         email: form.email,
         role_id: Number(form.roleId),
+        category_ids: form.categoryIds,
       };
 
       if (form.password) payload.password = form.password;
@@ -129,6 +149,15 @@ export default function AdminUserForm() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const toggleCategory = (categoryId: number) => {
+    setForm((prev) => ({
+      ...prev,
+      categoryIds: prev.categoryIds.includes(categoryId)
+        ? prev.categoryIds.filter((id) => id !== categoryId)
+        : [...prev.categoryIds, categoryId],
+    }));
   };
 
   return (
@@ -173,6 +202,33 @@ export default function AdminUserForm() {
               {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
             </select>
             {errors.roleId && <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>}
+          </div>
+        </div>
+
+        <div>
+          <label className="block mb-3 text-sm font-medium dark:text-gray-300">Allowed Categories</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {categories.length === 0 ? (
+              <div className="text-sm text-gray-500 dark:text-gray-400">No active categories found.</div>
+            ) : (
+              categories.map((category) => (
+                <label
+                  key={category.id}
+                  className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.categoryIds.includes(category.id)}
+                    onChange={() => toggleCategory(category.id)}
+                    className="h-4 w-4 rounded border-gray-300"
+                  />
+                  <span className="text-base">
+                    {category.flag_emoji ? `${category.flag_emoji} ` : ""}
+                    {category.title}
+                  </span>
+                </label>
+              ))
+            )}
           </div>
         </div>
 

@@ -60,6 +60,11 @@ const AppSidebar: React.FC = () => {
       name: "Admin Users",
       path: "/dashboard/admin-users",
     },
+    {
+      icon: <BoxCubeIcon />,
+      name: "Categories",
+      path: "/dashboard/categories",
+    },
   ];
 
   const othersItems: NavItem[] = [];

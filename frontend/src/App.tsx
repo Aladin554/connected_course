@@ -35,6 +35,8 @@ import AdminUsers from "./pages/Admin/AdminUsers";
 import AdminUserForm from "./pages/Admin/AdminUserForm";
 import ChooseDashboard from "./components/auth/ChooseDashboard.tsx";
 import AdminAllowedIps from "./pages/Admin/Security/AdminAllowedIps.tsx";
+import AdminCategories from "./pages/Category/CategoriesList";
+import CategoryForm from "./pages/Category/CategoryForm";
 
 // ✅ User learning flow — entry point that manages all sub-pages internally
 import Introduction from "./pages/User/pages/Introduction";
@@ -110,6 +112,9 @@ export default function App() {
           <Route path="admin-users"           element={<AdminUsers />} />
           <Route path="admin-users/add"       element={<AdminUserForm />} />
           <Route path="admin-users/:id/edit"  element={<AdminUserForm />} />
+          <Route path="categories"            element={<AdminCategories />} />
+          <Route path="categories/add"        element={<CategoryForm />} />
+          <Route path="categories/:id/edit"   element={<CategoryForm />} />
           <Route
             path="admin-allowed-ips"
             element={

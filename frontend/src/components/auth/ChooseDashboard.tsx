@@ -22,7 +22,7 @@ export default function ChooseDashboard() {
           <Button
             className="w-full"
             variant="outline"
-            onClick={() => navigate("/user-dashboard", { replace: true })}
+            onClick={() => navigate("/introduction", { replace: true })}
           >
             Go to User Dashboard
           </Button>
