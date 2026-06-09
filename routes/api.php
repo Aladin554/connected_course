@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\LearningContentController;
 
 // ==================================================================
 // 1. PUBLIC ROUTES – No auth, no IP restriction
@@ -15,6 +16,20 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::get('/storage/{path}', function (string $path) {
+    $root = realpath(storage_path('app/public'));
+    $file = realpath($root.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path));
+
+    abort_unless(
+        $root
+        && $file
+        && str_starts_with($file, $root.DIRECTORY_SEPARATOR)
+        && is_file($file),
+        404
+    );
+
+    return response()->file($file);
+})->where('path', '.*');
 
 // ==================================================================
 // 2. AUTHENTICATED ROUTES – Require login
@@ -30,6 +45,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/my-categories', [CategoryController::class, 'myCategories']);
     Route::get('/categories/{category}/welcome-slides', [CategoryController::class, 'welcomeSlides']);
+    Route::get('/categories/{category}/modules', [LearningContentController::class, 'categoryModules']);
+    Route::get('/modules/{module}/lessons', [LearningContentController::class, 'moduleLessons']);
+    Route::get('/lessons/{lesson}', [LearningContentController::class, 'lessonDetail']);
 
 });
 
@@ -56,6 +74,12 @@ Route::middleware(['auth:sanctum', 'admin.ip'])->group(function () {
     // Learning categories
     Route::get('/categories/active', [CategoryController::class, 'active']);
     Route::apiResource('/categories', CategoryController::class);
+    Route::post('/categories/{category}/modules', [LearningContentController::class, 'storeModule']);
+    Route::put('/modules/{module}', [LearningContentController::class, 'updateModule']);
+    Route::delete('/modules/{module}', [LearningContentController::class, 'destroyModule']);
+    Route::post('/modules/{module}/lessons', [LearningContentController::class, 'storeLesson']);
+    Route::put('/lessons/{lesson}', [LearningContentController::class, 'updateLesson']);
+    Route::delete('/lessons/{lesson}', [LearningContentController::class, 'destroyLesson']);
 
 });
 Route::get('/show-ip', function (Request $request) {

@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useEffect } from "react";
 
-import { GlobalStyles, LearningCategory, Page } from "./shared";
+import { GlobalStyles, LearningCategory, LearningLesson, LearningModule, Page } from "./shared";
 import HomePage           from "./HomePage";
 import WelcomePage        from "./WelcomePage";
 import CourseOverviewPage from "./CourseOverviewPage";
@@ -21,6 +21,8 @@ export default function Introduction() {
   const [page, setPage]       = useState<Page>("home");
   const [tab,  setTab]        = useState("Home");
   const [selectedCategory, setSelectedCategory] = useState<LearningCategory | null>(null);
+  const [selectedModule, setSelectedModule] = useState<LearningModule | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<LearningLesson | null>(null);
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 768 : false
   );
@@ -45,19 +47,28 @@ export default function Introduction() {
       ) : page === "course" ? (
         <CourseOverviewPage
           onBack        ={() => setPage("welcome")}
-          onModuleClick ={() => setPage("module")}
+          onModuleClick ={(module) => {
+            setSelectedModule(module);
+            setPage("module");
+          }}
           isDesktop     ={isDesktop}
+          category      ={selectedCategory}
         />
       ) : page === "module" ? (
         <ModuleLessonsPage
           onBack        ={() => setPage("course")}
-          onLessonClick ={() => setPage("lesson")}
+          onLessonClick ={(lesson) => {
+            setSelectedLesson(lesson);
+            setPage("lesson");
+          }}
           isDesktop     ={isDesktop}
+          module        ={selectedModule}
         />
       ) : page === "lesson" ? (
         <LessonDetailPage
           onBack   ={() => setPage("module")}
           isDesktop={isDesktop}
+          lesson   ={selectedLesson}
         />
       ) : (
         /* page === "home" */
@@ -67,6 +78,8 @@ export default function Introduction() {
           onContinue={(category) => {
             if (!category) return;
             setSelectedCategory(category);
+            setSelectedModule(null);
+            setSelectedLesson(null);
             setPage("welcome");
           }}
         />

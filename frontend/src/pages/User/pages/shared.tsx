@@ -14,6 +14,32 @@ export interface LearningCategory {
   thumbnail_image?: string | null;
   background_color?: string | null;
 }
+export interface LearningModule {
+  id: number;
+  category_id: number;
+  title: string;
+  subtitle?: string | null;
+  description?: string | null;
+  icon_emoji?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  lessons_count?: number;
+  all_lessons_count?: number;
+}
+export interface LearningLesson {
+  id: number;
+  module_id: number;
+  title: string;
+  duration_mins: number;
+  video_type: "upload" | "youtube" | "vimeo" | "bunny";
+  video_value: string;
+  video_thumbnail?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  strategies?: { id: number; step_number: number; content: string }[];
+  lesson_model_answer?: { id: number; content: string } | null;
+  common_mistakes?: { id: number; content: string; sort_order: number }[];
+}
 export interface IconProps  { active: boolean }
 export interface BarProps   { value: number; light?: boolean }
 export interface SectionHeaderProps { title: string; action?: string }
@@ -246,7 +272,7 @@ export const categoryImage = (category?: LearningCategory | null, size = 800) =>
 
   return category.thumbnail_image.startsWith("http")
     ? category.thumbnail_image
-    : `/storage/${category.thumbnail_image}`;
+    : `/api/storage/${category.thumbnail_image}`;
 };
 
 export const HeroCard = ({ height = 190, onContinue, category }: HeroCardProps) => (
@@ -260,7 +286,6 @@ export const HeroCard = ({ height = 190, onContinue, category }: HeroCardProps) 
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.13)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🏛️</div>
-          <span style={{ color: "#22c55e", fontSize: 11, fontWeight: 700 }}>Learning Category</span>
         </div>
         <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>{category?.title || "UK Interview Training"}</div>
         <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.5)" }}>{category?.description || "Financial Questions"}</div>

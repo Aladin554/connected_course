@@ -39,6 +39,11 @@ class Category extends Model
         return $this->hasMany(CourseModule::class)->where('is_active', true)->orderBy('sort_order');
     }
 
+    public function allCourseModules()
+    {
+        return $this->hasMany(CourseModule::class)->orderBy('sort_order');
+    }
+
     public function userCategoryEnrollments()
     {
         return $this->hasMany(UserCategoryEnrollment::class);

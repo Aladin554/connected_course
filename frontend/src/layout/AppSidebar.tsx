@@ -62,8 +62,13 @@ const AppSidebar: React.FC = () => {
     },
     {
       icon: <BoxCubeIcon />,
-      name: "Categories",
+      name: "Course",
       path: "/dashboard/categories",
+    },
+    {
+      icon: <PageIcon />,
+      name: "Learning Content",
+      path: "/dashboard/learning-content",
     },
   ];
 

@@ -13,7 +13,7 @@ interface Category {
   sort_order: number;
 }
 
-const storageUrl = (path: string) => path.startsWith("http") ? path : `/storage/${path}`;
+const storageUrl = (path: string) => path.startsWith("http") ? path : `/api/storage/${path}`;
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -69,13 +69,13 @@ export default function AdminCategories() {
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-700 lg:p-6 dark:bg-gray-900">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-5 gap-3">
         <h1 className="text-lg sm:text-2xl font-bold dark:text-gray-200">
-          Learning Categories
+          Courses
         </h1>
         <Link
           to="/dashboard/categories/add"
           className="flex items-center gap-2 px-5 py-3 rounded-lg bg-blue-600 text-white text-base font-medium shadow-sm hover:bg-blue-700"
         >
-          <Plus size={20} /> Add Category
+          <Plus size={20} /> Add Course
         </Link>
       </div>
 

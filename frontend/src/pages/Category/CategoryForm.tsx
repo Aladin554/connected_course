@@ -127,7 +127,7 @@ export default function CategoryForm() {
         <span className="font-medium">Back</span>
       </button>
 
-      <h1 className="text-2xl font-semibold mb-6 dark:text-gray-200">{isEdit ? "Edit Category" : "Add Category"}</h1>
+      <h1 className="text-2xl font-semibold mb-6 dark:text-gray-200">{isEdit ? "Edit Course" : "Add Course"}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -279,7 +279,7 @@ export default function CategoryForm() {
 
         <div className="flex justify-end gap-3">
           <button type="button" onClick={() => navigate("/dashboard/categories")} className="px-5 py-2 rounded-lg border dark:border-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button>
-          <button type="submit" disabled={submitting} className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-lg disabled:opacity-50">{submitting ? "Saving..." : "Save Category"}</button>
+          <button type="submit" disabled={submitting} className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-lg disabled:opacity-50">{submitting ? "Saving..." : "Save Course"}</button>
         </div>
       </form>
     </div>

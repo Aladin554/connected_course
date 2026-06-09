@@ -256,7 +256,7 @@ export default function AdminDepartmentForm() {
               <>Saving...</>
             ) : (
               <>
-                <span>Save Category</span>
+                <span>Save Course</span>
               </>
             )}
           </button>

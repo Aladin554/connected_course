@@ -1,35 +1,58 @@
-// src/pages/User/pages/CourseOverviewPage.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Course overview with hero banner and vertical learning-path timeline.
-// Props: onBack → WelcomePage, onModuleClick → ModuleLessonsPage, isDesktop
-// ─────────────────────────────────────────────────────────────────────────────
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import api from "../../../api/axios";
 import {
-  courseModules,
-  ArrowLeft, ArrowRight, BookmarkIcon, ChevRight,
-  CheckIcon, LockIcon, PlayIcon,
+  ArrowLeft,
+  ArrowRight,
+  BookmarkIcon,
+  categoryImage,
+  CheckIcon,
+  ChevRight,
+  LearningCategory,
+  LearningModule,
+  PlayIcon,
 } from "./shared";
 
 interface CourseOverviewPageProps {
   onBack: () => void;
-  onModuleClick: () => void;
+  onModuleClick: (module: LearningModule) => void;
   isDesktop: boolean;
+  category: LearningCategory | null;
 }
 
-export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop }: CourseOverviewPageProps) {
+export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, category }: CourseOverviewPageProps) {
+  const [modules, setModules] = useState<LearningModule[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!category) {
+      setModules([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    api.get(`/categories/${category.id}/modules`)
+      .then((res) => setModules(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setModules([]))
+      .finally(() => setLoading(false));
+  }, [category]);
+
+  const image = useMemo(() => categoryImage(category, 900), [category]);
+  const lessonsCount = modules.reduce((total, module) => total + (module.lessons_count ?? module.all_lessons_count ?? 0), 0);
+  const firstModule = modules[0];
+
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#fff", animation: "pageIn .35s cubic-bezier(.22,1,.36,1)", overflow: "hidden" }}>
-
-      {/* ── Hero banner ── */}
-      <div style={{ position: "relative", height: isDesktop ? 320 : 280, flexShrink: 0 }}>
-        <img
-          src="https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=900&q=80"
-          alt="UK"
-          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%" }}
-        />
+      <div style={{ position: "relative", height: isDesktop ? 320 : 280, flexShrink: 0, background: category?.background_color || "#071224" }}>
+        {image && (
+          <img
+            src={image}
+            alt={category?.title || "Category"}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%" }}
+          />
+        )}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(4,12,28,.5) 0%,rgba(4,12,28,.85) 100%)" }} />
 
-        {/* Header row */}
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px" }}>
           <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.15)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
             <ArrowLeft size={16} />
@@ -39,99 +62,59 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop }:
           </button>
         </div>
 
-        {/* Bottom info */}
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 20px 20px" }}>
-          <div style={{ fontSize: 22, marginBottom: 4 }}>🇬🇧</div>
+          <div style={{ fontSize: 22, marginBottom: 4 }}>{category?.flag_emoji || ""}</div>
           <h1 style={{ fontWeight: 900, fontSize: isDesktop ? 30 : 26, color: "white", letterSpacing: -0.8, lineHeight: 1.1, marginBottom: 8 }}>
-            UK Interview Training
+            {category?.title || "Learning Category"}
           </h1>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.65)", marginBottom: 12 }}>43 Lessons • 7 Modules</div>
-
-          {/* Progress bar */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.75)", flexShrink: 0 }}>72% Complete</div>
-            <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,.2)", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ width: "72%", height: "100%", background: "#22c55e", borderRadius: 4 }} />
-            </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.65)", marginBottom: 12 }}>
+            {lessonsCount} Lessons • {modules.length} Modules
           </div>
 
           <button
-            onClick={onModuleClick}
-            style={{ width: "100%", padding: "14px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 16px rgba(255,90,44,.4)" }}
+            onClick={() => firstModule && onModuleClick(firstModule)}
+            disabled={!firstModule}
+            style={{ width: "100%", padding: "14px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: firstModule ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 16px rgba(255,90,44,.4)", opacity: firstModule ? 1 : 0.65 }}
           >
             Continue Learning <ArrowRight />
           </button>
         </div>
       </div>
 
-      {/* ── Scrollable content ── */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "white" }} className="hs">
-
-        {/* Last Lesson shortcut */}
-        <div style={{ margin: "16px 16px 0" }}>
-          <div style={{ fontSize: 11, color: "#9ca3af", fontWeight: 600, marginBottom: 8 }}>Last Lesson</div>
-          <div
-            onClick={onModuleClick}
-            style={{ display: "flex", alignItems: "center", gap: 12, background: "#f9fafb", borderRadius: 14, padding: "12px 14px", cursor: "pointer", border: "1px solid #f0f0f0" }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: "#e8fdf1", border: "1px solid rgba(34,197,94,.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2"/>
-                <line x1="8" y1="21" x2="16" y2="21"/>
-                <line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 800, fontSize: 13, color: "#111", lineHeight: 1.3 }}>
-                Module 4:<br />Financial Questions
-              </div>
-              <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Lesson 3 of 6</div>
-            </div>
-            <ChevRight color="#9ca3af" />
-          </div>
-        </div>
-
-        {/* Learning path */}
         <div style={{ margin: "20px 16px 0" }}>
           <div style={{ fontWeight: 800, fontSize: 14, color: "#111", marginBottom: 14 }}>Your Learning Path</div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {courseModules.map((m, i) => {
-              const isDone   = m.status === "completed";
-              const isActive = m.status === "inprogress";
-              const isLocked = m.status === "locked";
-              return (
-                <div key={m.id} style={{ display: "flex", alignItems: "stretch", gap: 12 }}>
-                  {/* Timeline dot + line */}
+          {loading ? (
+            <div style={{ fontSize: 13, color: "#6b7280" }}>Loading modules...</div>
+          ) : modules.length === 0 ? (
+            <div style={{ fontSize: 13, color: "#6b7280" }}>No modules have been added for this category yet.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {modules.map((module, i) => (
+                <div key={module.id} style={{ display: "flex", alignItems: "stretch", gap: 12 }}>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: 24 }}>
-                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: isLocked ? "#f3f4f6" : "#22c55e", border: isLocked ? "2px solid #e5e7eb" : "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      {isLocked  ? <LockIcon size={12} color="#9ca3af" /> : isDone ? <CheckIcon size={10} /> : <PlayIcon size={8} />}
+                    <div style={{ width: 24, height: 24, borderRadius: "50%", background: i === 0 ? "#22c55e" : "#f3f4f6", border: i === 0 ? "none" : "2px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {i === 0 ? <PlayIcon size={8} /> : <CheckIcon size={10} color="#9ca3af" />}
                     </div>
-                    {i < courseModules.length - 1 && (
-                      <div style={{ width: 2, flex: 1, minHeight: 12, background: isDone ? "#22c55e" : "#e5e7eb", marginTop: 2 }} />
+                    {i < modules.length - 1 && (
+                      <div style={{ width: 2, flex: 1, minHeight: 12, background: "#e5e7eb", marginTop: 2 }} />
                     )}
                   </div>
 
-                  {/* Row content */}
                   <div
-                    onClick={isLocked ? undefined : onModuleClick}
-                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: i < courseModules.length - 1 ? 14 : 0, cursor: isLocked ? "default" : "pointer" }}
+                    onClick={() => onModuleClick(module)}
+                    style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: i < modules.length - 1 ? 14 : 0, cursor: "pointer" }}
                   >
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: isLocked ? "#9ca3af" : "#111" }}>{m.title}</div>
-                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>{m.subtitle}</div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{module.title}</div>
+                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>{module.subtitle || module.description || `${module.lessons_count ?? module.all_lessons_count ?? 0} lessons`}</div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      {isDone   && <span style={{ fontSize: 11, fontWeight: 700, color: "#22c55e" }}>Completed</span>}
-                      {isActive && <span style={{ fontSize: 11, fontWeight: 700, color: "#22c55e" }}>In Progress</span>}
-                      {isLocked
-                        ? <LockIcon size={14} color="#d1d5db" />
-                        : <ChevRight color={isActive ? "#22c55e" : "#d1d5db"} />}
-                    </div>
+                    <ChevRight color={i === 0 ? "#22c55e" : "#d1d5db"} />
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
         <div style={{ height: 32 }} />
       </div>
