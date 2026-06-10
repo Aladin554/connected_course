@@ -11,6 +11,7 @@ import {
   LockIcon,
   loadLearningProgress,
   PlayIcon,
+  WarningNotice,
 } from "./shared";
 
 interface ModuleLessonsPageProps {
@@ -75,6 +76,11 @@ export default function ModuleLessonsPage({ onBack, onLessonClick, module, categ
             <p style={{ fontSize: 12, color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>
               {module?.description || module?.subtitle || "Choose a lesson to continue."}
             </p>
+            {module?.warning && (
+              <div style={{ marginTop: 10 }}>
+                <WarningNotice message={module.warning} />
+              </div>
+            )}
           </div>
           <div style={{ width: 52, height: 52, borderRadius: "50%", background: "rgba(34,197,94,.15)", border: "1px solid rgba(34,197,94,.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             <span style={{ fontSize: 22, color: "#22c55e" }}>{module?.icon_emoji || "?"}</span>

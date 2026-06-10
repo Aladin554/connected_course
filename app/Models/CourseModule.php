@@ -14,6 +14,7 @@ class CourseModule extends Model
         'title',
         'subtitle',
         'description',
+        'warning',
         'icon_emoji',
         'sort_order',
         'is_active',

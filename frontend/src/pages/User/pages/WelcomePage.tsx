@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   categoryImage,
   LearningCategory,
+  WarningNotice,
   XIcon,
 } from "./shared";
 
@@ -11,6 +12,7 @@ interface WelcomeSlide {
   id: number;
   title: string;
   body_content: string;
+  warning?: string | null;
   slide_order: number;
 }
 
@@ -121,6 +123,7 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
               {cur.title}
             </h1>
             <div>{renderBody(cur.body_content)}</div>
+            <WarningNotice message={cur.warning} />
           </>
         ) : (
           <>

@@ -221,6 +221,7 @@ class LearningContentController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
+            'warning' => ['nullable', 'string'],
             'icon_emoji' => ['nullable', 'string', 'max:32'],
             'is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
         ];
@@ -230,6 +231,7 @@ class LearningContentController extends Controller
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'warning' => ['nullable', 'string'],
             'duration_mins' => ['nullable', 'integer', 'min:0'],
             'video_type' => ['required', Rule::in(['youtube'])],
             'video_value' => ['required', 'string', 'max:2048'],

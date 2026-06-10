@@ -11,6 +11,7 @@ import {
   LearningLesson,
   parseLessonContentBlock,
   PlayIcon,
+  WarningNotice,
 } from "./shared";
 
 interface LessonDetailPageProps {
@@ -98,6 +99,11 @@ export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetai
           <ClockIcon size={13} color="rgba(255,255,255,.5)" />
           <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>{detail?.duration_mins || 0} mins</span>
         </div>
+        {detail?.warning && (
+          <div style={{ marginTop: 10 }}>
+            <WarningNotice message={detail.warning} />
+          </div>
+        )}
       </div>
 
       <div style={{ position: "relative", margin: "0 18px 0", borderRadius: 14, overflow: "hidden", flexShrink: 0, background: "#071224" }}>

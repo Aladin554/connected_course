@@ -10,12 +10,14 @@ const blankModule = {
   title: "",
   subtitle: "",
   description: "",
+  warning: "",
   icon_emoji: "",
   is_active: true,
 };
 
 const blankLesson = {
   title: "",
+  warning: "",
   duration_mins: 0,
   video_type: "youtube" as LearningLesson["video_type"],
   video_value: "",
@@ -134,6 +136,7 @@ export default function LearningContent() {
       title: module.title || "",
       subtitle: module.subtitle || "",
       description: module.description || "",
+      warning: module.warning || "",
       icon_emoji: module.icon_emoji || "",
       is_active: Boolean(module.is_active),
     });
@@ -151,6 +154,7 @@ export default function LearningContent() {
 
     const payload = {
       title: lessonForm.title,
+      warning: lessonForm.warning,
       duration_mins: Number(lessonForm.duration_mins || 0),
       video_type: "youtube",
       video_value: lessonForm.video_value,
@@ -181,6 +185,7 @@ export default function LearningContent() {
     setEditingLessonId(lesson.id);
     setLessonForm({
       title: lesson.title || "",
+      warning: lesson.warning || "",
       duration_mins: lesson.duration_mins || 0,
       video_type: "youtube",
       video_value: lesson.video_value || "",
@@ -241,6 +246,7 @@ export default function LearningContent() {
             </div>
             <input placeholder="Subtitle" value={moduleForm.subtitle} onChange={(e) => setModuleForm({ ...moduleForm, subtitle: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             <textarea placeholder="Description" rows={3} value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+            <textarea placeholder="Warning" rows={3} value={moduleForm.warning} onChange={(e) => setModuleForm({ ...moduleForm, warning: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             <div>
               <input placeholder="Icon" value={moduleForm.icon_emoji} onChange={(e) => setModuleForm({ ...moduleForm, icon_emoji: e.target.value })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             </div>
@@ -278,6 +284,7 @@ export default function LearningContent() {
 
           <form onSubmit={saveLesson} className="space-y-3">
             <input required disabled={!selectedModule} placeholder="Question / lesson title" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+            <textarea disabled={!selectedModule} placeholder="Warning" rows={3} value={lessonForm.warning} onChange={(e) => setLessonForm({ ...lessonForm, warning: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input type="number" min={0} placeholder="Duration mins" value={lessonForm.duration_mins} onChange={(e) => setLessonForm({ ...lessonForm, duration_mins: Number(e.target.value) })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             </div>

@@ -154,6 +154,7 @@ class CategoryController extends Controller
             'welcome_slides.*.id' => ['nullable', 'integer', 'exists:welcome_slides,id'],
             'welcome_slides.*.title' => ['required_with:welcome_slides', 'string', 'max:255'],
             'welcome_slides.*.body_content' => ['required_with:welcome_slides', 'string'],
+            'welcome_slides.*.warning' => ['nullable', 'string'],
             'welcome_slides.*.is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
         ]);
     }
@@ -179,6 +180,7 @@ class CategoryController extends Controller
             $payload = [
                 'title' => $slide['title'] ?? '',
                 'body_content' => $slide['body_content'] ?? '',
+                'warning' => $slide['warning'] ?? null,
                 'slide_order' => $index,
                 'is_active' => array_key_exists('is_active', $slide)
                     ? filter_var($slide['is_active'], FILTER_VALIDATE_BOOLEAN)

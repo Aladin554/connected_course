@@ -13,6 +13,7 @@ class WelcomeSlide extends Model
         'category_id',
         'title',
         'body_content',
+        'warning',
         'slide_order',
         'is_active',
     ];

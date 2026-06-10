@@ -21,6 +21,7 @@ export interface LearningModule {
   title: string;
   subtitle?: string | null;
   description?: string | null;
+  warning?: string | null;
   icon_emoji?: string | null;
   sort_order: number;
   is_active: boolean;
@@ -31,6 +32,7 @@ export interface LearningLesson {
   id: number;
   module_id: number;
   title: string;
+  warning?: string | null;
   duration_mins: number;
   video_type: "upload" | "youtube" | "vimeo" | "bunny";
   video_value: string;
@@ -49,7 +51,7 @@ export interface LessonContentBlock {
 export interface IconProps  { active: boolean }
 export interface BarProps   { value: number; light?: boolean }
 export interface SectionHeaderProps { title: string; action?: string }
-export interface HeroCardProps { height?: number; onContinue: () => void; category?: LearningCategory | null; progress?: number }
+export interface HeroCardProps { height?: number; onContinue: () => void; category?: LearningCategory | null; progress?: number; moduleNumber?: number | null; moduleName?: string | null }
 export interface HelpBoxProps  { desktop: boolean }
 export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: (category?: LearningCategory) => void }
 
@@ -184,6 +186,18 @@ export const WarningIcon = () => (
     <line x1="12" y1="17" x2="12.01" y2="17"/>
   </svg>
 );
+
+export const WarningNotice = ({ message }: { message?: string | null }) => {
+  const text = (message || "").trim();
+  if (!text) return null;
+
+  return (
+    <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412", marginBottom: 12 }}>
+      <div style={{ flexShrink: 0, marginTop: 1 }}><WarningIcon /></div>
+      <p style={{ fontSize: 12.5, lineHeight: 1.55, margin: 0, fontWeight: 600 }}>{text}</p>
+    </div>
+  );
+};
 export const XIcon = ({ color = "#666" }: { color?: string }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
     stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -347,7 +361,7 @@ export const parseLessonContentBlock = (item: { id: number; content: string }): 
   return { id: item.id, title: "", description: item.content || "" };
 };
 
-export const HeroCard = ({ height = 190, onContinue, category, progress = 0 }: HeroCardProps) => (
+export const HeroCard = ({ height = 190, onContinue, category, progress = 0, moduleNumber, moduleName }: HeroCardProps) => (
   <div style={{ borderRadius: 16, overflow: "hidden", position: "relative", height, boxShadow: "0 4px 24px rgba(0,0,0,0.18)", background: category?.background_color || "#071224" }}>
     {categoryImage(category) && (
       <img src={categoryImage(category) || ""} alt={category?.title || "Category"}
@@ -359,8 +373,10 @@ export const HeroCard = ({ height = 190, onContinue, category, progress = 0 }: H
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.13)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🏛️</div>
         </div>
-        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>{category?.title || "UK Interview Training"}</div>
-        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.5)" }}>{category?.description || "Financial Questions"}</div>
+        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>{category?.title || "Course"}</div>
+        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.68)", lineHeight: 1.45 }}>
+          {moduleName ? `Module ${moduleNumber || 1}: ${moduleName}` : "No module available yet."}
+        </div>
       </div>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>

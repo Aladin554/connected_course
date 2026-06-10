@@ -7,12 +7,14 @@ interface WelcomeSlideForm {
   id?: number;
   title: string;
   body_content: string;
+  warning: string;
   is_active: boolean;
 }
 
 const emptySlide = (): WelcomeSlideForm => ({
   title: "",
   body_content: "",
+  warning: "",
   is_active: true,
 });
 
@@ -45,6 +47,7 @@ export default function CategoryForm() {
               id: slide.id,
               title: slide.title || "",
               body_content: slide.body_content || "",
+              warning: slide.warning || "",
               is_active: Boolean(slide.is_active),
             }))
           : [];
@@ -67,6 +70,7 @@ export default function CategoryForm() {
       if (slide.id) payload.append(`welcome_slides[${index}][id]`, slide.id.toString());
       payload.append(`welcome_slides[${index}][title]`, slide.title);
       payload.append(`welcome_slides[${index}][body_content]`, slide.body_content);
+      payload.append(`welcome_slides[${index}][warning]`, slide.warning);
       payload.append(`welcome_slides[${index}][is_active]`, slide.is_active ? "1" : "0");
     });
     if (thumbnail) payload.append("thumbnail_image", thumbnail);
@@ -195,6 +199,16 @@ export default function CategoryForm() {
                   value={slide.body_content}
                   onChange={(e) => updateSlide(index, { body_content: e.target.value })}
                   rows={6}
+                  className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="mt-4">
+                <label className="block mb-1 text-sm font-medium dark:text-gray-300">Warning</label>
+                <textarea
+                  value={slide.warning}
+                  onChange={(e) => updateSlide(index, { warning: e.target.value })}
+                  rows={3}
                   className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

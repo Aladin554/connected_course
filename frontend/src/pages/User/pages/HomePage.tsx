@@ -16,10 +16,11 @@ interface HomeLayoutProps extends LayoutProps {
   categories: LearningCategory[];
   loadingCategories: boolean;
   progressByCategory: Record<number, number>;
+  continueByCategory: Record<number, { moduleNumber: number; moduleName: string }>;
 }
 
 /* ── Mobile ── */
-function MobileHome({ tab, setTab, onContinue, categories, loadingCategories, progressByCategory }: HomeLayoutProps) {
+function MobileHome({ tab, setTab, onContinue, categories, loadingCategories, progressByCategory, continueByCategory }: HomeLayoutProps) {
   const modules = categories.map((category) => ({
     category,
     title: category.title,
@@ -63,7 +64,14 @@ function MobileHome({ tab, setTab, onContinue, categories, loadingCategories, pr
             {loadingCategories ? (
               <div style={{ height: 190, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>Loading...</div>
               ) : categories[0] ? (
-              <HeroCard height={190} onContinue={() => onContinue(categories[0])} category={categories[0]} progress={progressByCategory[categories[0].id] || 0} />
+              <HeroCard
+                height={190}
+                onContinue={() => onContinue(categories[0])}
+                category={categories[0]}
+                progress={progressByCategory[categories[0].id] || 0}
+                moduleNumber={continueByCategory[categories[0].id]?.moduleNumber}
+                moduleName={continueByCategory[categories[0].id]?.moduleName}
+              />
             ) : (
               <div style={{ padding: 16, color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>No learning category assigned yet.</div>
             )}
@@ -114,7 +122,7 @@ function MobileHome({ tab, setTab, onContinue, categories, loadingCategories, pr
 }
 
 /* ── Desktop ── */
-function DesktopHome({ tab, setTab, onContinue, categories, loadingCategories, progressByCategory }: HomeLayoutProps) {
+function DesktopHome({ tab, setTab, onContinue, categories, loadingCategories, progressByCategory, continueByCategory }: HomeLayoutProps) {
   const modules = categories.map((category) => ({
     category,
     title: category.title,
@@ -157,7 +165,14 @@ function DesktopHome({ tab, setTab, onContinue, categories, loadingCategories, p
               {loadingCategories ? (
                 <div style={{ height: 280, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>Loading...</div>
               ) : categories[0] ? (
-                <HeroCard height={280} onContinue={() => onContinue(categories[0])} category={categories[0]} progress={progressByCategory[categories[0].id] || 0} />
+                <HeroCard
+                  height={280}
+                  onContinue={() => onContinue(categories[0])}
+                  category={categories[0]}
+                  progress={progressByCategory[categories[0].id] || 0}
+                  moduleNumber={continueByCategory[categories[0].id]?.moduleNumber}
+                  moduleName={continueByCategory[categories[0].id]?.moduleName}
+                />
               ) : (
                 <div style={{ padding: 18, color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>No learning category assigned yet.</div>
               )}
@@ -201,6 +216,7 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
   const [categories, setCategories] = useState<LearningCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [progressByCategory, setProgressByCategory] = useState<Record<number, number>>({});
+  const [continueByCategory, setContinueByCategory] = useState<Record<number, { moduleNumber: number; moduleName: string }>>({});
 
   useEffect(() => {
     const onResize = () => setIsDesktop(window.innerWidth >= 768);
@@ -219,7 +235,7 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
     let cancelled = false;
 
     const loadHomeProgress = async () => {
-      const pairs = await Promise.all(categories.map(async (category) => {
+      const results = await Promise.all(categories.map(async (category) => {
         try {
           const modulesRes = await api.get(`/categories/${category.id}/modules`);
           const modules = Array.isArray(modulesRes.data) ? modulesRes.data : [];
@@ -237,20 +253,36 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
           const completedIds = await loadLearningProgress(category.id);
           const completedCount = lessonIds.filter((id) => completedIds.includes(id)).length;
           const progress = lessonIds.length > 0 ? Math.round((completedCount / lessonIds.length) * 100) : 0;
+          const continueIndex = modules.findIndex((module: LearningModule, index: number) => {
+            const lessons = lessonGroups[index] || [];
+            return lessons.length === 0 || lessons.some((lesson: LearningLesson) => !completedIds.includes(lesson.id));
+          });
+          const moduleIndex = continueIndex >= 0 ? continueIndex : 0;
+          const currentModule = modules[moduleIndex];
 
-          return [category.id, progress] as const;
+          return {
+            categoryId: category.id,
+            progress,
+            continueModule: currentModule
+              ? { moduleNumber: moduleIndex + 1, moduleName: currentModule.subtitle || currentModule.title }
+              : undefined,
+          };
         } catch {
-          return [category.id, 0] as const;
+          return { categoryId: category.id, progress: 0 };
         }
       }));
 
-      if (!cancelled) setProgressByCategory(Object.fromEntries(pairs));
+      if (!cancelled) {
+        setProgressByCategory(Object.fromEntries(results.map((item) => [item.categoryId, item.progress])));
+        setContinueByCategory(Object.fromEntries(results.filter((item) => item.continueModule).map((item) => [item.categoryId, item.continueModule])));
+      }
     };
 
     if (categories.length) {
       loadHomeProgress();
     } else {
       setProgressByCategory({});
+      setContinueByCategory({});
     }
 
     return () => {
@@ -259,6 +291,6 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
   }, [categories]);
 
   return isDesktop
-    ? <DesktopHome tab={tab} setTab={setTab} onContinue={onContinue} categories={categories} loadingCategories={loadingCategories} progressByCategory={progressByCategory} />
-    : <MobileHome  tab={tab} setTab={setTab} onContinue={onContinue} categories={categories} loadingCategories={loadingCategories} progressByCategory={progressByCategory} />;
+    ? <DesktopHome tab={tab} setTab={setTab} onContinue={onContinue} categories={categories} loadingCategories={loadingCategories} progressByCategory={progressByCategory} continueByCategory={continueByCategory} />
+    : <MobileHome  tab={tab} setTab={setTab} onContinue={onContinue} categories={categories} loadingCategories={loadingCategories} progressByCategory={progressByCategory} continueByCategory={continueByCategory} />;
 }

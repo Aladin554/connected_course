@@ -129,7 +129,6 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, c
 
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "white" }} className="hs">
         <div style={{ margin: "20px 16px 0" }}>
-          <div style={{ fontWeight: 800, fontSize: 14, color: "#111", marginBottom: 14 }}>Your Learning Path</div>
           {loading ? (
             <div style={{ fontSize: 13, color: "#6b7280" }}>Loading modules...</div>
           ) : modules.length === 0 ? (
@@ -137,7 +136,6 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, c
           ) : (
             <div style={{ display: "flex", flexDirection: "column" }}>
               {modules.map((module, i) => {
-                const stats = moduleStats(module);
                 const complete = isModuleComplete(module);
                 const unlocked = isModuleUnlocked(i);
                 const current = unlocked && !complete;
@@ -158,8 +156,7 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, c
                       style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: i < modules.length - 1 ? 14 : 0, cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.58 }}
                     >
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{module.title}</div>
-                        <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>{stats.completed}/{stats.total} lessons complete</div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{i + 1}. {module.subtitle || module.title}</div>
                       </div>
                       {unlocked ? <ChevRight color={current ? "#ff5a2c" : "#22c55e"} /> : <LockIcon />}
                     </div>
