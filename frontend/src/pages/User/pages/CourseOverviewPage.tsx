@@ -156,7 +156,7 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, c
                       style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: i < modules.length - 1 ? 14 : 0, cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.58 }}
                     >
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{i + 1}. {module.subtitle || module.title}</div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{module.title}</div>
                       </div>
                       {unlocked ? <ChevRight color={current ? "#ff5a2c" : "#22c55e"} /> : <LockIcon />}
                     </div>

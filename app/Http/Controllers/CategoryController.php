@@ -155,6 +155,7 @@ class CategoryController extends Controller
             'welcome_slides.*.title' => ['required_with:welcome_slides', 'string', 'max:255'],
             'welcome_slides.*.body_content' => ['required_with:welcome_slides', 'string'],
             'welcome_slides.*.warning' => ['nullable', 'string'],
+            'welcome_slides.*.warning_position' => ['nullable', Rule::in(['after_title', 'after_description'])],
             'welcome_slides.*.is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
         ]);
     }
@@ -181,6 +182,7 @@ class CategoryController extends Controller
                 'title' => $slide['title'] ?? '',
                 'body_content' => $slide['body_content'] ?? '',
                 'warning' => $slide['warning'] ?? null,
+                'warning_position' => $slide['warning_position'] ?? 'after_description',
                 'slide_order' => $index,
                 'is_active' => array_key_exists('is_active', $slide)
                     ? filter_var($slide['is_active'], FILTER_VALIDATE_BOOLEAN)

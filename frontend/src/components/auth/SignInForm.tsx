@@ -6,6 +6,7 @@ import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 import axios from "axios";
+import { clearAuthSession, isAuthSessionExpired, persistAuthSession } from "../../utils/session";
 import { toast } from "react-toastify"; // ✅ import toast
 
 export default function SignInForm() {
@@ -20,6 +21,12 @@ export default function SignInForm() {
     const token = sessionStorage.getItem("token");
     const roleId = sessionStorage.getItem("role_id");
     if (token) {
+      if (isAuthSessionExpired()) {
+        clearAuthSession();
+        setLoading(false);
+        return;
+      }
+
       if (roleId && parseInt(roleId, 10) === 3) {
         navigate("/introduction", { replace: true });
       } else {
@@ -45,10 +52,7 @@ export default function SignInForm() {
 
       const { access_token, user } = res.data;
 
-      // Save token & role_id
-      sessionStorage.setItem("token", access_token);
-      sessionStorage.setItem("role_id", user.role_id.toString());
-      sessionStorage.setItem("user", JSON.stringify(user));
+      persistAuthSession(access_token, user);
 
       // Redirect based on role
       // inside handleSignIn

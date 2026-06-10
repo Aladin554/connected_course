@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Edit, Plus, Save, Trash2 } from "lucide-react";
 import api from "../../api/axios";
 import { LearningCategory, LearningLesson, LearningModule } from "../User/pages/shared";
+import RichTextEditor from "../../components/form/RichTextEditor";
 
 type LessonSectionForm = { id?: number; step_number: number; content?: string; title: string; description: string };
 type MistakeForm = { id?: number; content: string };
 
 const blankModule = {
   title: "",
-  subtitle: "",
   description: "",
   warning: "",
   icon_emoji: "",
@@ -64,15 +64,6 @@ export default function LearningContent() {
     () => modules.find((module) => module.id === Number(moduleId)),
     [modules, moduleId]
   );
-  const autoModuleTitle = useMemo(() => {
-    const editingIndex = editingModuleId
-      ? modules.findIndex((module) => module.id === editingModuleId)
-      : -1;
-    const moduleNumber = editingIndex >= 0 ? editingIndex + 1 : modules.length + 1;
-
-    return `Module ${moduleNumber}`;
-  }, [editingModuleId, modules]);
-
   useEffect(() => {
     api.get("/categories/active")
       .then((res) => {
@@ -118,7 +109,8 @@ export default function LearningContent() {
 
     const payload = {
       ...moduleForm,
-      title: autoModuleTitle,
+      title: moduleForm.title.trim(),
+      subtitle: "",
       is_active: moduleForm.is_active ? 1 : 0,
     };
 
@@ -134,7 +126,6 @@ export default function LearningContent() {
     setEditingModuleId(module.id);
     setModuleForm({
       title: module.title || "",
-      subtitle: module.subtitle || "",
       description: module.description || "",
       warning: module.warning || "",
       icon_emoji: module.icon_emoji || "",
@@ -241,11 +232,8 @@ export default function LearningContent() {
           </div>
 
           <form onSubmit={saveModule} className="space-y-3">
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
-              {autoModuleTitle}
-            </div>
-            <input placeholder="Subtitle" value={moduleForm.subtitle} onChange={(e) => setModuleForm({ ...moduleForm, subtitle: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-            <textarea placeholder="Description" rows={3} value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+            <input required placeholder="Title" value={moduleForm.title} onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+            <RichTextEditor value={moduleForm.description} onChange={(description) => setModuleForm({ ...moduleForm, description })} height={180} />
             <textarea placeholder="Warning" rows={3} value={moduleForm.warning} onChange={(e) => setModuleForm({ ...moduleForm, warning: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             <div>
               <input placeholder="Icon" value={moduleForm.icon_emoji} onChange={(e) => setModuleForm({ ...moduleForm, icon_emoji: e.target.value })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
@@ -262,7 +250,7 @@ export default function LearningContent() {
             {modules.map((module, index) => (
               <div key={module.id} className={`flex items-center justify-between rounded-lg border p-3 dark:border-gray-700 ${String(module.id) === moduleId ? "bg-blue-50 dark:bg-gray-800" : ""}`}>
                 <button type="button" onClick={() => setModuleId(String(module.id))} className="text-left">
-                  <div className="font-semibold dark:text-gray-100">{module.icon_emoji} Module {index + 1}</div>
+                  <div className="font-semibold dark:text-gray-100">{module.icon_emoji} {module.title || `Module ${index + 1}`}</div>
                   <div className="text-sm text-gray-500">{module.all_lessons_count ?? module.lessons_count ?? 0} lessons</div>
                 </button>
                 <div className="flex gap-2">
@@ -295,7 +283,7 @@ export default function LearningContent() {
               {lessonForm.strategies.map((strategy, index) => (
                 <div key={index} className="mb-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                   <input placeholder="Title" value={strategy.title} onChange={(e) => updateStrategy(index, { title: e.target.value })} className="mb-2 w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-                  <textarea placeholder="Description" rows={3} value={strategy.description} onChange={(e) => updateStrategy(index, { description: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+                  <RichTextEditor value={strategy.description} onChange={(description) => updateStrategy(index, { description })} height={180} />
                 </div>
               ))}
               <button type="button" onClick={() => setLessonForm((current) => ({ ...current, strategies: [...current.strategies, { step_number: current.strategies.length + 1, title: "", description: "" }] }))} className="text-sm text-blue-600">Add title & description</button>

@@ -14,6 +14,7 @@ class WelcomeSlide extends Model
         'title',
         'body_content',
         'warning',
+        'warning_position',
         'slide_order',
         'is_active',
     ];

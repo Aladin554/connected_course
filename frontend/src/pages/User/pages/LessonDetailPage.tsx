@@ -11,6 +11,7 @@ import {
   LearningLesson,
   parseLessonContentBlock,
   PlayIcon,
+  RichTextContent,
   WarningNotice,
 } from "./shared";
 
@@ -157,7 +158,12 @@ export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetai
                   <span style={{ fontWeight: 800, fontSize: 14, color: "#111" }}>{block.title || `Section ${index + 1}`}</span>
                   {isOpen ? <ChevUp /> : <ChevDown />}
                 </button>
-                {isOpen && <p style={{ fontSize: 13, color: "#444", lineHeight: 1.75, margin: 0, paddingBottom: 16 }}>{block.description}</p>}
+                {isOpen && (
+                  <RichTextContent
+                    html={block.description}
+                    style={{ fontSize: 13, color: "#444", lineHeight: 1.75, margin: 0, paddingBottom: 16 }}
+                  />
+                )}
               </div>
             );
           })}

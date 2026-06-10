@@ -64,7 +64,7 @@ export default function ForgotPassword() {
 
         <div className="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
           <Link
-            to="/login"
+            to="/signin"
             className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
           >
             Back to Sign In

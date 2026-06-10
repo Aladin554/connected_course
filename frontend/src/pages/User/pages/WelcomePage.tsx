@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   categoryImage,
   LearningCategory,
+  RichTextContent,
   WarningNotice,
   XIcon,
 } from "./shared";
@@ -13,6 +14,7 @@ interface WelcomeSlide {
   title: string;
   body_content: string;
   warning?: string | null;
+  warning_position?: "after_title" | "after_description" | null;
   slide_order: number;
 }
 
@@ -40,6 +42,10 @@ function BulletItem({ text }: { text: string }) {
 }
 
 function renderBody(body: string) {
+  if (/<[a-z][\s\S]*>/i.test(body)) {
+    return <RichTextContent html={body} emptyText="No content has been added for this page yet." style={pStyle} />;
+  }
+
   const lines = body
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -122,8 +128,9 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
             <h1 style={{ fontWeight: 900, fontSize: isDesktop ? 26 : 20, color: "#111", letterSpacing: -0.7, marginBottom: 14, lineHeight: 1.2 }}>
               {cur.title}
             </h1>
+            {cur.warning_position === "after_title" && <WarningNotice message={cur.warning} />}
             <div>{renderBody(cur.body_content)}</div>
-            <WarningNotice message={cur.warning} />
+            {cur.warning_position !== "after_title" && <WarningNotice message={cur.warning} />}
           </>
         ) : (
           <>

@@ -11,6 +11,7 @@ import {
   LockIcon,
   loadLearningProgress,
   PlayIcon,
+  RichTextContent,
   WarningNotice,
 } from "./shared";
 
@@ -73,9 +74,13 @@ export default function ModuleLessonsPage({ onBack, onLessonClick, module, categ
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#ff5a2c", letterSpacing: "0.08em", marginBottom: 4 }}>MODULE</div>
             <h1 style={{ fontWeight: 900, fontSize: 24, color: "white", letterSpacing: -0.8, marginBottom: 6, lineHeight: 1.15 }}>{module?.title || "Module"}</h1>
-            <p style={{ fontSize: 12, color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>
-              {module?.description || module?.subtitle || "Choose a lesson to continue."}
-            </p>
+            {module?.description ? (
+              <RichTextContent html={module.description} style={{ fontSize: 12, color: "rgba(255,255,255,.5)", lineHeight: 1.5 }} />
+            ) : (
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>
+                {module?.title || "Choose a lesson to continue."}
+              </p>
+            )}
             {module?.warning && (
               <div style={{ marginTop: 10 }}>
                 <WarningNotice message={module.warning} />

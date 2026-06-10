@@ -3,6 +3,7 @@
 // Shared icons, data, and small components reused across all learning pages.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { ReactElement } from "react";
+import parse from "html-react-parser";
 import api from "../../../api/axios";
 
 /* ── Types ── */
@@ -198,6 +199,23 @@ export const WarningNotice = ({ message }: { message?: string | null }) => {
     </div>
   );
 };
+
+export const RichTextContent = ({
+  html,
+  emptyText,
+  style,
+}: {
+  html?: string | null;
+  emptyText?: string;
+  style?: React.CSSProperties;
+}) => {
+  const content = (html || "").trim();
+  if (!content) {
+    return emptyText ? <p style={style}>{emptyText}</p> : null;
+  }
+
+  return <div style={style}>{parse(content)}</div>;
+};
 export const XIcon = ({ color = "#666" }: { color?: string }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
     stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -375,7 +393,9 @@ export const HeroCard = ({ height = 190, onContinue, category, progress = 0, mod
         </div>
         <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>{category?.title || "Course"}</div>
         <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.68)", lineHeight: 1.45 }}>
-          {moduleName ? `Module ${moduleNumber || 1}: ${moduleName}` : "No module available yet."}
+          {moduleName
+            ? (/^module\s+\d+$/i.test(moduleName.trim()) ? moduleName : `Module ${moduleNumber || 1}: ${moduleName}`)
+            : "No module available yet."}
         </div>
       </div>
       <div>

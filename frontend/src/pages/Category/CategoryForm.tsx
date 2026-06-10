@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import api from "../../api/axios";
+import RichTextEditor from "../../components/form/RichTextEditor";
 
 interface WelcomeSlideForm {
   id?: number;
   title: string;
   body_content: string;
   warning: string;
+  warning_position: "after_title" | "after_description";
   is_active: boolean;
 }
 
@@ -15,6 +17,7 @@ const emptySlide = (): WelcomeSlideForm => ({
   title: "",
   body_content: "",
   warning: "",
+  warning_position: "after_description",
   is_active: true,
 });
 
@@ -48,6 +51,7 @@ export default function CategoryForm() {
               title: slide.title || "",
               body_content: slide.body_content || "",
               warning: slide.warning || "",
+              warning_position: slide.warning_position === "after_title" ? "after_title" : "after_description",
               is_active: Boolean(slide.is_active),
             }))
           : [];
@@ -71,6 +75,7 @@ export default function CategoryForm() {
       payload.append(`welcome_slides[${index}][title]`, slide.title);
       payload.append(`welcome_slides[${index}][body_content]`, slide.body_content);
       payload.append(`welcome_slides[${index}][warning]`, slide.warning);
+      payload.append(`welcome_slides[${index}][warning_position]`, slide.warning_position);
       payload.append(`welcome_slides[${index}][is_active]`, slide.is_active ? "1" : "0");
     });
     if (thumbnail) payload.append("thumbnail_image", thumbnail);
@@ -146,11 +151,11 @@ export default function CategoryForm() {
 
         <div>
           <label className="block mb-1 text-sm font-medium dark:text-gray-300">Description</label>
-          <textarea
+          <RichTextEditor
             value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={5}
-            className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(description) => setForm({ ...form, description })}
+            disabled={submitting}
+            height={240}
           />
         </div>
 
@@ -194,12 +199,12 @@ export default function CategoryForm() {
 
               <div className="mt-4">
                 <label className="block mb-1 text-sm font-medium dark:text-gray-300">Page Body</label>
-                <textarea
+                <RichTextEditor
                   required
                   value={slide.body_content}
-                  onChange={(e) => updateSlide(index, { body_content: e.target.value })}
-                  rows={6}
-                  className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(body_content) => updateSlide(index, { body_content })}
+                  disabled={submitting}
+                  height={260}
                 />
               </div>
 
@@ -211,6 +216,18 @@ export default function CategoryForm() {
                   rows={3}
                   className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+
+              <div className="mt-4">
+                <label className="block mb-1 text-sm font-medium dark:text-gray-300">Warning Position</label>
+                <select
+                  value={slide.warning_position}
+                  onChange={(e) => updateSlide(index, { warning_position: e.target.value as WelcomeSlideForm["warning_position"] })}
+                  className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="after_title">After title</option>
+                  <option value="after_description">After description</option>
+                </select>
               </div>
 
               <label className="mt-3 inline-flex items-center gap-3 dark:text-gray-300">

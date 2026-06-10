@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearAuthSession, isAuthSessionExpired } from "../utils/session";
 
 // Create an axios instance
 const api = axios.create({
@@ -8,6 +9,12 @@ const api = axios.create({
 // Attach token automatically
 api.interceptors.request.use(
   (config) => {
+    if (isAuthSessionExpired()) {
+      clearAuthSession();
+      window.location.href = "/signin";
+      return Promise.reject(new axios.Cancel("Session expired"));
+    }
+
     const token = sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -22,10 +29,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 403 && error.response.data.force_logout) {
-      // Clear session/local storage
-      sessionStorage.removeItem("token");
-      sessionStorage.removeItem("role_id");
-      localStorage.removeItem("token");
+      clearAuthSession();
 
       // Redirect to login page
       window.location.href = "/signin";
