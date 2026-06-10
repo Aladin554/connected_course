@@ -46,8 +46,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/my-categories', [CategoryController::class, 'myCategories']);
     Route::get('/categories/{category}/welcome-slides', [CategoryController::class, 'welcomeSlides']);
     Route::get('/categories/{category}/modules', [LearningContentController::class, 'categoryModules']);
+    Route::get('/categories/{category}/progress', [LearningContentController::class, 'categoryProgress']);
     Route::get('/modules/{module}/lessons', [LearningContentController::class, 'moduleLessons']);
     Route::get('/lessons/{lesson}', [LearningContentController::class, 'lessonDetail']);
+    Route::post('/lessons/{lesson}/complete', [LearningContentController::class, 'completeLesson']);
 
 });
 

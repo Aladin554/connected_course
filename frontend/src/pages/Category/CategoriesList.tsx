@@ -10,7 +10,6 @@ interface Category {
   description?: string | null;
   thumbnail_image?: string | null;
   is_active: boolean;
-  sort_order: number;
 }
 
 const storageUrl = (path: string) => path.startsWith("http") ? path : `/api/storage/${path}`;
@@ -115,16 +114,15 @@ export default function AdminCategories() {
               <th className="px-6 py-4 text-left font-medium text-gray-700 dark:text-gray-200 border-r">Title</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700 dark:text-gray-200 border-r">Image</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700 dark:text-gray-200 border-r">Status</th>
-              <th className="px-6 py-4 text-left font-medium text-gray-700 dark:text-gray-200 border-r">Sort</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700 dark:text-gray-200 border-r">Description</th>
               <th className="px-6 py-4 text-left font-medium text-gray-700 dark:text-gray-200">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
             {loading ? (
-              <tr><td colSpan={6} className="py-4 text-center dark:text-gray-200">Loading...</td></tr>
+              <tr><td colSpan={5} className="py-4 text-center dark:text-gray-200">Loading...</td></tr>
             ) : paginated.length === 0 ? (
-              <tr><td colSpan={6} className="py-4 text-center dark:text-gray-200">No categories found</td></tr>
+              <tr><td colSpan={5} className="py-4 text-center dark:text-gray-200">No categories found</td></tr>
             ) : (
               paginated.map((category) => (
                 <tr key={category.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -143,7 +141,6 @@ export default function AdminCategories() {
                       {category.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-6 py-4 border-r text-gray-700 dark:text-gray-300">{category.sort_order}</td>
                   <td className="px-6 py-4 border-r text-gray-600 dark:text-gray-400 truncate max-w-xs">
                     {category.description || "-"}
                   </td>

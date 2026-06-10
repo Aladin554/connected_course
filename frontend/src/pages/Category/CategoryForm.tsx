@@ -7,14 +7,12 @@ interface WelcomeSlideForm {
   id?: number;
   title: string;
   body_content: string;
-  slide_order: number;
   is_active: boolean;
 }
 
-const emptySlide = (slide_order = 0): WelcomeSlideForm => ({
+const emptySlide = (): WelcomeSlideForm => ({
   title: "",
   body_content: "",
-  slide_order,
   is_active: true,
 });
 
@@ -25,11 +23,8 @@ export default function CategoryForm() {
 
   const [form, setForm] = useState({
     title: "",
-    flag_emoji: "",
     description: "",
-    background_color: "#071224",
     is_active: true,
-    sort_order: 0,
   });
   const [slides, setSlides] = useState<WelcomeSlideForm[]>([emptySlide()]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
@@ -42,18 +37,14 @@ export default function CategoryForm() {
       .then((res) => {
         setForm({
           title: res.data.title || "",
-          flag_emoji: res.data.flag_emoji || "",
           description: res.data.description || "",
-          background_color: res.data.background_color || "#071224",
           is_active: Boolean(res.data.is_active),
-          sort_order: Number(res.data.sort_order || 0),
         });
         const loadedSlides = Array.isArray(res.data.all_welcome_slides)
-          ? res.data.all_welcome_slides.map((slide: any, index: number) => ({
+          ? res.data.all_welcome_slides.map((slide: any) => ({
               id: slide.id,
               title: slide.title || "",
               body_content: slide.body_content || "",
-              slide_order: Number(slide.slide_order ?? index),
               is_active: Boolean(slide.is_active),
             }))
           : [];
@@ -70,16 +61,12 @@ export default function CategoryForm() {
 
     const payload = new FormData();
     payload.append("title", form.title);
-    payload.append("flag_emoji", form.flag_emoji);
     payload.append("description", form.description);
-    payload.append("background_color", form.background_color || "#071224");
     payload.append("is_active", form.is_active ? "1" : "0");
-    payload.append("sort_order", form.sort_order.toString());
     slides.forEach((slide, index) => {
       if (slide.id) payload.append(`welcome_slides[${index}][id]`, slide.id.toString());
       payload.append(`welcome_slides[${index}][title]`, slide.title);
       payload.append(`welcome_slides[${index}][body_content]`, slide.body_content);
-      payload.append(`welcome_slides[${index}][slide_order]`, slide.slide_order.toString());
       payload.append(`welcome_slides[${index}][is_active]`, slide.is_active ? "1" : "0");
     });
     if (thumbnail) payload.append("thumbnail_image", thumbnail);
@@ -111,7 +98,7 @@ export default function CategoryForm() {
   };
 
   const addSlide = () => {
-    setSlides((current) => [...current, emptySlide(current.length)]);
+    setSlides((current) => [...current, emptySlide()]);
   };
 
   const removeSlide = (index: number) => {
@@ -140,45 +127,6 @@ export default function CategoryForm() {
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Flag Emoji</label>
-            <input
-              type="text"
-              value={form.flag_emoji}
-              onChange={(e) => setForm({ ...form, flag_emoji: e.target.value })}
-              className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Sort Order</label>
-            <input
-              type="number"
-              min={0}
-              value={form.sort_order}
-              onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })}
-              className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Background Color</label>
-            <div className="flex gap-3">
-              <input
-                type="color"
-                value={form.background_color}
-                onChange={(e) => setForm({ ...form, background_color: e.target.value })}
-                className="h-12 w-16 rounded-lg border dark:bg-gray-700"
-              />
-              <input
-                type="text"
-                value={form.background_color}
-                onChange={(e) => setForm({ ...form, background_color: e.target.value })}
-                className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
           </div>
 
           <div>
@@ -229,8 +177,7 @@ export default function CategoryForm() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
+              <div>
                   <label className="block mb-1 text-sm font-medium dark:text-gray-300">Page Title</label>
                   <input
                     type="text"
@@ -239,18 +186,6 @@ export default function CategoryForm() {
                     onChange={(e) => updateSlide(index, { title: e.target.value })}
                     className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
-
-                <div>
-                  <label className="block mb-1 text-sm font-medium dark:text-gray-300">Order</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={slide.slide_order}
-                    onChange={(e) => updateSlide(index, { slide_order: Number(e.target.value) })}
-                    className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
               </div>
 
               <div className="mt-4">

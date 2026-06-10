@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\CourseModule;
 use App\Models\Lesson;
+use App\Models\UserLessonProgress;
+use App\Models\UserModuleProgress;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +35,8 @@ class LearningContentController extends Controller
         $relation = $this->canAdminister() ? 'allLessons' : 'lessons';
         $modules = ($this->canAdminister() ? $category->allCourseModules() : $category->courseModules())
             ->withCount($relation)
-            ->orderBy('sort_order')
+            ->orderBy('created_at')
+            ->orderBy('id')
             ->get();
 
         return response()->json($modules);
@@ -107,6 +110,66 @@ class LearningContentController extends Controller
         return response()->json($lesson);
     }
 
+    public function categoryProgress(Category $category): JsonResponse
+    {
+        if (!$this->canViewCategory($category)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $lessonIds = $category->courseModules()
+            ->with('lessons:id,module_id')
+            ->get()
+            ->flatMap(fn (CourseModule $module) => $module->lessons->pluck('id'))
+            ->values();
+
+        $completedLessonIds = UserLessonProgress::query()
+            ->where('user_id', Auth::id())
+            ->whereIn('lesson_id', $lessonIds)
+            ->where('status', 'completed')
+            ->pluck('lesson_id')
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        return response()->json([
+            'completed_lesson_ids' => $completedLessonIds,
+        ]);
+    }
+
+    public function completeLesson(Lesson $lesson): JsonResponse
+    {
+        $lesson->load('module.category');
+
+        if (!$this->canViewCategory($lesson->module->category)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (!$this->canAdminister() && (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active)) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        UserLessonProgress::query()->updateOrCreate(
+            ['user_id' => Auth::id(), 'lesson_id' => $lesson->id],
+            ['status' => 'completed', 'completed_at' => now()]
+        );
+
+        $moduleLessonIds = $lesson->module->lessons()->pluck('id');
+        $completedCount = UserLessonProgress::query()
+            ->where('user_id', Auth::id())
+            ->whereIn('lesson_id', $moduleLessonIds)
+            ->where('status', 'completed')
+            ->count();
+
+        UserModuleProgress::query()->updateOrCreate(
+            ['user_id' => Auth::id(), 'module_id' => $lesson->module_id],
+            ['status' => $moduleLessonIds->isNotEmpty() && $completedCount >= $moduleLessonIds->count() ? 'completed' : 'in_progress']
+        );
+
+        return response()->json([
+            'message' => 'Lesson marked complete',
+            'completed_lesson_id' => $lesson->id,
+        ]);
+    }
+
     public function storeLesson(Request $request, CourseModule $module): JsonResponse
     {
         if (!$this->canAdminister()) {
@@ -159,7 +222,6 @@ class LearningContentController extends Controller
             'subtitle' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'icon_emoji' => ['nullable', 'string', 'max:32'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
         ];
     }
@@ -169,10 +231,9 @@ class LearningContentController extends Controller
         return [
             'title' => ['required', 'string', 'max:255'],
             'duration_mins' => ['nullable', 'integer', 'min:0'],
-            'video_type' => ['required', Rule::in(['upload', 'youtube', 'vimeo', 'bunny'])],
+            'video_type' => ['required', Rule::in(['youtube'])],
             'video_value' => ['required', 'string', 'max:2048'],
             'video_thumbnail' => ['nullable', 'string', 'max:2048'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
             'strategies' => ['sometimes', 'array'],
             'strategies.*.id' => ['nullable', 'integer', 'exists:lesson_strategies,id'],
@@ -182,7 +243,6 @@ class LearningContentController extends Controller
             'common_mistakes' => ['sometimes', 'array'],
             'common_mistakes.*.id' => ['nullable', 'integer', 'exists:lesson_common_mistakes,id'],
             'common_mistakes.*.content' => ['required_with:common_mistakes', 'string'],
-            'common_mistakes.*.sort_order' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
@@ -230,7 +290,7 @@ class LearningContentController extends Controller
         foreach ($children['common_mistakes'] as $index => $mistake) {
             $payload = [
                 'content' => $mistake['content'] ?? '',
-                'sort_order' => $mistake['sort_order'] ?? $index,
+                'sort_order' => $index,
             ];
 
             if (!empty($mistake['id'])) {

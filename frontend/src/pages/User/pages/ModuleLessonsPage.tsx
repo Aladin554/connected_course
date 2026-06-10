@@ -5,8 +5,11 @@ import {
   CheckIcon,
   ChevRight,
   ClockIcon,
+  LearningCategory,
   LearningLesson,
   LearningModule,
+  LockIcon,
+  loadLearningProgress,
   PlayIcon,
 } from "./shared";
 
@@ -15,11 +18,13 @@ interface ModuleLessonsPageProps {
   onLessonClick: (lesson: LearningLesson) => void;
   isDesktop: boolean;
   module: LearningModule | null;
+  category: LearningCategory | null;
 }
 
-export default function ModuleLessonsPage({ onBack, onLessonClick, module }: ModuleLessonsPageProps) {
+export default function ModuleLessonsPage({ onBack, onLessonClick, module, category }: ModuleLessonsPageProps) {
   const [lessons, setLessons] = useState<LearningLesson[]>([]);
   const [loading, setLoading] = useState(true);
+  const [completedLessonIds, setCompletedLessonIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (!module) {
@@ -34,6 +39,20 @@ export default function ModuleLessonsPage({ onBack, onLessonClick, module }: Mod
       .catch(() => setLessons([]))
       .finally(() => setLoading(false));
   }, [module]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadLearningProgress(category?.id).then((ids) => {
+      if (!cancelled) setCompletedLessonIds(ids);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [category, lessons]);
+
+  const isLessonUnlocked = (index: number) => index === 0 || lessons.slice(0, index).every((lesson) => completedLessonIds.includes(lesson.id));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#0d1f35", animation: "pageIn .35s cubic-bezier(.22,1,.36,1)", overflow: "hidden" }}>
@@ -64,7 +83,7 @@ export default function ModuleLessonsPage({ onBack, onLessonClick, module }: Mod
 
         <div style={{ marginTop: 16, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           <span style={{ fontSize: 12, color: "rgba(255,255,255,.6)", fontWeight: 600 }}>{lessons.length} Lessons</span>
-          <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700 }}>Available</span>
+          <span style={{ fontSize: 12, color: "#22c55e", fontWeight: 700 }}>{completedLessonIds.filter((id) => lessons.some((lesson) => lesson.id === id)).length}/{lessons.length} Complete</span>
         </div>
       </div>
 
@@ -73,43 +92,54 @@ export default function ModuleLessonsPage({ onBack, onLessonClick, module }: Mod
           <div style={{ padding: 16, fontSize: 13, color: "#6b7280" }}>Loading lessons...</div>
         ) : lessons.length === 0 ? (
           <div style={{ padding: 16, fontSize: 13, color: "#6b7280" }}>No lessons have been added for this module yet.</div>
-        ) : lessons.map((lesson, i) => (
+        ) : lessons.map((lesson, i) => {
+          const completed = completedLessonIds.includes(lesson.id);
+          const unlocked = isLessonUnlocked(i);
+          const current = unlocked && !completed;
+
+          return (
           <div
             key={lesson.id}
-            onClick={() => onLessonClick(lesson)}
+            onClick={() => unlocked && onLessonClick(lesson)}
             style={{
               display: "flex", alignItems: "center", gap: 14,
               padding: "14px 16px",
-              background: i === 0 ? "#fff8f4" : "white",
+              background: current ? "#fff8f4" : "white",
               borderBottom: i < lessons.length - 1 ? "1px solid #f3f4f6" : "none",
-              cursor: "pointer",
+              cursor: unlocked ? "pointer" : "default",
+              opacity: unlocked ? 1 : 0.58,
             }}
           >
-            <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: i === 0 ? "#ff5a2c" : "#22c55e" }}>
-              {i === 0 ? <PlayIcon size={12} /> : <CheckIcon size={13} />}
+            <div style={{ width: 36, height: 36, borderRadius: "50%", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: completed ? "#22c55e" : current ? "#ff5a2c" : "#eef2f7" }}>
+              {completed ? <CheckIcon size={13} /> : current ? <PlayIcon size={12} /> : <LockIcon size={14} color="#9ca3af" />}
             </div>
 
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 10.5, color: i === 0 ? "#ff5a2c" : "#9ca3af", fontWeight: 600, marginBottom: 2 }}>Lesson {i + 1}</div>
+              <div style={{ fontSize: 10.5, color: current ? "#ff5a2c" : "#9ca3af", fontWeight: 600, marginBottom: 2 }}>Lesson {i + 1}</div>
               <div style={{ fontWeight: 700, fontSize: 13.5, color: "#111", marginBottom: 3 }}>{lesson.title}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <ClockIcon size={11} color={i === 0 ? "#ff5a2c" : "#9ca3af"} />
-                <span style={{ fontSize: 11, color: i === 0 ? "#ff5a2c" : "#9ca3af" }}>{lesson.duration_mins} mins</span>
+                <ClockIcon size={11} color={current ? "#ff5a2c" : "#9ca3af"} />
+                <span style={{ fontSize: 11, color: current ? "#ff5a2c" : "#9ca3af" }}>{lesson.duration_mins} mins</span>
               </div>
             </div>
 
-            {i === 0 ? (
+            {current ? (
               <button
-                onClick={() => onLessonClick(lesson)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onLessonClick(lesson);
+                }}
                 style={{ padding: "8px 16px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
               >
                 Continue
               </button>
+            ) : !unlocked ? (
+              <LockIcon />
             ) : (
               <ChevRight color="#d1d5db" />
             )}
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

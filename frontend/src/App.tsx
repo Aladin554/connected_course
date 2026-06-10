@@ -79,7 +79,7 @@ export default function App() {
           via its own page state — no extra routes needed.
         */}
         <Route
-          path="/introduction"
+          path="/introduction/*"
           element={
             <ProtectedRoute allowedRoles={[2, 3]} requireActivePanel={true}>
               <Introduction />

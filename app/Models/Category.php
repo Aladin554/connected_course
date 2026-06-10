@@ -26,22 +26,22 @@ class Category extends Model
 
     public function welcomeSlides()
     {
-        return $this->hasMany(WelcomeSlide::class)->where('is_active', true)->orderBy('slide_order');
+        return $this->hasMany(WelcomeSlide::class)->where('is_active', true)->orderBy('created_at')->orderBy('id');
     }
 
     public function allWelcomeSlides()
     {
-        return $this->hasMany(WelcomeSlide::class)->orderBy('slide_order');
+        return $this->hasMany(WelcomeSlide::class)->orderBy('created_at')->orderBy('id');
     }
 
     public function courseModules()
     {
-        return $this->hasMany(CourseModule::class)->where('is_active', true)->orderBy('sort_order');
+        return $this->hasMany(CourseModule::class)->where('is_active', true)->orderBy('created_at')->orderBy('id');
     }
 
     public function allCourseModules()
     {
-        return $this->hasMany(CourseModule::class)->orderBy('sort_order');
+        return $this->hasMany(CourseModule::class)->orderBy('created_at')->orderBy('id');
     }
 
     public function userCategoryEnrollments()

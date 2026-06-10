@@ -43,7 +43,7 @@ class Lesson extends Model
 
     public function commonMistakes()
     {
-        return $this->hasMany(LessonCommonMistake::class)->orderBy('sort_order');
+        return $this->hasMany(LessonCommonMistake::class)->orderBy('created_at')->orderBy('id');
     }
 
     public function userLessonProgress()

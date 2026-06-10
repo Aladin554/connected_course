@@ -31,12 +31,12 @@ class CourseModule extends Model
 
     public function lessons()
     {
-        return $this->hasMany(Lesson::class, 'module_id')->where('is_active', true)->orderBy('sort_order');
+        return $this->hasMany(Lesson::class, 'module_id')->where('is_active', true)->orderBy('created_at')->orderBy('id');
     }
 
     public function allLessons()
     {
-        return $this->hasMany(Lesson::class, 'module_id')->orderBy('sort_order');
+        return $this->hasMany(Lesson::class, 'module_id')->orderBy('created_at')->orderBy('id');
     }
 
     public function userModuleProgress()

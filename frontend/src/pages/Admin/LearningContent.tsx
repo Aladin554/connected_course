@@ -3,15 +3,14 @@ import { Edit, Plus, Save, Trash2 } from "lucide-react";
 import api from "../../api/axios";
 import { LearningCategory, LearningLesson, LearningModule } from "../User/pages/shared";
 
-type StrategyForm = { id?: number; step_number: number; content: string };
-type MistakeForm = { id?: number; sort_order: number; content: string };
+type LessonSectionForm = { id?: number; step_number: number; content?: string; title: string; description: string };
+type MistakeForm = { id?: number; content: string };
 
 const blankModule = {
   title: "",
   subtitle: "",
   description: "",
   icon_emoji: "",
-  sort_order: 0,
   is_active: true,
 };
 
@@ -20,12 +19,28 @@ const blankLesson = {
   duration_mins: 0,
   video_type: "youtube" as LearningLesson["video_type"],
   video_value: "",
-  video_thumbnail: "",
-  sort_order: 0,
   is_active: true,
-  strategies: [{ step_number: 1, content: "" }] as StrategyForm[],
+  strategies: [{ step_number: 1, title: "", description: "" }] as LessonSectionForm[],
   model_answer: "",
-  common_mistakes: [{ sort_order: 0, content: "" }] as MistakeForm[],
+  common_mistakes: [{ content: "" }] as MistakeForm[],
+};
+
+const parseLessonSection = (item: { id?: number; step_number: number; content: string }): LessonSectionForm => {
+  try {
+    const parsed = JSON.parse(item.content);
+    if (parsed && typeof parsed === "object") {
+      return {
+        id: item.id,
+        step_number: item.step_number,
+        title: typeof parsed.title === "string" ? parsed.title : "",
+        description: typeof parsed.description === "string" ? parsed.description : "",
+      };
+    }
+  } catch {
+    // Older lessons stored a single content string; keep it visible while editing.
+  }
+
+  return { id: item.id, step_number: item.step_number, title: "", description: item.content || "" };
 };
 
 export default function LearningContent() {
@@ -47,6 +62,14 @@ export default function LearningContent() {
     () => modules.find((module) => module.id === Number(moduleId)),
     [modules, moduleId]
   );
+  const autoModuleTitle = useMemo(() => {
+    const editingIndex = editingModuleId
+      ? modules.findIndex((module) => module.id === editingModuleId)
+      : -1;
+    const moduleNumber = editingIndex >= 0 ? editingIndex + 1 : modules.length + 1;
+
+    return `Module ${moduleNumber}`;
+  }, [editingModuleId, modules]);
 
   useEffect(() => {
     api.get("/categories/active")
@@ -93,7 +116,7 @@ export default function LearningContent() {
 
     const payload = {
       ...moduleForm,
-      sort_order: Number(moduleForm.sort_order || 0),
+      title: autoModuleTitle,
       is_active: moduleForm.is_active ? 1 : 0,
     };
 
@@ -112,7 +135,6 @@ export default function LearningContent() {
       subtitle: module.subtitle || "",
       description: module.description || "",
       icon_emoji: module.icon_emoji || "",
-      sort_order: module.sort_order || 0,
       is_active: Boolean(module.is_active),
     });
   };
@@ -130,14 +152,21 @@ export default function LearningContent() {
     const payload = {
       title: lessonForm.title,
       duration_mins: Number(lessonForm.duration_mins || 0),
-      video_type: lessonForm.video_type,
+      video_type: "youtube",
       video_value: lessonForm.video_value,
-      video_thumbnail: lessonForm.video_thumbnail,
-      sort_order: Number(lessonForm.sort_order || 0),
       is_active: lessonForm.is_active ? 1 : 0,
-      strategies: lessonForm.strategies.filter((item) => item.content.trim()),
-      model_answer: lessonForm.model_answer,
-      common_mistakes: lessonForm.common_mistakes.filter((item) => item.content.trim()),
+      strategies: lessonForm.strategies
+        .filter((item) => item.title.trim() || item.description.trim())
+        .map((item, index) => ({
+          id: item.id,
+          step_number: index + 1,
+          content: JSON.stringify({
+            title: item.title.trim(),
+            description: item.description.trim(),
+          }),
+        })),
+      model_answer: "",
+      common_mistakes: [],
     };
 
     if (editingLessonId) {
@@ -153,18 +182,16 @@ export default function LearningContent() {
     setLessonForm({
       title: lesson.title || "",
       duration_mins: lesson.duration_mins || 0,
-      video_type: lesson.video_type || "youtube",
+      video_type: "youtube",
       video_value: lesson.video_value || "",
-      video_thumbnail: lesson.video_thumbnail || "",
-      sort_order: lesson.sort_order || 0,
       is_active: Boolean(lesson.is_active),
       strategies: lesson.strategies?.length
-        ? lesson.strategies.map((item) => ({ id: item.id, step_number: item.step_number, content: item.content }))
-        : [{ step_number: 1, content: "" }],
+        ? lesson.strategies.map(parseLessonSection)
+        : [{ step_number: 1, title: "", description: "" }],
       model_answer: lesson.lesson_model_answer?.content || "",
       common_mistakes: lesson.common_mistakes?.length
-        ? lesson.common_mistakes.map((item) => ({ id: item.id, sort_order: item.sort_order, content: item.content }))
-        : [{ sort_order: 0, content: "" }],
+        ? lesson.common_mistakes.map((item) => ({ id: item.id, content: item.content }))
+        : [{ content: "" }],
     });
   };
 
@@ -174,7 +201,7 @@ export default function LearningContent() {
     await loadLessons();
   };
 
-  const updateStrategy = (index: number, patch: Partial<StrategyForm>) => {
+  const updateStrategy = (index: number, patch: Partial<LessonSectionForm>) => {
     setLessonForm((current) => ({
       ...current,
       strategies: current.strategies.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item),
@@ -209,12 +236,13 @@ export default function LearningContent() {
           </div>
 
           <form onSubmit={saveModule} className="space-y-3">
-            <input required placeholder="Module title" value={moduleForm.title} onChange={(e) => setModuleForm({ ...moduleForm, title: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100">
+              {autoModuleTitle}
+            </div>
             <input placeholder="Subtitle" value={moduleForm.subtitle} onChange={(e) => setModuleForm({ ...moduleForm, subtitle: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             <textarea placeholder="Description" rows={3} value={moduleForm.description} onChange={(e) => setModuleForm({ ...moduleForm, description: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-            <div className="grid grid-cols-2 gap-3">
+            <div>
               <input placeholder="Icon" value={moduleForm.icon_emoji} onChange={(e) => setModuleForm({ ...moduleForm, icon_emoji: e.target.value })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-              <input type="number" min={0} placeholder="Order" value={moduleForm.sort_order} onChange={(e) => setModuleForm({ ...moduleForm, sort_order: Number(e.target.value) })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             </div>
             <label className="inline-flex items-center gap-2 dark:text-gray-300">
               <input type="checkbox" checked={moduleForm.is_active} onChange={(e) => setModuleForm({ ...moduleForm, is_active: e.target.checked })} /> Active
@@ -225,10 +253,10 @@ export default function LearningContent() {
           </form>
 
           <div className="mt-5 space-y-2">
-            {modules.map((module) => (
+            {modules.map((module, index) => (
               <div key={module.id} className={`flex items-center justify-between rounded-lg border p-3 dark:border-gray-700 ${String(module.id) === moduleId ? "bg-blue-50 dark:bg-gray-800" : ""}`}>
                 <button type="button" onClick={() => setModuleId(String(module.id))} className="text-left">
-                  <div className="font-semibold dark:text-gray-100">{module.icon_emoji} {module.title}</div>
+                  <div className="font-semibold dark:text-gray-100">{module.icon_emoji} Module {index + 1}</div>
                   <div className="text-sm text-gray-500">{module.all_lessons_count ?? module.lessons_count ?? 0} lessons</div>
                 </button>
                 <div className="flex gap-2">
@@ -250,46 +278,20 @@ export default function LearningContent() {
 
           <form onSubmit={saveLesson} className="space-y-3">
             <input required disabled={!selectedModule} placeholder="Question / lesson title" value={lessonForm.title} onChange={(e) => setLessonForm({ ...lessonForm, title: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <input type="number" min={0} placeholder="Duration mins" value={lessonForm.duration_mins} onChange={(e) => setLessonForm({ ...lessonForm, duration_mins: Number(e.target.value) })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-              <input type="number" min={0} placeholder="Order" value={lessonForm.sort_order} onChange={(e) => setLessonForm({ ...lessonForm, sort_order: Number(e.target.value) })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
             </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-              <select value={lessonForm.video_type} onChange={(e) => setLessonForm({ ...lessonForm, video_type: e.target.value as LearningLesson["video_type"] })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100">
-                <option value="youtube">YouTube</option>
-                <option value="vimeo">Vimeo</option>
-                <option value="bunny">Bunny</option>
-                <option value="upload">Upload</option>
-              </select>
-              <input required placeholder="Video URL/value" value={lessonForm.video_value} onChange={(e) => setLessonForm({ ...lessonForm, video_value: e.target.value })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100 md:col-span-2" />
-            </div>
-            <input placeholder="Video thumbnail URL" value={lessonForm.video_thumbnail} onChange={(e) => setLessonForm({ ...lessonForm, video_thumbnail: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+            <input required placeholder="YouTube video link" value={lessonForm.video_value} onChange={(e) => setLessonForm({ ...lessonForm, video_value: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
 
             <div>
-              <div className="mb-2 font-semibold dark:text-gray-200">Strategy to Answer the Question</div>
+              <div className="mb-2 font-semibold dark:text-gray-200">Title & Description</div>
               {lessonForm.strategies.map((strategy, index) => (
-                <div key={index} className="mb-2 grid grid-cols-5 gap-2">
-                  <input type="number" min={1} value={strategy.step_number} onChange={(e) => updateStrategy(index, { step_number: Number(e.target.value) })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-                  <input value={strategy.content} onChange={(e) => updateStrategy(index, { content: e.target.value })} className="col-span-4 rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+                <div key={index} className="mb-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                  <input placeholder="Title" value={strategy.title} onChange={(e) => updateStrategy(index, { title: e.target.value })} className="mb-2 w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
+                  <textarea placeholder="Description" rows={3} value={strategy.description} onChange={(e) => updateStrategy(index, { description: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
                 </div>
               ))}
-              <button type="button" onClick={() => setLessonForm((current) => ({ ...current, strategies: [...current.strategies, { step_number: current.strategies.length + 1, content: "" }] }))} className="text-sm text-blue-600">Add strategy step</button>
-            </div>
-
-            <div>
-              <div className="mb-2 font-semibold dark:text-gray-200">Model Answer</div>
-              <textarea rows={5} value={lessonForm.model_answer} onChange={(e) => setLessonForm({ ...lessonForm, model_answer: e.target.value })} className="w-full rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-            </div>
-
-            <div>
-              <div className="mb-2 font-semibold dark:text-gray-200">Common Mistakes</div>
-              {lessonForm.common_mistakes.map((mistake, index) => (
-                <div key={index} className="mb-2 grid grid-cols-5 gap-2">
-                  <input type="number" min={0} value={mistake.sort_order} onChange={(e) => updateMistake(index, { sort_order: Number(e.target.value) })} className="rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-                  <input value={mistake.content} onChange={(e) => updateMistake(index, { content: e.target.value })} className="col-span-4 rounded-lg border px-3 py-2 dark:bg-gray-800 dark:text-gray-100" />
-                </div>
-              ))}
-              <button type="button" onClick={() => setLessonForm((current) => ({ ...current, common_mistakes: [...current.common_mistakes, { sort_order: current.common_mistakes.length, content: "" }] }))} className="text-sm text-blue-600">Add mistake</button>
+              <button type="button" onClick={() => setLessonForm((current) => ({ ...current, strategies: [...current.strategies, { step_number: current.strategies.length + 1, title: "", description: "" }] }))} className="text-sm text-blue-600">Add title & description</button>
             </div>
 
             <label className="inline-flex items-center gap-2 dark:text-gray-300">

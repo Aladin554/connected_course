@@ -9,21 +9,23 @@ import {
   ClockIcon,
   FullscreenIcon,
   LearningLesson,
+  parseLessonContentBlock,
   PlayIcon,
 } from "./shared";
 
 interface LessonDetailPageProps {
   onBack: () => void;
+  onNext: () => void;
   isDesktop: boolean;
   lesson: LearningLesson | null;
 }
 
-export default function LessonDetailPage({ onBack, lesson }: LessonDetailPageProps) {
+export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetailPageProps) {
   const [detail, setDetail] = useState<LearningLesson | null>(lesson);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [expanded, setExpanded] = useState<string[]>(["strategy", "model", "mistakes"]);
+  const [expanded, setExpanded] = useState<string[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -39,6 +41,12 @@ export default function LessonDetailPage({ onBack, lesson }: LessonDetailPagePro
       .catch(() => setDetail(lesson))
       .finally(() => setLoading(false));
   }, [lesson]);
+
+  const contentBlocks = (detail?.strategies || []).map(parseLessonContentBlock);
+
+  useEffect(() => {
+    setExpanded(contentBlocks.map((block) => String(block.id)));
+  }, [detail?.id, contentBlocks.length]);
 
   const togglePlay = () => {
     if (playing) {
@@ -68,46 +76,7 @@ export default function LessonDetailPage({ onBack, lesson }: LessonDetailPagePro
   const totalSecs = Math.max(1, (detail?.duration_mins || 1) * 60);
   const currentSecs = Math.floor((progress / 100) * totalSecs);
   const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-
-  const strategies = detail?.strategies || [];
-  const commonMistakes = detail?.common_mistakes || [];
-  const modelAnswer = detail?.lesson_model_answer?.content || "";
   const thumb = detail?.video_thumbnail || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80";
-
-  const sections = [
-    {
-      key: "strategy",
-      label: "Strategy to Answer the Question",
-      content: strategies.length ? (
-        <ol style={{ paddingLeft: 18, margin: 0 }}>
-          {strategies.map((strategy) => (
-            <li key={strategy.id} style={{ fontSize: 13, color: "#444", lineHeight: 1.7, marginBottom: 4 }}>{strategy.content}</li>
-          ))}
-        </ol>
-      ) : <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>No strategy added yet.</p>,
-    },
-    {
-      key: "model",
-      label: "Model Answer",
-      content: modelAnswer ? (
-        <p style={{ fontSize: 13, color: "#444", lineHeight: 1.75, margin: 0, fontStyle: "italic" }}>{modelAnswer}</p>
-      ) : <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>No model answer added yet.</p>,
-    },
-    {
-      key: "mistakes",
-      label: "Common Mistakes",
-      content: commonMistakes.length ? (
-        <ul style={{ paddingLeft: 0, margin: 0, listStyle: "none" }}>
-          {commonMistakes.map((mistake) => (
-            <li key={mistake.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 6 }}>
-              <span style={{ color: "#ff5a2c", fontWeight: 700, fontSize: 14, lineHeight: 1.5 }}>•</span>
-              <span style={{ fontSize: 13, color: "#444", lineHeight: 1.6 }}>{mistake.content}</span>
-            </li>
-          ))}
-        </ul>
-      ) : <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>No common mistakes added yet.</p>,
-    },
-  ];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#0d1f35", animation: "pageIn .35s cubic-bezier(.22,1,.36,1)", overflow: "hidden" }}>
@@ -115,9 +84,7 @@ export default function LessonDetailPage({ onBack, lesson }: LessonDetailPagePro
         <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ArrowLeft size={15} />
         </button>
-        <span style={{ color: "rgba(255,255,255,.75)", fontSize: 13, fontWeight: 600 }}>
-          Lesson
-        </span>
+        <span style={{ color: "rgba(255,255,255,.75)", fontSize: 13, fontWeight: 600 }}>Lesson</span>
         <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <BookmarkIcon />
         </button>
@@ -169,18 +136,22 @@ export default function LessonDetailPage({ onBack, lesson }: LessonDetailPagePro
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 0" }} className="hs">
           <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14 }}>Expand the sections below to learn more.</p>
 
-          {sections.map((sec) => {
-            const isOpen = expanded.includes(sec.key);
+          {contentBlocks.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>No content added yet.</p>
+          ) : contentBlocks.map((block, index) => {
+            const key = String(block.id);
+            const isOpen = expanded.includes(key);
+
             return (
-              <div key={sec.key} style={{ borderBottom: "1px solid #f0f0f0" }}>
+              <div key={block.id} style={{ borderBottom: "1px solid #f0f0f0" }}>
                 <button
-                  onClick={() => toggleSection(sec.key)}
+                  onClick={() => toggleSection(key)}
                   style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
                 >
-                  <span style={{ fontWeight: 800, fontSize: 14, color: "#111" }}>{sec.label}</span>
+                  <span style={{ fontWeight: 800, fontSize: 14, color: "#111" }}>{block.title || `Section ${index + 1}`}</span>
                   {isOpen ? <ChevUp /> : <ChevDown />}
                 </button>
-                {isOpen && <div style={{ paddingBottom: 16 }}>{sec.content}</div>}
+                {isOpen && <p style={{ fontSize: 13, color: "#444", lineHeight: 1.75, margin: 0, paddingBottom: 16 }}>{block.description}</p>}
               </div>
             );
           })}
@@ -188,7 +159,7 @@ export default function LessonDetailPage({ onBack, lesson }: LessonDetailPagePro
         </div>
 
         <div style={{ padding: "12px 18px 20px", background: "white", borderTop: "1px solid #f5f5f5", flexShrink: 0 }}>
-          <button style={{ width: "100%", padding: "15px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,90,44,.35)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+          <button onClick={onNext} style={{ width: "100%", padding: "15px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,90,44,.35)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
             Next Question <ArrowRight />
           </button>
         </div>

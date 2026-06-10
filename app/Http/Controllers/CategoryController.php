@@ -23,8 +23,8 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $categories = Category::orderBy('sort_order')
-            ->orderBy('title')
+        $categories = Category::orderBy('created_at')
+            ->orderBy('id')
             ->get();
 
         return response()->json($categories);
@@ -37,8 +37,8 @@ class CategoryController extends Controller
         }
 
         $categories = Category::where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('title')
+            ->orderBy('created_at')
+            ->orderBy('id')
             ->get();
 
         return response()->json($categories);
@@ -49,8 +49,8 @@ class CategoryController extends Controller
         $categories = Auth::user()
             ->categories()
             ->where('categories.is_active', true)
-            ->orderBy('categories.sort_order')
-            ->orderBy('categories.title')
+            ->orderBy('categories.created_at')
+            ->orderBy('categories.id')
             ->get();
 
         return response()->json($categories);
@@ -150,12 +150,10 @@ class CategoryController extends Controller
             'thumbnail_image' => ['nullable', 'image', 'max:2048'],
             'background_color' => ['nullable', 'string', 'max:32'],
             'is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
             'welcome_slides' => ['sometimes', 'array'],
             'welcome_slides.*.id' => ['nullable', 'integer', 'exists:welcome_slides,id'],
             'welcome_slides.*.title' => ['required_with:welcome_slides', 'string', 'max:255'],
             'welcome_slides.*.body_content' => ['required_with:welcome_slides', 'string'],
-            'welcome_slides.*.slide_order' => ['nullable', 'integer', 'min:0'],
             'welcome_slides.*.is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
         ]);
     }
@@ -181,7 +179,7 @@ class CategoryController extends Controller
             $payload = [
                 'title' => $slide['title'] ?? '',
                 'body_content' => $slide['body_content'] ?? '',
-                'slide_order' => $slide['slide_order'] ?? $index,
+                'slide_order' => $index,
                 'is_active' => array_key_exists('is_active', $slide)
                     ? filter_var($slide['is_active'], FILTER_VALIDATE_BOOLEAN)
                     : true,

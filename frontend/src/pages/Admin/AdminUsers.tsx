@@ -372,11 +372,11 @@ export default function AdminUsers() {
               </th>
               <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">User</th>
               <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">Role</th>
-              <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">Data Range</th>
+              
               {currentUser?.role_id === 1 && (
                 <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">Permission</th>
               )}
-              <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r">Panel Status</th>
+              
               <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">Created</th>
               <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-700">Updated</th>
               <th className="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300">Action</th>
@@ -417,18 +417,7 @@ export default function AdminUsers() {
                   <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
                     {user.role?.name || "-"}
                   </td>
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
-                    <button
-                      onClick={() => toggleDataRange(user)}
-                      className={`px-3 py-1.5 rounded text-white text-sm font-medium transition ${
-                        user.data_range === 1
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-red-600 hover:bg-red-700"
-                      }`}
-                    >
-                      {user.data_range === 1 ? "Active" : "Inactive"}
-                    </button>
-                  </td>
+                  
                   {currentUser?.role_id === 1 && (
                     <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
                       <button
@@ -443,22 +432,7 @@ export default function AdminUsers() {
                       </button>
                     </td>
                   )}
-                  <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700">
-                    {user.role_id === 2 ? (
-                      <button
-                        onClick={() => togglePanelStatus(user)}
-                        className={`px-3 py-1.5 rounded text-white text-sm font-medium transition ${
-                          user.panel_status === 1
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-red-600 hover:bg-red-700"
-                        }`}
-                      >
-                        {user.panel_status === 1 ? "Active" : "Inactive"}
-                      </button>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
+                  
 
                   <td className="px-4 py-3 border-r border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300">
                     {formatDate(user.created_at)}

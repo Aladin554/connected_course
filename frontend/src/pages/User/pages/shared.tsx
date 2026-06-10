@@ -3,6 +3,7 @@
 // Shared icons, data, and small components reused across all learning pages.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { ReactElement } from "react";
+import api from "../../../api/axios";
 
 /* ── Types ── */
 export type Page = "home" | "welcome" | "course" | "module" | "lesson";
@@ -40,10 +41,15 @@ export interface LearningLesson {
   lesson_model_answer?: { id: number; content: string } | null;
   common_mistakes?: { id: number; content: string; sort_order: number }[];
 }
+export interface LessonContentBlock {
+  id: number;
+  title: string;
+  description: string;
+}
 export interface IconProps  { active: boolean }
 export interface BarProps   { value: number; light?: boolean }
 export interface SectionHeaderProps { title: string; action?: string }
-export interface HeroCardProps { height?: number; onContinue: () => void; category?: LearningCategory | null }
+export interface HeroCardProps { height?: number; onContinue: () => void; category?: LearningCategory | null; progress?: number }
 export interface HelpBoxProps  { desktop: boolean }
 export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: (category?: LearningCategory) => void }
 
@@ -275,7 +281,73 @@ export const categoryImage = (category?: LearningCategory | null, size = 800) =>
     : `/api/storage/${category.thumbnail_image}`;
 };
 
-export const HeroCard = ({ height = 190, onContinue, category }: HeroCardProps) => (
+export const progressKey = (categoryId: number) => `learning-progress:${categoryId}`;
+
+export const readLearningProgress = (categoryId?: number | null): number[] => {
+  if (!categoryId || typeof window === "undefined") return [];
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(progressKey(categoryId)) || "[]");
+    return Array.isArray(parsed) ? parsed.map(Number).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+};
+
+export const writeLearningProgress = (categoryId: number, lessonIds: number[]) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(progressKey(categoryId), JSON.stringify(Array.from(new Set(lessonIds))));
+};
+
+export const markLessonComplete = (categoryId: number, lessonId: number) => {
+  writeLearningProgress(categoryId, [...readLearningProgress(categoryId), lessonId]);
+};
+
+export const loadLearningProgress = async (categoryId?: number | null): Promise<number[]> => {
+  if (!categoryId) return [];
+
+  try {
+    const res = await api.get(`/categories/${categoryId}/progress`);
+    const ids = Array.isArray(res.data?.completed_lesson_ids)
+      ? res.data.completed_lesson_ids.map(Number).filter(Boolean)
+      : [];
+    writeLearningProgress(categoryId, ids);
+    return ids;
+  } catch {
+    return readLearningProgress(categoryId);
+  }
+};
+
+export const completeLearningLesson = async (categoryId: number, lessonId: number): Promise<number[]> => {
+  const fallbackIds = [...readLearningProgress(categoryId), lessonId];
+  writeLearningProgress(categoryId, fallbackIds);
+
+  try {
+    await api.post(`/lessons/${lessonId}/complete`);
+    return loadLearningProgress(categoryId);
+  } catch {
+    return Array.from(new Set(fallbackIds));
+  }
+};
+
+export const parseLessonContentBlock = (item: { id: number; content: string }): LessonContentBlock => {
+  try {
+    const parsed = JSON.parse(item.content);
+    if (parsed && typeof parsed === "object") {
+      return {
+        id: item.id,
+        title: typeof parsed.title === "string" ? parsed.title : "",
+        description: typeof parsed.description === "string" ? parsed.description : "",
+      };
+    }
+  } catch {
+    // Keep old plain text lessons readable after the admin form changed shape.
+  }
+
+  return { id: item.id, title: "", description: item.content || "" };
+};
+
+export const HeroCard = ({ height = 190, onContinue, category, progress = 0 }: HeroCardProps) => (
   <div style={{ borderRadius: 16, overflow: "hidden", position: "relative", height, boxShadow: "0 4px 24px rgba(0,0,0,0.18)", background: category?.background_color || "#071224" }}>
     {categoryImage(category) && (
       <img src={categoryImage(category) || ""} alt={category?.title || "Category"}
@@ -292,8 +364,8 @@ export const HeroCard = ({ height = 190, onContinue, category }: HeroCardProps) 
       </div>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", flexShrink: 0 }}>72% Complete</span>
-          <Bar value={72} light />
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", flexShrink: 0 }}>{progress}% Complete</span>
+          <Bar value={progress} light />
         </div>
         <button onClick={onContinue} style={{ background: "#22c55e", color: "white", border: "none", borderRadius: 9, padding: "8px 18px", fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", boxShadow: "0 3px 12px rgba(34,197,94,0.4)" }}>
           Continue <ArrowRight />
