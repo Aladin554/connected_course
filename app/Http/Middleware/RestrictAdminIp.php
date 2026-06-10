@@ -24,7 +24,7 @@ class RestrictAdminIp
 
         $user = $request->user();
 
-        if ($this->adminIpAccess->shouldRestrictUser($user) && !$this->adminIpAccess->isAllowed($ip)) {
+        if ($this->adminIpAccess->shouldRestrictUser($user) && !$this->adminIpAccess->isAllowedForUser($user, $ip)) {
             $request->user()?->currentAccessToken()?->delete();
 
             Log::warning('Blocked admin access from unauthorized IP', [

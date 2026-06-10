@@ -19,6 +19,13 @@ interface CurrentUser {
   can_create_users: number;
 }
 
+const isLikelyIp = (value: string): boolean => {
+  const ipv4 =
+    /^(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)\.){3}(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)$/;
+  const ipv6 = /^[0-9A-Fa-f:]+$/;
+  return ipv4.test(value) || (value.includes(":") && ipv6.test(value));
+};
+
 export default function AdminUserForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -32,6 +39,7 @@ export default function AdminUserForm() {
     roleId: isEdit ? "" : "3",
     password: "",
     categoryIds: [] as number[],
+    allowed_ips: [] as string[],
   });
   const [errors, setErrors] = useState({
     first_name: "",
@@ -39,10 +47,14 @@ export default function AdminUserForm() {
     email: "",
     roleId: "",
     password: "",
+    allowed_ips: "",
   });
+  const [ipInput, setIpInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const canCreateNewUsers =
+    Number(currentUser?.role_id) === 1 || Number(currentUser?.can_create_users) === 1;
 
   useEffect(() => {
     api.get("/profile")
@@ -57,8 +69,8 @@ export default function AdminUserForm() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const roleId = currentUser.role_id;
-    const canCreate = currentUser.can_create_users === 1;
+    const roleId = Number(currentUser.role_id);
+    const canCreate = Number(currentUser.can_create_users) === 1;
 
     if (roleId === 1) return;
     if (roleId === 2 && canCreate) return;
@@ -97,6 +109,7 @@ export default function AdminUserForm() {
             categoryIds: Array.isArray(res.data.categories)
               ? res.data.categories.map((category: Category) => category.id)
               : [],
+            allowed_ips: Array.isArray(res.data.allowed_ips) ? res.data.allowed_ips : [],
           });
         })
         .catch(() =>
@@ -106,7 +119,7 @@ export default function AdminUserForm() {
   }, [id, isEdit, navigate]);
 
   const validateForm = () => {
-    const newErrors = { first_name: "", last_name: "", email: "", roleId: "", password: "" };
+    const newErrors = { first_name: "", last_name: "", email: "", roleId: "", password: "", allowed_ips: "" };
     let valid = true;
 
     if (!form.first_name.trim()) { newErrors.first_name = "First name is required."; valid = false; }
@@ -115,13 +128,50 @@ export default function AdminUserForm() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { newErrors.email = "Invalid email address."; valid = false; }
     if (!form.roleId) { newErrors.roleId = "Role is required."; valid = false; }
     if (!isEdit && !form.password.trim()) { newErrors.password = "Password is required."; valid = false; }
+    if (Number(currentUser?.role_id) === 1 && form.allowed_ips.some((ip) => !isLikelyIp(ip))) {
+      newErrors.allowed_ips = "One or more IPs are invalid.";
+      valid = false;
+    }
 
     setErrors(newErrors);
     return valid;
   };
 
+  const addAllowedIp = () => {
+    const raw = ipInput.trim();
+    if (!raw) return;
+
+    const values = raw.split(/[,\s]+/).map((value) => value.trim()).filter(Boolean);
+    const invalid = values.find((value) => !isLikelyIp(value));
+
+    if (invalid) {
+      setErrors((prev) => ({ ...prev, allowed_ips: `Invalid IP: ${invalid}` }));
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      allowed_ips: Array.from(new Set([...prev.allowed_ips, ...values])),
+    }));
+    setErrors((prev) => ({ ...prev, allowed_ips: "" }));
+    setIpInput("");
+  };
+
+  const removeAllowedIp = (ip: string) => {
+    setForm((prev) => ({
+      ...prev,
+      allowed_ips: prev.allowed_ips.filter((value) => value !== ip),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEdit && !canCreateNewUsers) {
+      navigate("/dashboard/admin-users", {
+        state: { message: "Add user permission is inactive.", type: "error" },
+      });
+      return;
+    }
     if (!validateForm()) return;
 
     setSubmitting(true);
@@ -135,6 +185,7 @@ export default function AdminUserForm() {
       };
 
       if (form.password) payload.password = form.password;
+      if (Number(currentUser?.role_id) === 1) payload.allowed_ips = form.allowed_ips;
 
       if (isEdit) {
         await api.put(`/users/${id}`, payload);
@@ -203,6 +254,49 @@ export default function AdminUserForm() {
             </select>
             {errors.roleId && <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>}
           </div>
+
+          {Number(currentUser?.role_id) === 1 && (
+            <div className="md:col-span-2">
+              <label className="block mb-1 text-sm font-medium dark:text-gray-300">Allowed IPs (User-wise security)</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {form.allowed_ips.map((ip) => (
+                  <span key={ip} className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+                    {ip}
+                    <button
+                      type="button"
+                      onClick={() => removeAllowedIp(ip)}
+                      className="text-blue-700 hover:text-blue-900 dark:text-blue-200 dark:hover:text-white"
+                    >
+                      x
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={ipInput}
+                  onChange={(e) => setIpInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addAllowedIp();
+                    }
+                  }}
+                  placeholder="Add IP (e.g. 203.0.113.10)"
+                  className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={addAllowedIp}
+                  className="px-4 py-2 rounded-lg border dark:border-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  Add
+                </button>
+              </div>
+              {errors.allowed_ips && <p className="text-red-500 text-sm mt-1">{errors.allowed_ips}</p>}
+            </div>
+          )}
         </div>
 
         <div>
@@ -234,7 +328,7 @@ export default function AdminUserForm() {
 
         <div className="flex justify-end gap-3 mt-8">
           <button type="button" onClick={() => navigate("/dashboard/admin-users")} className="px-5 py-2 rounded-lg border dark:border-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button>
-          <button type="submit" disabled={submitting} className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-lg disabled:opacity-50">{submitting ? "Saving..." : "Save User"}</button>
+          <button type="submit" disabled={submitting || (!isEdit && !canCreateNewUsers)} className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-lg disabled:opacity-50">{submitting ? "Saving..." : "Save User"}</button>
         </div>
       </form>
     </div>

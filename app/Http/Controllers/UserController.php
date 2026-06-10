@@ -76,7 +76,20 @@ class UserController extends Controller
             'max_cards'  => 'sometimes|nullable|integer|min:0', // NEW
             'category_ids' => 'sometimes|array',
             'category_ids.*' => 'integer|exists:categories,id',
+            'allowed_ips' => $isUpdate ? 'sometimes|array' : 'nullable|array',
+            'allowed_ips.*' => 'nullable|ip',
         ];
+    }
+
+    protected function sanitizeAllowedIps($value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(array_map(static function ($ip) {
+            return trim((string) $ip);
+        }, $value))));
     }
 
     // --- User Listing ---
@@ -96,6 +109,10 @@ class UserController extends Controller
             return response()->json(['message' => 'Admins can only create users'], 403);
         }
 
+        if (!$this->isSuperAdmin() && $request->has('allowed_ips')) {
+            return response()->json(['message' => 'Only superadmin can assign IP allowlist'], 403);
+        }
+
         try {
             $plainPassword = $request->password;
 
@@ -109,6 +126,9 @@ class UserController extends Controller
                 'role_id'    => $request->role_id,
                 'password'   => Hash::make($plainPassword),
                 'max_cards'  => $maxCards, // NEW
+                'allowed_ips' => $this->isSuperAdmin()
+                    ? $this->sanitizeAllowedIps($request->input('allowed_ips', []))
+                    : [],
             ]);
 
             $this->syncCategories($user, $request->input('category_ids', []));
@@ -150,6 +170,10 @@ class UserController extends Controller
         if (!$user) return response()->json(['message' => 'User not found'], 404);
         if (!$this->canManage($user)) return response()->json(['message' => 'Forbidden'], 403);
 
+        if (!$this->isSuperAdmin() && $request->has('allowed_ips')) {
+            return response()->json(['message' => 'Only superadmin can assign IP allowlist'], 403);
+        }
+
         $request->validate($this->validationRules(true, $id));
 
         if ($request->role_id) {
@@ -171,6 +195,10 @@ class UserController extends Controller
         // Only superadmin can update max_cards
         if ($this->isSuperAdmin() && $request->has('max_cards')) {
             $user->max_cards = $request->max_cards;
+        }
+
+        if ($this->isSuperAdmin() && $request->has('allowed_ips')) {
+            $user->allowed_ips = $this->sanitizeAllowedIps($request->input('allowed_ips', []));
         }
 
         try {

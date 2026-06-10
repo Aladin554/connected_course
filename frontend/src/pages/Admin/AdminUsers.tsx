@@ -38,6 +38,8 @@ export default function AdminUsers() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<"all" | "user" | "admin">("all");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const canAddUsers =
+    Number(currentUser?.role_id) === 1 || Number(currentUser?.can_create_users) === 1;
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -296,7 +298,7 @@ export default function AdminUsers() {
           Admin User List
         </h1>
 
-        {currentUser?.can_create_users === 1 && (
+        {canAddUsers && (
           <Link
             to="/dashboard/admin-users/add"
             className="flex items-center gap-2 px-5 py-3 rounded-lg bg-blue-600 text-white text-base font-medium shadow-sm hover:bg-blue-700 transition-all"
@@ -423,12 +425,12 @@ export default function AdminUsers() {
                       <button
                         onClick={() => togglePermission(user)}
                         className={`px-3 py-1.5 rounded text-white text-sm font-medium transition ${
-                          user.can_create_users === 1
+                          Number(user.can_create_users) === 1
                             ? "bg-green-600 hover:bg-green-700"
                             : "bg-red-600 hover:bg-red-700"
                         }`}
                       >
-                        {user.can_create_users === 1 ? "Active" : "Inactive"}
+                        {Number(user.can_create_users) === 1 ? "Active" : "Inactive"}
                       </button>
                     </td>
                   )}
@@ -508,10 +510,10 @@ export default function AdminUsers() {
                   <button
                     onClick={() => togglePermission(user)}
                     className={`ml-2 px-2 py-1 rounded text-white text-xs font-medium ${
-                      user.can_create_users === 1 ? "bg-green-600" : "bg-red-600"
+                      Number(user.can_create_users) === 1 ? "bg-green-600" : "bg-red-600"
                     }`}
                   >
-                    {user.can_create_users === 1 ? "Active" : "Inactive"}
+                    {Number(user.can_create_users) === 1 ? "Active" : "Inactive"}
                   </button>
                 </div>
               )}

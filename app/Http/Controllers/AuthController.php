@@ -47,7 +47,7 @@ class AuthController extends Controller
         if ($this->adminIpAccess->shouldRestrictUser($user)) {
             $clientIp = $this->adminIpAccess->getClientIp($request);
 
-            if (!$this->adminIpAccess->shouldBypassChecks($clientIp) && !$this->adminIpAccess->isAllowed($clientIp)) {
+            if (!$this->adminIpAccess->shouldBypassChecks($clientIp) && !$this->adminIpAccess->isAllowedForUser($user, $clientIp)) {
                 return response()->json([
                     'message' => 'Access denied. This IP is not allowed for admin accounts.',
                     'your_ip' => $clientIp,

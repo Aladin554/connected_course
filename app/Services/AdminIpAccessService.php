@@ -35,7 +35,8 @@ class AdminIpAccessService
             return false;
         }
 
-        return in_array((int) $user->role_id, $this->restrictedRoleIds(), true);
+        return $this->userAllowedEntries($user) !== []
+            || in_array((int) $user->role_id, $this->restrictedRoleIds(), true);
     }
 
     public function isBypassIp(string $ip): bool
@@ -84,6 +85,25 @@ class AdminIpAccessService
         return false;
     }
 
+    public function isAllowedForUser(?User $user, string $clientIp): bool
+    {
+        if (!$user) {
+            return true;
+        }
+
+        $userEntries = $this->userAllowedEntries($user);
+
+        if ($userEntries !== []) {
+            return $this->ipMatchesAnyEntry($clientIp, $userEntries);
+        }
+
+        if (!in_array((int) $user->role_id, $this->restrictedRoleIds(), true)) {
+            return true;
+        }
+
+        return $this->isAllowed($clientIp);
+    }
+
     public function allowedEntries(): array
     {
         $fromDatabase = $this->allowedEntriesFromDatabase();
@@ -120,6 +140,22 @@ class AdminIpAccessService
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private function userAllowedEntries(User $user): array
+    {
+        $entries = $user->allowed_ips ?? [];
+
+        if (is_string($entries)) {
+            $decoded = json_decode($entries, true);
+            $entries = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($entries)) {
+            return [];
+        }
+
+        return $this->sanitizeEntries($entries);
     }
 
     private function restrictedRoleIds(): array
@@ -220,6 +256,21 @@ class AdminIpAccessService
         }
 
         return $this->ipInCidr($ip, $entry);
+    }
+
+    private function ipMatchesAnyEntry(string $ip, array $entries): bool
+    {
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            return false;
+        }
+
+        foreach ($entries as $entry) {
+            if ($this->ipMatchesEntry($ip, $entry)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isValidCidr(string $cidr): bool

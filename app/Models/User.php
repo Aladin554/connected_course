@@ -28,6 +28,7 @@ class User extends Authenticatable
         'max_cards',
         'data_range',
         'can_create_users',
+        'allowed_ips',
     ];
 
     protected $hidden = [
@@ -45,6 +46,7 @@ class User extends Authenticatable
         'video_status'           => 'integer',
         'data_range' => 'integer',
         'can_create_users' => 'integer',
+        'allowed_ips' => 'array',
     ];
 
     public function role()
