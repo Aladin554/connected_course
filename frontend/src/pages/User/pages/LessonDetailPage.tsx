@@ -20,9 +20,11 @@ interface LessonDetailPageProps {
   onNext: () => void;
   isDesktop: boolean;
   lesson: LearningLesson | null;
+  lessonIndex: number;
+  totalLessons: number;
 }
 
-export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetailPageProps) {
+export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, totalLessons }: LessonDetailPageProps) {
   const [detail, setDetail] = useState<LearningLesson | null>(lesson);
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(false);
@@ -47,8 +49,8 @@ export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetai
   const contentBlocks = (detail?.strategies || []).map(parseLessonContentBlock);
 
   useEffect(() => {
-    setExpanded(contentBlocks.map((block) => String(block.id)));
-  }, [detail?.id, contentBlocks.length]);
+    setExpanded([]);
+  }, [detail?.id]);
 
   const togglePlay = () => {
     if (playing) {
@@ -86,7 +88,9 @@ export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetai
         <button onClick={onBack} style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ArrowLeft size={15} />
         </button>
-        <span style={{ color: "rgba(255,255,255,.75)", fontSize: 13, fontWeight: 600 }}>Lesson</span>
+        <span style={{ color: "rgba(255,255,255,.75)", fontSize: 13, fontWeight: 600 }}>
+          Lesson {lessonIndex + 1} of {totalLessons}
+        </span>
         <button style={{ width: 32, height: 32, borderRadius: "50%", background: "rgba(255,255,255,.1)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <BookmarkIcon />
         </button>
@@ -100,11 +104,6 @@ export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetai
           <ClockIcon size={13} color="rgba(255,255,255,.5)" />
           <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>{detail?.duration_mins || 0} mins</span>
         </div>
-        {detail?.warning && (
-          <div style={{ marginTop: 10 }}>
-            <WarningNotice message={detail.warning} />
-          </div>
-        )}
       </div>
 
       <div style={{ position: "relative", margin: "0 18px 0", borderRadius: 14, overflow: "hidden", flexShrink: 0, background: "#071224" }}>
@@ -142,6 +141,12 @@ export default function LessonDetailPage({ onBack, onNext, lesson }: LessonDetai
       <div style={{ flex: 1, minHeight: 0, background: "white", borderRadius: "20px 20px 0 0", marginTop: 14, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 0" }} className="hs">
           <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14 }}>Expand the sections below to learn more.</p>
+
+          {detail?.warning && (
+            <div style={{ marginTop: 10 }}>
+              <WarningNotice message={detail.warning} />
+            </div>
+          )}
 
           {contentBlocks.length === 0 ? (
             <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>No content added yet.</p>

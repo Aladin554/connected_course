@@ -26,7 +26,10 @@ export default function Introduction() {
   const [tab,  setTab]        = useState("Home");
   const [selectedCategory, setSelectedCategory] = useState<LearningCategory | null>(null);
   const [selectedModule, setSelectedModule] = useState<LearningModule | null>(null);
+  const [selectedModuleNumber, setSelectedModuleNumber] = useState<number | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<LearningLesson | null>(null);
+  const [selectedLessonIndex, setSelectedLessonIndex] = useState<number>(0);
+  const [totalLessonsInModule, setTotalLessonsInModule] = useState<number>(0);
   const [routeLoading, setRouteLoading] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 768 : false
@@ -45,7 +48,10 @@ export default function Introduction() {
       if (cancelled) return;
       setSelectedCategory(null);
       setSelectedModule(null);
+      setSelectedModuleNumber(null);
       setSelectedLesson(null);
+      setSelectedLessonIndex(0);
+      setTotalLessonsInModule(0);
       setPage("home");
       setRouteLoading(false);
     };
@@ -86,7 +92,10 @@ export default function Introduction() {
 
         setSelectedCategory(category);
         setSelectedModule(null);
+        setSelectedModuleNumber(null);
         setSelectedLesson(null);
+        setSelectedLessonIndex(0);
+        setTotalLessonsInModule(0);
 
         if (routeKind === "welcome") {
           setPage("welcome");
@@ -131,6 +140,7 @@ export default function Introduction() {
         }
 
         setSelectedModule(module);
+        setSelectedModuleNumber(moduleIndex >= 0 ? moduleIndex + 1 : null);
 
         if (!segments[4]) {
           setPage("module");
@@ -161,6 +171,8 @@ export default function Introduction() {
         }
 
         setSelectedLesson(lesson);
+        setSelectedLessonIndex(lessonIndex);
+        setTotalLessonsInModule(lessons.length);
         setPage("lesson");
       } catch {
         if (!cancelled) navigate("/introduction", { replace: true });
@@ -223,19 +235,22 @@ export default function Introduction() {
           onLessonClick ={(lesson) => showLesson(lesson)}
           isDesktop     ={isDesktop}
           module        ={selectedModule}
+          moduleNumber  ={selectedModuleNumber}
           category      ={selectedCategory}
         />
       ) : page === "lesson" ? (
         <LessonDetailPage
-          onBack   ={() => selectedModule ? showModule(selectedModule) : showCourse()}
-          onNext   ={async () => {
+          onBack      ={() => selectedModule ? showModule(selectedModule) : showCourse()}
+          onNext      ={async () => {
             if (selectedCategory && selectedModule && selectedLesson) {
               await completeLearningLesson(selectedCategory.id, selectedLesson.id);
               showModule(selectedModule, selectedCategory);
             }
           }}
-          isDesktop={isDesktop}
-          lesson   ={selectedLesson}
+          isDesktop   ={isDesktop}
+          lesson      ={selectedLesson}
+          lessonIndex ={selectedLessonIndex}
+          totalLessons={totalLessonsInModule}
         />
       ) : (
         /* page === "home" */

@@ -44,6 +44,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/my-categories', [CategoryController::class, 'myCategories']);
+    Route::get('/home-summary', [CategoryController::class, 'homeSummary']);
     Route::get('/categories/{category}/welcome-slides', [CategoryController::class, 'welcomeSlides']);
     Route::get('/categories/{category}/modules', [LearningContentController::class, 'categoryModules']);
     Route::get('/categories/{category}/progress', [LearningContentController::class, 'categoryProgress']);

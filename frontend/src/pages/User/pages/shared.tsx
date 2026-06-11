@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared icons, data, and small components reused across all learning pages.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { ReactElement } from "react";
+import React from "react";
 import parse from "html-react-parser";
 import api from "../../../api/axios";
 
@@ -132,13 +132,6 @@ export const HeadphonesIcon = ({ size = 18 }: { size?: number }) => (
     <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
   </svg>
 );
-export const BellIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-    stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-  </svg>
-);
 export const BookmarkIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -223,64 +216,6 @@ export const XIcon = ({ color = "#666" }: { color?: string }) => (
     <line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
 );
-
-/* ════════ DATA ════════ */
-export const tabs: { label: string; icon: (a: boolean) => ReactElement }[] = [
-  { label: "Home",           icon: (a) => <HomeIcon active={a} /> },
-  { label: "Modules",        icon: (a) => <BookIcon active={a} /> },
-  { label: "Mock Interview", icon: (a) => <MicIcon  active={a} /> },
-  { label: "Profile",        icon: (a) => <UserIcon active={a} /> },
-];
-
-export const homeModules = [
-  { title: "UK Interview Training",  progress: 72, img: "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?w=300&q=80" },
-  { title: "Australia GS Training",  progress: 58, img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=300&q=80" },
-  { title: "New Zealand Training",   progress: 40, img: "https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=300&q=80" },
-  { title: "Canada Visa Prep",       progress: 58, img: "https://images.unsplash.com/photo-1517935706615-2717063c2225?w=300&q=80" },
-];
-
-export const courseModules = [
-  { id: 1, title: "Module 1", subtitle: "Verification & Integrity",         status: "completed"  as const },
-  { id: 2, title: "Module 2", subtitle: "About Your Course",                status: "completed"  as const },
-  { id: 3, title: "Module 3", subtitle: "Your University & Location",       status: "completed"  as const },
-  { id: 4, title: "Module 4", subtitle: "Finances & Funding",               status: "inprogress" as const },
-  { id: 5, title: "Module 5", subtitle: "Career Goals & Future Plans",      status: "locked"     as const },
-  { id: 6, title: "Module 6", subtitle: "Student Life & Wellbeing",         status: "locked"     as const },
-  { id: 7, title: "Module 7", subtitle: "Personal & Personality Questions", status: "locked"     as const },
-  { id: 8, title: "Module 8", subtitle: "Visa Interview Questions",         status: "locked"     as const },
-];
-
-export const moduleLessons = [
-  { id: 1, title: "Who is Sponsoring You?",    mins: 8,  status: "completed"  as const },
-  { id: 2, title: "How Much Have You Paid?",   mins: 5,  status: "completed"  as const },
-  { id: 3, title: "Living Cost Questions",     mins: 10, status: "inprogress" as const },
-  { id: 4, title: "Bank Statements & Funds",   mins: 7,  status: "locked"     as const },
-  { id: 5, title: "Scholarships & Loans",      mins: 6,  status: "locked"     as const },
-  { id: 6, title: "Mixed Financial Scenarios", mins: 8,  status: "locked"     as const },
-];
-
-export const lessonData = {
-  title: "Living Cost Questions",
-  lessonNum: 3,
-  totalLessons: 6,
-  mins: 10,
-  videoThumb: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
-  strategy: [
-    "Start by clearly mentioning who is sponsoring your studies.",
-    "Explain your sponsor's job and relationship to you.",
-    "Mention the total income or financial capacity.",
-    "State how much tuition has already been paid (if applicable).",
-    "Explain how living expenses will be covered.",
-    "Be confident, consistent, and honest.",
-  ],
-  modelAnswer: `"My father is sponsoring my studies in the UK. He is a Senior Manager at XYZ Company and earns approximately £85,000 per year. He has saved for my education over the past few years. I have already paid my full tuition fees. For living expenses, he will provide £1,200 per month, which is sufficient to cover my accommodation, food, transport, and other personal expenses."`,
-  commonMistakes: [
-    "Giving inconsistent or unclear financial information",
-    "Not mentioning tuition already paid",
-    "Providing unrealistic or exaggerated amounts",
-    "Saying \"I don't know\" or unsure statements",
-  ],
-};
 
 /* ════════ SHARED SMALL COMPONENTS ════════ */
 export const Bar = ({ value, light = false }: BarProps) => (
@@ -391,10 +326,17 @@ export const HeroCard = ({ height = 190, onContinue, category, progress = 0, mod
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.13)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🏛️</div>
         </div>
-        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 3 }}>{category?.title || "Course"}</div>
-        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.68)", lineHeight: 1.45 }}>
+        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 6 }}>
+          {category?.title || "Course"}
+        </div>
+        {moduleNumber && (
+          <div style={{ fontSize: height > 200 ? 13 : 11, color: "#22c55e", fontWeight: 700, marginBottom: 2 }}>
+            Module {moduleNumber}
+          </div>
+        )}
+        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.45 }}>
           {moduleName
-            ? (/^module\s+\d+$/i.test(moduleName.trim()) ? moduleName : `Module ${moduleNumber || 1}: ${moduleName}`)
+            ? (/^module\s+\d+$/i.test(moduleName.trim()) ? "" : moduleName)
             : "No module available yet."}
         </div>
       </div>

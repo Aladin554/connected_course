@@ -22,7 +22,12 @@ interface CourseOverviewPageProps {
   category: LearningCategory | null;
 }
 
-export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, category }: CourseOverviewPageProps) {
+export default function CourseOverviewPage({
+  onBack,
+  onModuleClick,
+  isDesktop,
+  category,
+}: CourseOverviewPageProps) {
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [moduleLessons, setModuleLessons] = useState<Record<number, LearningLesson[]>>({});
   const [completedLessonIds, setCompletedLessonIds] = useState<number[]>([]);
@@ -38,19 +43,20 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, c
     }
 
     setLoading(true);
-    api.get(`/categories/${category.id}/modules`)
+    api
+      .get(`/categories/${category.id}/modules`)
       .then(async (res) => {
-        const rows = Array.isArray(res.data) ? res.data : [];
+        const rows: LearningModule[] = Array.isArray(res.data) ? res.data : [];
         setModules(rows);
         setCompletedLessonIds(await loadLearningProgress(category.id));
 
         const lessonPairs = await Promise.all(
-          rows.map(async (module: LearningModule) => {
+          rows.map(async (m) => {
             try {
-              const lessonsRes = await api.get(`/modules/${module.id}/lessons`);
-              return [module.id, Array.isArray(lessonsRes.data) ? lessonsRes.data : []] as const;
+              const r = await api.get(`/modules/${m.id}/lessons`);
+              return [m.id, Array.isArray(r.data) ? r.data : []] as const;
             } catch {
-              return [module.id, []] as const;
+              return [m.id, []] as const;
             }
           })
         );
@@ -64,110 +70,428 @@ export default function CourseOverviewPage({ onBack, onModuleClick, isDesktop, c
   }, [category]);
 
   const image = useMemo(() => categoryImage(category, 900), [category]);
-  const moduleStats = (module: LearningModule) => {
-    const lessons = moduleLessons[module.id] || [];
-    const total = lessons.length || module.lessons_count || module.all_lessons_count || 0;
-    const completed = lessons.filter((lesson) => completedLessonIds.includes(lesson.id)).length;
-    return { total, completed };
+
+  const moduleStats = (m: LearningModule) => {
+    const lessons = moduleLessons[m.id] || [];
+    const total = lessons.length || m.lessons_count || m.all_lessons_count || 0;
+    const completed = lessons.filter((l) => completedLessonIds.includes(l.id)).length;
+    return { total, completed, lessons };
   };
-  const lessonsCount = modules.reduce((total, module) => total + moduleStats(module).total, 0);
-  const completedCount = modules.reduce((total, module) => total + moduleStats(module).completed, 0);
+
+  const lessonsCount = modules.reduce((s, m) => s + moduleStats(m).total, 0);
+  const completedCount = modules.reduce((s, m) => s + moduleStats(m).completed, 0);
   const courseProgress = lessonsCount > 0 ? Math.round((completedCount / lessonsCount) * 100) : 0;
-  const isModuleComplete = (module: LearningModule) => {
-    const stats = moduleStats(module);
-    return stats.total > 0 && stats.completed >= stats.total;
+
+  const isModuleComplete = (m: LearningModule) => {
+    const s = moduleStats(m);
+    return s.total > 0 && s.completed >= s.total;
   };
-  const isModuleUnlocked = (index: number) => index === 0 || modules.slice(0, index).every(isModuleComplete);
-  const continueModule = modules.find((module, index) => isModuleUnlocked(index) && !isModuleComplete(module)) || modules[0];
+
+  const isModuleUnlocked = (i: number) =>
+    i === 0 || modules.slice(0, i).every(isModuleComplete);
+
+  const continueModule =
+    modules.find((m, i) => isModuleUnlocked(i) && !isModuleComplete(m)) || modules[0];
+
+  const currentLessonInfo = useMemo(() => {
+    if (!continueModule) return null;
+
+    const lessons = moduleLessons[continueModule.id] || [];
+    const completed = lessons.filter((l) => completedLessonIds.includes(l.id)).length;
+
+    return {
+      module: continueModule,
+      lessonIndex: lessons.length > 0 ? Math.min(completed + 1, lessons.length) : 1,
+      totalLessons: lessons.length,
+      completedLessons: completed,
+    };
+  }, [continueModule, moduleLessons, completedLessonIds]);
+
+  const heroBg = category?.background_color || "#071224";
+  const heroH = isDesktop ? 255 : 250;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#fff", animation: "pageIn .35s cubic-bezier(.22,1,.36,1)", overflow: "hidden" }}>
-      <div style={{ position: "relative", height: isDesktop ? 320 : 280, flexShrink: 0, background: category?.background_color || "#071224" }}>
-        {image && (
-          <img
-            src={image}
-            alt={category?.title || "Category"}
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%" }}
+    <>
+      <style>{`
+        @keyframes pageIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+
+        .cop-hs::-webkit-scrollbar { display:none; }
+        .cop-hs { -ms-overflow-style:none; scrollbar-width:none; }
+
+        .cop-back:hover, .cop-bkmk:hover { 
+          background:rgba(255,255,255,.35) !important; 
+        }
+
+        .cop-cta {
+          transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cop-cta:hover {
+          filter: brightness(1.12);
+          transform: translateY(-2px);
+          box-shadow: 0 10px 30px rgba(255,90,44,0.45);
+        }
+
+        .cop-module {
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cop-module:hover {
+          background: #fafaf8 !important;
+          transform: translateX(4px);
+        }
+
+        .cop-last:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 35px rgba(0,0,0,0.1);
+        }
+      `}</style>
+
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100dvh",
+          background: "#f5f5f3",
+          animation: "pageIn 0.4s cubic-bezier(0.22,1,0.36,1)",
+          overflow: "hidden",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+        }}
+      >
+        {/* Compact Hero */}
+        <div
+          style={{
+            position: "relative",
+            height: heroH,
+            flexShrink: 0,
+            background: heroBg,
+            overflow: "hidden",
+          }}
+        >
+          {image && (
+            <img
+              src={image}
+              alt={category?.title || ""}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center 35%",
+                filter: "brightness(0.85) saturate(1.1)",
+              }}
+            />
+          )}
+
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(to bottom, rgba(7,18,36,0.35) 15%, rgba(7,18,36,0.93) 78%)",
+            }}
           />
-        )}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(4,12,28,.5) 0%,rgba(4,12,28,.85) 100%)" }} />
 
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 18px" }}>
-          <button onClick={onBack} style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.15)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <ArrowLeft size={16} />
-          </button>
-          <button style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,.15)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <BookmarkIcon />
-          </button>
-        </div>
-
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 20px 20px" }}>
-          <div style={{ fontSize: 22, marginBottom: 4 }}>{category?.flag_emoji || ""}</div>
-          <h1 style={{ fontWeight: 900, fontSize: isDesktop ? 30 : 26, color: "white", letterSpacing: -0.8, lineHeight: 1.1, marginBottom: 8 }}>
-            {category?.title || "Learning Category"}
-          </h1>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.65)", marginBottom: 10 }}>
-            {lessonsCount} Lessons - {modules.length} Modules
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,.72)", fontWeight: 700, flexShrink: 0 }}>{courseProgress}% Complete</span>
-            <div style={{ height: 4, background: "rgba(255,255,255,.22)", borderRadius: 8, overflow: "hidden", flex: 1 }}>
-              <div style={{ width: `${courseProgress}%`, height: "100%", background: "#22c55e", borderRadius: 8 }} />
-            </div>
-          </div>
-
-          <button
-            onClick={() => continueModule && onModuleClick(continueModule)}
-            disabled={!continueModule}
-            style={{ width: "100%", padding: "14px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: continueModule ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, boxShadow: "0 4px 16px rgba(255,90,44,.4)", opacity: continueModule ? 1 : 0.65 }}
+          {/* Top Bar */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "14px 20px",
+              zIndex: 10,
+            }}
           >
-            Continue Learning <ArrowRight />
-          </button>
+            <button
+              onClick={onBack}
+              className="cop-back"
+              aria-label="Back"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.2)",
+                border: "1px solid rgba(255,255,255,0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <ArrowLeft size={17} />
+            </button>
+
+            <button
+              className="cop-bkmk"
+              aria-label="Bookmark"
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.2)",
+                border: "1px solid rgba(255,255,255,0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <BookmarkIcon />
+            </button>
+          </div>
+
+          {/* Hero Content */}
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 24px 17px" }}>
+            {category?.flag_emoji && (
+              <div style={{ fontSize: 29, marginBottom: 4 }}>{category.flag_emoji}</div>
+            )}
+
+            <h1
+              style={{
+                fontWeight: 900,
+                fontSize: isDesktop ? 27 : 23,
+                color: "white",
+                letterSpacing: -0.85,
+                lineHeight: 1.05,
+                margin: "0 0 6px 0",
+              }}
+            >
+              {category?.title || "Learning Path"}
+            </h1>
+
+            <div style={{ fontSize: 12.5, color: "rgba(255,255,255,0.82)", fontWeight: 600, marginBottom: 12 }}>
+              {lessonsCount} Lessons • {modules.length} Modules
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 11.5, color: "rgba(255,255,255,0.85)", fontWeight: 700, marginBottom: 5 }}>
+                {courseProgress}% COMPLETE
+              </div>
+              <div style={{ height: 5, background: "rgba(255,255,255,0.28)", borderRadius: 9999 }}>
+                <div
+                  style={{
+                    width: `${courseProgress}%`,
+                    height: "100%",
+                    background: "#22c55e",
+                    borderRadius: 9999,
+                    transition: "width 0.7s ease-out",
+                  }}
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={() => continueModule && onModuleClick(continueModule)}
+              disabled={!continueModule || loading}
+              className="cop-cta"
+              style={{
+                width: "100%",
+                padding: "14px",
+                background: "#ff5a2c",
+                color: "white",
+                border: "none",
+                borderRadius: 14,
+                fontSize: 15,
+                fontWeight: 800,
+                cursor: continueModule && !loading ? "pointer" : "default",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 9,
+                boxShadow: "0 5px 22px rgba(255, 90, 44, 0.38)",
+                opacity: continueModule && !loading ? 1 : 0.7,
+              }}
+            >
+              Continue Learning <ArrowRight size={17} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", background: "white" }} className="hs">
-        <div style={{ margin: "20px 16px 0" }}>
-          {loading ? (
-            <div style={{ fontSize: 13, color: "#6b7280" }}>Loading modules...</div>
-          ) : modules.length === 0 ? (
-            <div style={{ fontSize: 13, color: "#6b7280" }}>No modules have been added for this category yet.</div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {modules.map((module, i) => {
-                const complete = isModuleComplete(module);
-                const unlocked = isModuleUnlocked(i);
-                const current = unlocked && !complete;
+        {/* Scrollable Body */}
+        <div className="cop-hs" style={{ flex: 1, overflowY: "auto", background: "#f5f5f3" }}>
+          <div
+            style={{
+              maxWidth: isDesktop ? 720 : "100%",
+              margin: isDesktop ? "0 auto" : undefined,
+              padding: isDesktop ? "0 40px" : "0 16px",
+            }}
+          >
+            {/* Resume Card */}
+            {!loading && currentLessonInfo && (
+              <div style={{ padding: "14px 0 6px" }}>
+                <div
+                  onClick={() => onModuleClick(currentLessonInfo.module)}
+                  className="cop-last"
+                  style={{
+                    background: "white",
+                    borderRadius: 16,
+                    border: "1px solid #f0f0f0",
+                    padding: "13px 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 14,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 12,
+                      background: "#fff4f0",
+                      border: "2px solid rgba(255,90,44,0.2)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <PlayIcon size={22} color="#ff5a2c" />
+                  </div>
 
-                return (
-                  <div key={module.id} style={{ display: "flex", alignItems: "stretch", gap: 12 }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0, width: 24 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: "50%", background: complete ? "#22c55e" : current ? "#ff5a2c" : "#f3f4f6", border: complete || current ? "none" : "2px solid #e5e7eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {complete ? <CheckIcon size={10} /> : current ? <PlayIcon size={8} /> : <LockIcon size={12} color="#9ca3af" />}
-                      </div>
-                      {i < modules.length - 1 && (
-                        <div style={{ width: 2, flex: 1, minHeight: 12, background: "#e5e7eb", marginTop: 2 }} />
-                      )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 11, color: "#f97316", fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase" }}>
+                      CONTINUE
                     </div>
-
-                    <div
-                      onClick={() => unlocked && onModuleClick(module)}
-                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: i < modules.length - 1 ? 14 : 0, cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : 0.58 }}
-                    >
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{module.title}</div>
-                      </div>
-                      {unlocked ? <ChevRight color={current ? "#ff5a2c" : "#22c55e"} /> : <LockIcon />}
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "#111", margin: "3px 0 2px", lineHeight: 1.25 }}>
+                      {currentLessonInfo.module.title}
+                    </div>
+                    <div style={{ fontSize: 12.5, color: "#666" }}>
+                      Lesson {currentLessonInfo.lessonIndex} of {currentLessonInfo.totalLessons}
                     </div>
                   </div>
-                );
-              })}
+
+                  <ChevRight />
+                </div>
+              </div>
+            )}
+
+            {/* Learning Path */}
+            <div style={{ padding: "8px 0 40px" }}>
+              <div style={{ fontSize: 17.5, fontWeight: 900, color: "#111", marginBottom: 16 }}>
+                Your Learning Path
+              </div>
+
+              {loading ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e5e5e5" }} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ height: 13, width: "58%", background: "#e5e5e5", borderRadius: 6, marginBottom: 5 }} />
+                        <div style={{ height: 9, width: "38%", background: "#f0f0f0", borderRadius: 6 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : modules.length === 0 ? (
+                <p style={{ color: "#888", padding: "20px 0" }}>No modules available yet.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                  {modules.map((module, i) => {
+                    const complete = isModuleComplete(module);
+                    const unlocked = isModuleUnlocked(i);
+                    const current = unlocked && !complete;
+
+                    const statusLabel = complete ? "Completed" : current ? "In Progress" : null;
+                    const statusColor = complete ? "#16a34a" : "#ff5a2c";
+
+                    return (
+                      <div key={module.id} style={{ display: "flex", alignItems: "stretch", gap: 13 }}>
+                        {/* Timeline */}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 30 }}>
+                          <div
+                            style={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: "50%",
+                              background: complete ? "#22c55e" : current ? "#ff5a2c" : "#e5e7eb",
+                              border: complete || current ? "none" : "2.5px solid #d1d5db",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {complete ? (
+                              <CheckIcon size={13} />
+                            ) : current ? (
+                              <PlayIcon size={13} color="white" />
+                            ) : (
+                              <LockIcon size={13} color="#9ca3af" />
+                            )}
+                          </div>
+                          {i < modules.length - 1 && (
+                            <div
+                              style={{
+                                width: 2,
+                                flex: 1,
+                                background: complete ? "#86efac" : "#e5e7eb",
+                                marginTop: 3,
+                              }}
+                            />
+                          )}
+                        </div>
+
+                        {/* Module Card */}
+                        <div
+                          onClick={() => unlocked && onModuleClick(module)}
+                          className={unlocked ? "cop-module" : ""}
+                          style={{
+                            flex: 1,
+                            padding: "11px 14px",
+                            marginBottom: i < modules.length - 1 ? 6 : 0,
+                            borderRadius: 14,
+                            cursor: unlocked ? "pointer" : "default",
+                            opacity: unlocked ? 1 : 0.55,
+                            background: current ? "rgba(255,90,44,0.06)" : "white",
+                            border: current ? "1px solid rgba(255,90,44,0.15)" : "1px solid #f0f0f0",
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: current ? 800 : 700, color: current ? "#111" : "#222" }}>
+                                Module {i + 1}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: current ? 700 : 600,
+                                  color: current ? "#1f2937" : "#4b5563",
+                                  marginTop: 1,
+                                  lineHeight: 1.3,
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {module.title}
+                              </div>
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+                              {statusLabel && (
+                                <span style={{ fontSize: 11.5, fontWeight: 700, color: statusColor }}>
+                                  {statusLabel}
+                                </span>
+                              )}
+                              {unlocked ? (
+                                <ChevRight stroke={current ? "#ff5a2c" : complete ? "#22c55e" : "#9ca3af"} />
+                              ) : (
+                                <LockIcon size={15} color="#9ca3af" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
-        <div style={{ height: 32 }} />
       </div>
-    </div>
+    </>
   );
 }

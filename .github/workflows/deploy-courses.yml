@@ -1,0 +1,66 @@
+name: Deploy Courses
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Package source
+        run: |
+          tar \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='vendor' \
+            --exclude='node_modules' \
+            --exclude='frontend/node_modules' \
+            --exclude='storage/logs' \
+            -czf connected-course-deploy.tgz .
+
+      - name: Install SSH password helper
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Trust VPS host key
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload source archive
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          sshpass -p "$VPS_PASSWORD" ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" "mkdir -p ~/connected-course-preview"
+          sshpass -p "$VPS_PASSWORD" scp -P "$VPS_PORT" connected-course-deploy.tgz "$VPS_USER@$VPS_HOST:~/connected-course-preview/source.tgz"
+
+      - name: Deploy and migrate
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || '22' }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          sshpass -p "$VPS_PASSWORD" ssh -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" <<'REMOTE'
+          set -euo pipefail
+          cd ~/connected-course-preview
+          mkdir -p app
+          tar -xzf source.tgz -C app
+          cp .env app/.env
+          cd app
+          docker compose -p connected-course-preview up -d --build --remove-orphans
+          docker exec connected-course-preview-app-1 php artisan migrate --force --no-interaction
+          docker exec connected-course-preview-app-1 php artisan config:clear
+          docker exec connected-course-preview-app-1 php artisan config:cache
+          docker exec connected-course-preview-app-1 php artisan view:cache
+          REMOTE

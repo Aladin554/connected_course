@@ -1,15 +1,10 @@
-// src/pages/User/pages/HomePage.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Home dashboard — mobile & desktop responsive.
-// Props: tab, setTab, onContinue (navigate to WelcomePage)
-// ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 import {
-  tabs, categoryImage,
+  categoryImage,
   Bar, SectionHeader, HeroCard, HelpBox,
-  BellIcon, ArrowRight,
+  HomeIcon, BookIcon, MicIcon, UserIcon,
   LayoutProps, LearningCategory, LearningLesson, LearningModule, loadLearningProgress,
 } from "./shared";
 import { clearAuthSession, getStoredUser } from "../../../utils/session";
@@ -37,6 +32,15 @@ interface HomeLayoutProps extends LayoutProps {
   onLogout: () => void;
 }
 
+// ─── Local tabs ───────────────────────────────────────────────────────────────
+
+const tabs: { label: string; icon: (a: boolean) => React.ReactElement }[] = [
+  { label: "Home",           icon: (a) => <HomeIcon active={a} /> },
+  { label: "Modules",        icon: (a) => <BookIcon active={a} /> },
+  { label: "Mock Interview", icon: (a) => <MicIcon  active={a} /> },
+  { label: "Profile",        icon: (a) => <UserIcon active={a} /> },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const userName = (user?: ProfileUser | null) => {
@@ -54,6 +58,19 @@ const userInitials = (user?: ProfileUser | null) => {
       .join("") || "U"
   );
 };
+
+// ─── Logo Component ───────────────────────────────────────────────────────────
+
+function Logo() {
+  return (
+    <img
+      src="/images/logo/connected_logo.png"
+      alt="Connected Logo"
+      className="dark:hidden transition-transform duration-300 group-hover:scale-105 w-[150px] h-[30px]"
+      style={{ width: 150, height: 30, objectFit: "contain" }}
+    />
+  );
+}
 
 // ─── ProfileMenu (header avatar dropdown) ─────────────────────────────────────
 
@@ -76,44 +93,213 @@ function ProfileMenu({
         onClick={() => setOpen((v) => !v)}
         aria-label="Open profile menu"
         style={{
-          position: "relative", width: size, height: size, borderRadius: "50%",
-          border: "1.5px solid rgba(255,255,255,.3)", display: "flex", alignItems: "center",
-          justifyContent: "center", fontWeight: 800, fontSize: size > 34 ? 12 : 11,
-          color: "white", background: "rgba(255,255,255,.1)", cursor: "pointer",
+          position: "relative",
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          border: "2px solid #22c55e",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontWeight: 800,
+          fontSize: size > 34 ? 13 : 11,
+          color: "white",
+          background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(34,197,94,0.35)",
+          transition: "transform 0.15s, box-shadow 0.15s",
         }}
       >
         {userInitials(user)}
-        <span style={{
-          position: "absolute", bottom: 1, right: 1,
-          width: size > 34 ? 9 : 7, height: size > 34 ? 9 : 7,
-          borderRadius: "50%", background: "#22c55e", border: "2px solid #071224",
-        }} />
+        <span
+          style={{
+            position: "absolute",
+            bottom: 1,
+            right: 1,
+            width: size > 34 ? 10 : 8,
+            height: size > 34 ? 10 : 8,
+            borderRadius: "50%",
+            background: "#4ade80",
+            border: "2px solid white",
+            boxShadow: "0 0 0 1px rgba(34,197,94,0.3)",
+          }}
+        />
       </button>
       {open && (
-        <div style={{
-          position: "absolute", right: 0, top: size + 10, zIndex: 20, width: 220,
-          borderRadius: 14, background: "white", border: "1px solid #e5e7eb",
-          boxShadow: "0 14px 34px rgba(0,0,0,.22)", padding: 10,
-        }}>
-          <div style={{ padding: "8px 10px 10px", borderBottom: "1px solid #f1f5f9", marginBottom: 6 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{userName(user)}</div>
-            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis" }}>{user?.email || ""}</div>
+        <>
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 19 }}
+            onClick={() => setOpen(false)}
+          />
+          <div
+            style={{
+              position: "absolute",
+              right: 0,
+              top: size + 12,
+              zIndex: 20,
+              width: 232,
+              borderRadius: 18,
+              background: "white",
+              border: "1px solid rgba(0,0,0,0.08)",
+              boxShadow: "0 20px 48px rgba(0,0,0,0.16), 0 4px 12px rgba(0,0,0,0.08)",
+              overflow: "hidden",
+            }}
+          >
+            {/* Header strip */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, #071224 0%, #0f2040 100%)",
+                padding: "16px 16px 14px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #16a34a, #22c55e)",
+                  border: "2px solid rgba(255,255,255,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  color: "white",
+                  flexShrink: 0,
+                }}
+              >
+                {userInitials(user)}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 800,
+                    color: "white",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {userName(user)}
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: "rgba(255,255,255,0.5)",
+                    marginTop: 2,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {user?.email || ""}
+                </div>
+              </div>
+            </div>
+
+            {/* Menu items */}
+            <div style={{ padding: 8 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onEditProfile();
+                }}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  background: "transparent",
+                  textAlign: "left",
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#111827",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdf4")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <span
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    background: "#f0fdf4",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </span>
+                Update profile
+              </button>
+              <div style={{ height: 1, background: "#f1f5f9", margin: "4px 0" }} />
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onLogout();
+                }}
+                style={{
+                  width: "100%",
+                  border: "none",
+                  background: "transparent",
+                  textAlign: "left",
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#dc2626",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  transition: "background 0.12s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#fef2f2")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <span
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 8,
+                    background: "#fef2f2",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                </span>
+                Log out
+              </button>
+            </div>
           </div>
-          <button type="button" onClick={() => { setOpen(false); onEditProfile(); }}
-            style={{ width: "100%", border: "none", background: "transparent", textAlign: "left", padding: "10px", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#111827" }}>
-            Update profile
-          </button>
-          <button type="button" onClick={() => { setOpen(false); onLogout(); }}
-            style={{ width: "100%", border: "none", background: "transparent", textAlign: "left", padding: "10px", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700, color: "#dc2626" }}>
-            Log out
-          </button>
-        </div>
+        </>
       )}
     </div>
   );
 }
 
-// ─── ProfileView (rendered when tab === "Profile") ────────────────────────────
+// ─── ProfileView ──────────────────────────────────────────────────────────────
 
 function ProfileView({
   user,
@@ -130,105 +316,337 @@ function ProfileView({
 }) {
   if (loadingUser) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 48, color: "#6b7280", fontSize: 13 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 56,
+          color: "#9ca3af",
+          fontSize: 13,
+          gap: 10,
+        }}
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#22c55e"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          style={{ animation: "spin 1s linear infinite" }}
+        >
+          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+        </svg>
         Loading profile…
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: isDesktop ? 560 : undefined }}>
+  const roleName =
+    user?.role_id === 1 ? "Admin" : user?.role_id === 2 ? "Instructor" : "Student";
 
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        maxWidth: isDesktop ? 580 : undefined,
+      }}
+    >
       {/* Avatar + name card */}
-      <div style={{
-        borderRadius: 20, overflow: "hidden",
-        boxShadow: "0 2px 16px rgba(0,0,0,.07)", border: "1px solid #edf2f7",
-      }}>
-        {/* Dark header strip */}
-        <div style={{ background: "#071224", padding: isDesktop ? "28px 24px 20px" : "22px 18px 16px", display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{
-            width: isDesktop ? 64 : 54, height: isDesktop ? 64 : 54, borderRadius: "50%",
-            background: "#22c55e", color: "white", display: "flex", alignItems: "center",
-            justifyContent: "center", fontWeight: 900, fontSize: isDesktop ? 22 : 18,
-            flexShrink: 0, border: "2px solid rgba(255,255,255,.15)",
-          }}>
+      <div
+        style={{
+          borderRadius: 24,
+          overflow: "hidden",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.06)",
+        }}
+      >
+        {/* Dark header strip with gradient */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #071224 0%, #0d1f3c 60%, #071224 100%)",
+            padding: isDesktop ? "32px 28px 24px" : "24px 20px 18px",
+            display: "flex",
+            alignItems: "center",
+            gap: 18,
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {/* Decorative circles */}
+          <div
+            style={{
+              position: "absolute",
+              top: -30,
+              right: -30,
+              width: 120,
+              height: 120,
+              borderRadius: "50%",
+              background: "rgba(34,197,94,0.08)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: -20,
+              right: 60,
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: "rgba(34,197,94,0.05)",
+            }}
+          />
+
+          <div
+            style={{
+              width: isDesktop ? 72 : 60,
+              height: isDesktop ? 72 : 60,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+              color: "white",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 900,
+              fontSize: isDesktop ? 24 : 20,
+              flexShrink: 0,
+              border: "3px solid rgba(255,255,255,0.15)",
+              boxShadow: "0 4px 16px rgba(34,197,94,0.4)",
+              zIndex: 1,
+            }}
+          >
             {userInitials(user)}
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: isDesktop ? 20 : 17, fontWeight: 900, color: "white", lineHeight: 1.15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          <div style={{ minWidth: 0, zIndex: 1 }}>
+            <div
+              style={{
+                fontSize: isDesktop ? 22 : 18,
+                fontWeight: 900,
+                color: "white",
+                lineHeight: 1.15,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                letterSpacing: -0.5,
+              }}
+            >
               {userName(user)}
             </div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", marginTop: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#22c55e",
+                  background: "rgba(34,197,94,0.15)",
+                  border: "1px solid rgba(34,197,94,0.25)",
+                  borderRadius: 20,
+                  padding: "2px 10px",
+                  letterSpacing: 0.3,
+                }}
+              >
+                {roleName}
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 6 }}>
               {user?.email || "No email found"}
             </div>
           </div>
         </div>
 
         {/* Info rows */}
-        <div style={{ background: "white", padding: isDesktop ? "16px 24px" : "12px 18px", display: "flex", flexDirection: "column", gap: 0 }}>
+        <div
+          style={{
+            background: "white",
+            padding: isDesktop ? "4px 28px 8px" : "4px 20px 8px",
+          }}
+        >
           {user?.account_expires_at && (
-            <InfoRow label="Access expires" value={new Date(user.account_expires_at).toLocaleString()} />
+            <InfoRow
+              icon={
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              }
+              label="Access expires"
+              value={new Date(user.account_expires_at).toLocaleString()}
+            />
           )}
           {user?.role_id !== undefined && (
-            <InfoRow label="Role" value={user.role_id === 1 ? "Admin" : user.role_id === 2 ? "Instructor" : "Student"} />
+            <InfoRow
+              icon={
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              }
+              label="Role"
+              value={roleName}
+            />
           )}
           {user?.email && (
-            <InfoRow label="Email" value={user.email} last />
+            <InfoRow
+              icon={
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              }
+              label="Email"
+              value={user.email}
+              last
+            />
           )}
         </div>
       </div>
 
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <ActionButton
-          label="Update Profile"
-          color="#22c55e"
-          textColor="white"
+        <button
+          type="button"
           onClick={onEditProfile}
-        />
-        <ActionButton
-          label="Log Out"
-          color="white"
-          textColor="#dc2626"
-          border="1px solid #fecaca"
+          style={{
+            width: "100%",
+            padding: "15px 0",
+            borderRadius: 16,
+            border: "none",
+            background: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+            color: "white",
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(34,197,94,0.35)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            transition: "transform 0.15s, box-shadow 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 6px 20px rgba(34,197,94,0.45)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "translateY(0)";
+            e.currentTarget.style.boxShadow = "0 4px 16px rgba(34,197,94,0.35)";
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Update Profile
+        </button>
+        <button
+          type="button"
           onClick={onLogout}
-        />
+          style={{
+            width: "100%",
+            padding: "14px 0",
+            borderRadius: 16,
+            border: "1.5px solid #fecaca",
+            background: "white",
+            color: "#dc2626",
+            fontSize: 14,
+            fontWeight: 800,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            transition: "background 0.12s, border-color 0.12s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#fef2f2";
+            e.currentTarget.style.borderColor = "#f87171";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "white";
+            e.currentTarget.style.borderColor = "#fecaca";
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Log Out
+        </button>
       </div>
     </div>
   );
 }
 
-function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+function InfoRow({
+  icon,
+  label,
+  value,
+  last,
+}: {
+  icon?: React.ReactNode;
+  label: string;
+  value: string;
+  last?: boolean;
+}) {
   return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "11px 0", borderBottom: last ? "none" : "1px solid #f1f5f9", gap: 12,
-    }}>
-      <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 12, color: "#111827", fontWeight: 700, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</span>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "13px 0",
+        borderBottom: last ? "none" : "1px solid #f1f5f9",
+        gap: 12,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {icon && (
+          <span
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 8,
+              background: "#f0fdf4",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            {icon}
+          </span>
+        )}
+        <span style={{ fontSize: 12, color: "#9ca3af", fontWeight: 600 }}>{label}</span>
+      </div>
+      <span
+        style={{
+          fontSize: 12,
+          color: "#111827",
+          fontWeight: 700,
+          textAlign: "right",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
 
-function ActionButton({ label, color, textColor, border, onClick }: {
-  label: string; color: string; textColor: string; border?: string; onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        width: "100%", padding: "14px 0", borderRadius: 14, border: border || "none",
-        background: color, color: textColor, fontSize: 14, fontWeight: 800, cursor: "pointer",
-        boxShadow: color !== "white" ? "0 4px 14px rgba(34,197,94,.25)" : undefined,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-// ─── Mobile ───────────────────────────────────────────────────────────────────
+// ─── ProfileEditModal ─────────────────────────────────────────────────────────
 
 function ProfileEditModal({
   user,
@@ -241,7 +659,12 @@ function ProfileEditModal({
   saving: boolean;
   error: string;
   onClose: () => void;
-  onSave: (payload: { first_name: string; last_name: string; email: string; password: string }) => void;
+  onSave: (payload: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    password: string;
+  }) => void;
 }) {
   const [form, setForm] = useState({
     first_name: user?.first_name || "",
@@ -260,31 +683,204 @@ function ProfileEditModal({
   }, [user]);
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(7,18,36,.62)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 60,
+        background: "rgba(7,18,36,0.7)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+      }}
+    >
       <form
         onSubmit={(event) => {
           event.preventDefault();
           onSave(form);
         }}
-        style={{ width: "100%", maxWidth: 430, borderRadius: 18, background: "white", boxShadow: "0 20px 60px rgba(0,0,0,.32)", padding: 20 }}
+        style={{
+          width: "100%",
+          maxWidth: 440,
+          borderRadius: 24,
+          background: "white",
+          boxShadow: "0 32px 72px rgba(0,0,0,0.28)",
+          overflow: "hidden",
+        }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={{ fontSize: 18, fontWeight: 900, color: "#111827" }}>Update Profile</div>
-          <button type="button" onClick={onClose} style={{ border: "none", background: "#f3f4f6", borderRadius: 10, width: 32, height: 32, cursor: "pointer", fontWeight: 900 }}>x</button>
+        {/* Modal header */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, #071224 0%, #0d1f3c 100%)",
+            padding: "20px 24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: "white", letterSpacing: -0.4 }}>
+              Update Profile
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+              Edit your personal information
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(255,255,255,0.08)",
+              cursor: "pointer",
+              color: "white",
+              fontSize: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: 700,
+              transition: "background 0.12s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+          >
+            ×
+          </button>
         </div>
 
-        {error && <div style={{ marginBottom: 12, borderRadius: 12, background: "#fef2f2", color: "#b91c1c", padding: "10px 12px", fontSize: 12, fontWeight: 700 }}>{error}</div>}
+        {/* Modal body */}
+        <div style={{ padding: "20px 24px 24px" }}>
+          {error && (
+            <div
+              style={{
+                marginBottom: 16,
+                borderRadius: 12,
+                background: "#fef2f2",
+                border: "1px solid #fecaca",
+                color: "#b91c1c",
+                padding: "10px 14px",
+                fontSize: 12,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b91c1c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
+            </div>
+          )}
 
-        <ProfileInput label="First name" value={form.first_name} onChange={(first_name) => setForm((current) => ({ ...current, first_name }))} required />
-        <ProfileInput label="Last name" value={form.last_name} onChange={(last_name) => setForm((current) => ({ ...current, last_name }))} required />
-        <ProfileInput label="Email" type="email" value={form.email} onChange={(email) => setForm((current) => ({ ...current, email }))} required />
-        <ProfileInput label="New password" type="password" value={form.password} onChange={(password) => setForm((current) => ({ ...current, password }))} placeholder="Leave blank to keep current password" />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <ProfileInput
+              label="First name"
+              value={form.first_name}
+              onChange={(first_name) => setForm((c) => ({ ...c, first_name }))}
+              required
+            />
+            <ProfileInput
+              label="Last name"
+              value={form.last_name}
+              onChange={(last_name) => setForm((c) => ({ ...c, last_name }))}
+              required
+            />
+          </div>
+          <ProfileInput
+            label="Email address"
+            type="email"
+            value={form.email}
+            onChange={(email) => setForm((c) => ({ ...c, email }))}
+            required
+          />
+          <ProfileInput
+            label="New password"
+            type="password"
+            value={form.password}
+            onChange={(password) => setForm((c) => ({ ...c, password }))}
+            placeholder="Leave blank to keep current"
+          />
 
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 18 }}>
-          <button type="button" onClick={onClose} disabled={saving} style={{ border: "1px solid #e5e7eb", borderRadius: 12, background: "white", padding: "11px 15px", fontSize: 13, fontWeight: 800, cursor: "pointer" }}>Cancel</button>
-          <button type="submit" disabled={saving} style={{ border: "none", borderRadius: 12, background: "#22c55e", color: "white", padding: "12px 18px", fontSize: 13, fontWeight: 900, cursor: "pointer", opacity: saving ? 0.7 : 1 }}>
-            {saving ? "Saving..." : "Save"}
-          </button>
+          <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              style={{
+                flex: 1,
+                border: "1.5px solid #e5e7eb",
+                borderRadius: 14,
+                background: "white",
+                padding: "13px 0",
+                fontSize: 13,
+                fontWeight: 800,
+                cursor: "pointer",
+                color: "#374151",
+                transition: "background 0.12s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#f9fafb")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              style={{
+                flex: 2,
+                border: "none",
+                borderRadius: 14,
+                background: saving
+                  ? "#86efac"
+                  : "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+                color: "white",
+                padding: "13px 0",
+                fontSize: 13,
+                fontWeight: 900,
+                cursor: saving ? "not-allowed" : "pointer",
+                boxShadow: saving ? "none" : "0 4px 14px rgba(34,197,94,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                transition: "opacity 0.15s",
+              }}
+            >
+              {saving ? (
+                <>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{ animation: "spin 1s linear infinite" }}
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                  </svg>
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  Save Changes
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -306,89 +902,203 @@ function ProfileInput({
   required?: boolean;
   placeholder?: string;
 }) {
+  const [focused, setFocused] = useState(false);
   return (
     <label style={{ display: "block", marginBottom: 12 }}>
-      <span style={{ display: "block", marginBottom: 5, fontSize: 12, fontWeight: 800, color: "#374151" }}>{label}</span>
+      <span
+        style={{
+          display: "block",
+          marginBottom: 6,
+          fontSize: 12,
+          fontWeight: 700,
+          color: focused ? "#16a34a" : "#374151",
+          transition: "color 0.15s",
+        }}
+      >
+        {label}
+        {required && (
+          <span style={{ color: "#22c55e", marginLeft: 2 }}>*</span>
+        )}
+      </span>
       <input
         type={type}
         required={required}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: 12, padding: "11px 12px", fontSize: 14, outline: "none" }}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          width: "100%",
+          border: focused ? "1.5px solid #22c55e" : "1.5px solid #e5e7eb",
+          borderRadius: 12,
+          padding: "11px 14px",
+          fontSize: 13,
+          outline: "none",
+          transition: "border-color 0.15s, box-shadow 0.15s",
+          boxShadow: focused ? "0 0 0 3px rgba(34,197,94,0.12)" : "none",
+          boxSizing: "border-box",
+          background: focused ? "#fafffe" : "white",
+        }}
       />
     </label>
   );
 }
 
+// ─── Mobile ───────────────────────────────────────────────────────────────────
+
 function MobileHome({
-  tab, setTab, onContinue,
-  categories, loadingCategories, progressByCategory, continueByCategory,
-  user, loadingUser, onEditProfile, onLogout,
+  tab,
+  setTab,
+  onContinue,
+  categories,
+  loadingCategories,
+  progressByCategory,
+  continueByCategory,
+  user,
+  loadingUser,
+  onEditProfile,
+  onLogout,
 }: HomeLayoutProps) {
   const isProfile = tab === "Profile";
 
-  const modules = categories.map((category) => ({
-    category,
-    title: category.title,
-    progress: progressByCategory[category.id] || 0,
-    img: categoryImage(category, 300),
-    background: category.background_color || "#071224",
-  }));
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", width: "100%", overflow: "hidden", background: "#071224" }}>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100dvh",
+        width: "100%",
+        overflow: "hidden",
+        background: "#f0fdf4",
+      }}
+    >
       {/* Top bar */}
-      <div style={{ padding: "10px 16px 0", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-        <div>
-          <div style={{ fontWeight: 900, fontSize: 17, color: "white", letterSpacing: -0.5 }}>
-            Connected<span style={{ color: "#22c55e" }}>.</span>
-          </div>
-          <div style={{ color: "#22c55e", fontSize: 7.5, fontWeight: 700, letterSpacing: "0.22em", marginTop: 1 }}>EDUCATION</div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button style={{ background: "none", border: "none", cursor: "pointer", lineHeight: 0, padding: 0 }}><BellIcon /></button>
-          <ProfileMenu user={user} size={32} onEditProfile={onEditProfile} onLogout={onLogout} />
-        </div>
+      <div
+        style={{
+          padding: "12px 16px 0",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexShrink: 0,
+        }}
+      >
+        <Logo />
+        <ProfileMenu
+          user={user}
+          size={34}
+          onEditProfile={onEditProfile}
+          onLogout={onLogout}
+        />
       </div>
 
-      {/* Greeting — hidden on Profile tab */}
-      {!isProfile && (
-        <div style={{ padding: "8px 16px 10px", flexShrink: 0 }}>
-          <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 3 }}>
-            Good morning,<br />{userName(user)} 👋
+      {/* Greeting or profile header */}
+      {!isProfile ? (
+        <div style={{ padding: "12px 16px 14px", flexShrink: 0 }}>
+          <div
+            style={{
+              fontWeight: 900,
+              fontSize: 20,
+              color: "#071224",
+              letterSpacing: -0.5,
+              lineHeight: 1.2,
+              marginBottom: 4,
+            }}
+          >
+           
+            <span style={{ color: "#16a34a" }}>{userName(user)}</span> 👋
           </div>
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,.45)", lineHeight: 1.4 }}>
+          <div style={{ fontSize: 12, color: "#6b7280", lineHeight: 1.5 }}>
             Keep going! You're one step closer to your dream.
           </div>
         </div>
-      )}
-
-      {/* Profile tab header */}
-      {isProfile && (
-        <div style={{ padding: "10px 16px 12px", flexShrink: 0 }}>
-          <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4 }}>My Profile</div>
+      ) : (
+        <div style={{ padding: "10px 16px 14px", flexShrink: 0 }}>
+          <div
+            style={{
+              fontWeight: 900,
+              fontSize: 20,
+              color: "#071224",
+              letterSpacing: -0.5,
+            }}
+          >
+            My Profile
+          </div>
         </div>
       )}
 
       {/* White card */}
-      <div style={{ flex: 1, minHeight: 0, background: "white", borderRadius: "20px 20px 0 0", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column", padding: "16px 15px 0", gap: 11 }} className="hs">
-
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          background: "white",
+          borderRadius: "24px 24px 0 0",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+            overflowX: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            padding: "18px 16px 0",
+            gap: 14,
+          }}
+          className="hs"
+        >
           {isProfile ? (
             <div style={{ paddingBottom: 16 }}>
-              <ProfileView user={user} loadingUser={loadingUser} onEditProfile={onEditProfile} onLogout={onLogout} isDesktop={false} />
+              <ProfileView
+                user={user}
+                loadingUser={loadingUser}
+                onEditProfile={onEditProfile}
+                onLogout={onLogout}
+                isDesktop={false}
+              />
             </div>
           ) : (
             <>
               <div style={{ flexShrink: 0 }}>
                 <SectionHeader title="Continue Learning" />
                 {loadingCategories ? (
-                  <div style={{ height: 190, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>Loading...</div>
+                  <div
+                    style={{
+                      height: 475,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#9ca3af",
+                      background: "#f9fafb",
+                      borderRadius: 20,
+                      gap: 8,
+                      fontSize: 13,
+                    }}
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ animation: "spin 1s linear infinite" }}
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    </svg>
+                    Loading…
+                  </div>
                 ) : categories[0] ? (
                   <HeroCard
-                    height={190}
+                    height={475}
                     onContinue={() => onContinue(categories[0])}
                     category={categories[0]}
                     progress={progressByCategory[categories[0].id] || 0}
@@ -396,34 +1106,20 @@ function MobileHome({
                     moduleName={continueByCategory[categories[0].id]?.moduleName}
                   />
                 ) : (
-                  <div style={{ padding: 16, color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>No learning category assigned yet.</div>
+                  <div
+                    style={{
+                      padding: "20px 16px",
+                      color: "#6b7280",
+                      background: "#f9fafb",
+                      borderRadius: 20,
+                      fontSize: 13,
+                      textAlign: "center",
+                    }}
+                  >
+                    No learning category assigned yet.
+                  </div>
                 )}
               </div>
-
-              <div style={{ flexShrink: 0 }}>
-                <SectionHeader title="Your Modules" action="View All" />
-                <div className="hs" style={{ display: "flex", gap: 8, overflowX: "auto", marginLeft: -15, paddingLeft: 15, marginRight: -15, paddingRight: 10, paddingBottom: 2 }}>
-                  {loadingCategories ? (
-                    <div style={{ color: "#6b7280", fontSize: 12 }}>Loading modules...</div>
-                  ) : modules.length === 0 ? (
-                    <div style={{ color: "#6b7280", fontSize: 12 }}>No modules available.</div>
-                  ) : modules.map((m, i) => (
-                    <div key={i} onClick={() => onContinue(m.category)} style={{ flexShrink: 0, width: 118, borderRadius: 12, overflow: "hidden", background: "white", border: "1px solid #efefef", boxShadow: "0 2px 8px rgba(0,0,0,.07)", cursor: "pointer" }}>
-                      <div style={{ height: 70, overflow: "hidden", background: m.background }}>
-                        {m.img && <img src={m.img} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-                      </div>
-                      <div style={{ padding: "6px 8px 8px" }}>
-                        <div style={{ fontWeight: 700, fontSize: 10, color: "#111", marginBottom: 5, lineHeight: 1.3 }}>{m.title}</div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                          <Bar value={m.progress} />
-                          <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, flexShrink: 0 }}>{m.progress}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               <div style={{ flexShrink: 0, paddingBottom: 12 }}>
                 <HelpBox desktop={false} />
               </div>
@@ -432,18 +1128,67 @@ function MobileHome({
         </div>
       </div>
 
-      {/* Bottom Nav */}
-      <nav style={{ background: "white", flexShrink: 0, borderTop: "1px solid rgba(0,0,0,.07)", boxShadow: "0 -2px 12px rgba(0,0,0,.07)", display: "flex", justifyContent: "space-around", padding: "7px 0 max(8px,env(safe-area-inset-bottom))" }}>
+      
+      {/* <nav
+        style={{
+          background: "white",
+          flexShrink: 0,
+          borderTop: "1px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 -4px 16px rgba(0,0,0,0.06)",
+          display: "flex",
+          justifyContent: "space-around",
+          padding: "8px 0 max(10px,env(safe-area-inset-bottom))",
+        }}
+      >
         {tabs.map(({ label, icon }) => {
-          const a = tab === label;
+          const active = tab === label;
           return (
-            <button key={label} onClick={() => setTab(label)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, color: a ? "#22c55e" : "#9ca3af", padding: "0 8px" }}>
-              {icon(a)}
-              <span style={{ fontSize: 9.5, fontWeight: a ? 700 : 500, lineHeight: 1 }}>{label}</span>
+            <button
+              key={label}
+              onClick={() => setTab(label)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 3,
+                color: active ? "#16a34a" : "#9ca3af",
+                padding: "0 10px",
+                transition: "color 0.15s",
+              }}
+            >
+              <span
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 12,
+                  background: active ? "#f0fdf4" : "transparent",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "background 0.15s",
+                }}
+              >
+                {icon(active)}
+              </span>
+              <span
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: active ? 800 : 500,
+                  lineHeight: 1,
+                  transition: "font-weight 0.15s",
+                }}
+              >
+                {label}
+              </span>
             </button>
           );
         })}
-      </nav>
+      </nav> */}
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -451,48 +1196,78 @@ function MobileHome({
 // ─── Desktop ──────────────────────────────────────────────────────────────────
 
 function DesktopHome({
-  tab, setTab, onContinue,
-  categories, loadingCategories, progressByCategory, continueByCategory,
-  user, loadingUser, onEditProfile, onLogout,
+  tab,
+  setTab,
+  onContinue,
+  categories,
+  loadingCategories,
+  progressByCategory,
+  continueByCategory,
+  user,
+  loadingUser,
+  onEditProfile,
+  onLogout,
 }: HomeLayoutProps) {
   const isProfile = tab === "Profile";
 
-  const modules = categories.map((category) => ({
-    category,
-    title: category.title,
-    progress: progressByCategory[category.id] || 0,
-    img: categoryImage(category, 300),
-    background: category.background_color || "#071224",
-  }));
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100dvh", background: "#071224" }}>
-
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100dvh",
+        background: "#f0fdf4",
+      }}
+    >
       {/* Header */}
-      <div style={{ padding: "28px 56px 52px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: 22, color: "white", letterSpacing: -0.6 }}>
-              Connected<span style={{ color: "#22c55e" }}>.</span>
-            </div>
-            <div style={{ color: "#22c55e", fontSize: 8, fontWeight: 700, letterSpacing: "0.22em", marginTop: 2 }}>EDUCATION</div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <button style={{ background: "none", border: "none", cursor: "pointer", lineHeight: 0, padding: 0 }}><BellIcon /></button>
-            <ProfileMenu user={user} size={38} onEditProfile={onEditProfile} onLogout={onLogout} />
-          </div>
+      <div style={{ padding: "28px 60px 52px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 32,
+          }}
+        >
+          <Logo />
+
+          <ProfileMenu
+            user={user}
+            size={40}
+            onEditProfile={onEditProfile}
+            onLogout={onLogout}
+          />
         </div>
 
+        {/* Page heading */}
         {isProfile ? (
-          <div style={{ fontWeight: 900, fontSize: 28, color: "white", letterSpacing: -0.8, lineHeight: 1.15 }}>
+          <div
+            style={{
+              fontWeight: 900,
+              fontSize: 30,
+              color: "#071224",
+              letterSpacing: -0.8,
+              lineHeight: 1.15,
+            }}
+          >
             My Profile
           </div>
         ) : (
           <div>
-            <div style={{ fontWeight: 900, fontSize: 32, color: "white", letterSpacing: -1, lineHeight: 1.15, marginBottom: 8 }}>
-              Good morning, {userName(user)} 👋
+            <div
+              style={{
+                fontWeight: 900,
+                fontSize: 34,
+                color: "#071224",
+                letterSpacing: -1,
+                lineHeight: 1.15,
+                marginBottom: 8,
+              }}
+            >
+              
+              <span style={{ color: "#16a34a" }}>{userName(user)}</span> 👋
             </div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,.45)", lineHeight: 1.5 }}>
+            <div style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6 }}>
               Keep going! You're one step closer to your dream.
             </div>
           </div>
@@ -500,60 +1275,94 @@ function DesktopHome({
       </div>
 
       {/* White body */}
-      <div style={{ flex: 1, background: "white", borderRadius: "24px 24px 0 0" }}>
-        <div style={{ padding: "36px 56px 48px", display: "flex", flexDirection: "column", gap: 32 }}>
-
+      <div
+        style={{
+          flex: 1,
+          background: "white",
+          borderRadius: "28px 28px 0 0",
+          boxShadow: "0 -4px 24px rgba(0,0,0,0.06)",
+        }}
+      >
+        <div
+          style={{
+            padding: "40px 60px 52px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 36,
+          }}
+        >
           {isProfile ? (
-            <ProfileView user={user} loadingUser={loadingUser} onEditProfile={onEditProfile} onLogout={onLogout} isDesktop={true} />
+            <ProfileView
+              user={user}
+              loadingUser={loadingUser}
+              onEditProfile={onEditProfile}
+              onLogout={onLogout}
+              isDesktop={true}
+            />
           ) : (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 28 }}>
-                <div>
-                  <SectionHeader title="Continue Learning" />
-                  {loadingCategories ? (
-                    <div style={{ height: 280, display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>Loading...</div>
-                  ) : categories[0] ? (
-                    <HeroCard
-                      height={280}
-                      onContinue={() => onContinue(categories[0])}
-                      category={categories[0]}
-                      progress={progressByCategory[categories[0].id] || 0}
-                      moduleNumber={continueByCategory[categories[0].id]?.moduleNumber}
-                      moduleName={continueByCategory[categories[0].id]?.moduleName}
-                    />
-                  ) : (
-                    <div style={{ padding: 18, color: "#6b7280", background: "#f9fafb", borderRadius: 16 }}>No learning category assigned yet.</div>
-                  )}
-                </div>
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <SectionHeader title="Your Modules" action="View All" />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, flex: 1 }}>
-                    {loadingCategories ? (
-                      <div style={{ color: "#6b7280", fontSize: 13 }}>Loading modules...</div>
-                    ) : modules.length === 0 ? (
-                      <div style={{ color: "#6b7280", fontSize: 13 }}>No modules available.</div>
-                    ) : modules.map((m, i) => (
-                      <div key={i} onClick={() => onContinue(m.category)} style={{ background: "white", borderRadius: 14, overflow: "hidden", border: "1px solid #f0f0f0", boxShadow: "0 2px 10px rgba(0,0,0,.05)", display: "flex", alignItems: "center", cursor: "pointer" }}>
-                        <div style={{ width: 82, height: 74, flexShrink: 0, overflow: "hidden", background: m.background }}>
-                          {m.img && <img src={m.img} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
-                        </div>
-                        <div style={{ padding: "10px 14px", flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 700, fontSize: 11, color: "#111", marginBottom: 7, lineHeight: 1.35 }}>{m.title}</div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <Bar value={m.progress} />
-                            <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 700, flexShrink: 0 }}>{m.progress}%</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+              <div>
+                <SectionHeader title="Continue Learning" />
+                {loadingCategories ? (
+                  <div
+                    style={{
+                      height: 280,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "#9ca3af",
+                      background: "#f9fafb",
+                      borderRadius: 20,
+                      gap: 10,
+                      fontSize: 14,
+                    }}
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ animation: "spin 1s linear infinite" }}
+                    >
+                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                    </svg>
+                    Loading…
                   </div>
-                </div>
+                ) : categories[0] ? (
+                  <HeroCard
+                    height={280}
+                    onContinue={() => onContinue(categories[0])}
+                    category={categories[0]}
+                    progress={progressByCategory[categories[0].id] || 0}
+                    moduleNumber={continueByCategory[categories[0].id]?.moduleNumber}
+                    moduleName={continueByCategory[categories[0].id]?.moduleName}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      padding: 20,
+                      color: "#6b7280",
+                      background: "#f9fafb",
+                      borderRadius: 20,
+                      textAlign: "center",
+                      fontSize: 14,
+                    }}
+                  >
+                    No learning category assigned yet.
+                  </div>
+                )}
               </div>
               <HelpBox desktop={true} />
             </>
           )}
         </div>
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -568,9 +1377,15 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
   );
   const [categories, setCategories] = useState<LearningCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [progressByCategory, setProgressByCategory] = useState<Record<number, number>>({});
-  const [continueByCategory, setContinueByCategory] = useState<Record<number, { moduleNumber: number; moduleName: string }>>({});
-  const [user, setUser] = useState<ProfileUser | null>(() => getStoredUser() as ProfileUser | null);
+  const [progressByCategory, setProgressByCategory] = useState<
+    Record<number, number>
+  >({});
+  const [continueByCategory, setContinueByCategory] = useState<
+    Record<number, { moduleNumber: number; moduleName: string }>
+  >({});
+  const [user, setUser] = useState<ProfileUser | null>(
+    () => getStoredUser() as ProfileUser | null
+  );
   const [loadingUser, setLoadingUser] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -585,7 +1400,8 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
 
   // Fetch profile
   useEffect(() => {
-    api.get("/profile")
+    api
+      .get("/profile")
       .then((res) => setUser(res.data?.user ?? res.data ?? null))
       .catch(() => setUser(getStoredUser() as ProfileUser | null))
       .finally(() => setLoadingUser(false));
@@ -593,8 +1409,11 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
 
   // Fetch categories
   useEffect(() => {
-    api.get("/my-categories")
-      .then((res) => setCategories(Array.isArray(res.data) ? res.data : []))
+    api
+      .get("/my-categories")
+      .then((res) =>
+        setCategories(Array.isArray(res.data) ? res.data : [])
+      )
       .catch(() => setCategories([]))
       .finally(() => setLoadingCategories(false));
   }, []);
@@ -607,25 +1426,44 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
       const results = await Promise.all(
         categories.map(async (category) => {
           try {
-            const modulesRes = await api.get(`/categories/${category.id}/modules`);
-            const modules: LearningModule[] = Array.isArray(modulesRes.data) ? modulesRes.data : [];
+            const modulesRes = await api.get(
+              `/categories/${category.id}/modules`
+            );
+            const modules: LearningModule[] = Array.isArray(modulesRes.data)
+              ? modulesRes.data
+              : [];
             const lessonGroups = await Promise.all(
               modules.map(async (module) => {
                 try {
-                  const lessonsRes = await api.get(`/modules/${module.id}/lessons`);
+                  const lessonsRes = await api.get(
+                    `/modules/${module.id}/lessons`
+                  );
                   return Array.isArray(lessonsRes.data) ? lessonsRes.data : [];
                 } catch {
                   return [];
                 }
               })
             );
-            const lessonIds = lessonGroups.flat().map((lesson: LearningLesson) => lesson.id);
+            const lessonIds = lessonGroups
+              .flat()
+              .map((lesson: LearningLesson) => lesson.id);
             const completedIds = await loadLearningProgress(category.id);
-            const completedCount = lessonIds.filter((id) => completedIds.includes(id)).length;
-            const progress = lessonIds.length > 0 ? Math.round((completedCount / lessonIds.length) * 100) : 0;
+            const completedCount = lessonIds.filter((id) =>
+              completedIds.includes(id)
+            ).length;
+            const progress =
+              lessonIds.length > 0
+                ? Math.round((completedCount / lessonIds.length) * 100)
+                : 0;
             const continueIndex = modules.findIndex((_module, index) => {
               const lessons = lessonGroups[index] || [];
-              return lessons.length === 0 || lessons.some((lesson: LearningLesson) => !completedIds.includes(lesson.id));
+              return (
+                lessons.length === 0 ||
+                lessons.some(
+                  (lesson: LearningLesson) =>
+                    !completedIds.includes(lesson.id)
+                )
+              );
             });
             const moduleIndex = continueIndex >= 0 ? continueIndex : 0;
             const currentModule = modules[moduleIndex];
@@ -633,20 +1471,31 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
               categoryId: category.id,
               progress,
               continueModule: currentModule
-                ? { moduleNumber: moduleIndex + 1, moduleName: currentModule.title }
+                ? {
+                    moduleNumber: moduleIndex + 1,
+                    moduleName: currentModule.title,
+                  }
                 : undefined,
             };
           } catch {
-            return { categoryId: category.id, progress: 0, continueModule: undefined };
+            return {
+              categoryId: category.id,
+              progress: 0,
+              continueModule: undefined,
+            };
           }
         })
       );
 
       if (!cancelled) {
-        setProgressByCategory(Object.fromEntries(results.map((r) => [r.categoryId, r.progress])));
+        setProgressByCategory(
+          Object.fromEntries(results.map((r) => [r.categoryId, r.progress]))
+        );
         setContinueByCategory(
           Object.fromEntries(
-            results.filter((r) => r.continueModule).map((r) => [r.categoryId, r.continueModule!])
+            results
+              .filter((r) => r.continueModule)
+              .map((r) => [r.categoryId, r.continueModule!])
           )
         );
       }
@@ -659,7 +1508,9 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
       setContinueByCategory({});
     }
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [categories]);
 
   const handleLogout = () => {
@@ -672,7 +1523,12 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
     setEditingProfile(true);
   };
 
-  const handleSaveProfile = async (payload: { first_name: string; last_name: string; email: string; password: string }) => {
+  const handleSaveProfile = async (payload: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    password: string;
+  }) => {
     setSavingProfile(true);
     setProfileError("");
 
@@ -690,24 +1546,35 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
       sessionStorage.setItem("user", JSON.stringify(updated));
       setEditingProfile(false);
     } catch (error: any) {
-      setProfileError(error?.response?.data?.message || "Failed to update profile.");
+      setProfileError(
+        error?.response?.data?.message || "Failed to update profile."
+      );
     } finally {
       setSavingProfile(false);
     }
   };
 
   const sharedProps: HomeLayoutProps = {
-    tab, setTab, onContinue,
-    categories, loadingCategories,
-    progressByCategory, continueByCategory,
-    user, loadingUser,
+    tab,
+    setTab,
+    onContinue,
+    categories,
+    loadingCategories,
+    progressByCategory,
+    continueByCategory,
+    user,
+    loadingUser,
     onEditProfile: handleEditProfile,
     onLogout: handleLogout,
   };
 
   return (
     <>
-      {isDesktop ? <DesktopHome {...sharedProps} /> : <MobileHome  {...sharedProps} />}
+      {isDesktop ? (
+        <DesktopHome {...sharedProps} />
+      ) : (
+        <MobileHome {...sharedProps} />
+      )}
       {editingProfile && (
         <ProfileEditModal
           user={user}
