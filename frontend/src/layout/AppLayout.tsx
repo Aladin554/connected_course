@@ -25,7 +25,7 @@ const LayoutContent: React.FC = () => {
         </div>
 
         {/* Footer only for AppLayout */}
-        <Footer />
+        {/* <Footer /> */}
       </div>
     </div>
   );
