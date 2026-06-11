@@ -8,20 +8,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Package source
         run: |
-          tar \
-            --exclude='.git' \
-            --exclude='.env' \
-            --exclude='vendor' \
-            --exclude='node_modules' \
-            --exclude='frontend/node_modules' \
-            --exclude='storage/logs' \
-            -czf connected-course-deploy.tgz .
+          git archive --format=tar HEAD | gzip > connected-course-deploy.tgz
 
       - name: Install SSH password helper
         run: sudo apt-get update && sudo apt-get install -y sshpass
