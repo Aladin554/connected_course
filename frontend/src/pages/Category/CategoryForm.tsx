@@ -25,6 +25,29 @@ const emptySlide = (): WelcomeSlideForm => ({
   is_active: true,
 });
 
+// ── Moved OUTSIDE component to prevent remount on every render ──────────────
+const inputClass =
+  "w-full border-2 border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition";
+
+const Field = ({
+  label,
+  children,
+  required,
+}: {
+  label: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
+  <div>
+    <label className="block text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2 uppercase tracking-wide">
+      {label}
+      {required && <span className="text-red-500 ml-1">*</span>}
+    </label>
+    {children}
+  </div>
+);
+// ────────────────────────────────────────────────────────────────────────────
+
 export default function CategoryForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -141,28 +164,6 @@ export default function CategoryForm() {
       next.has(index) ? next.delete(index) : next.add(index);
       return next;
     });
-
-  // ── Shared helpers ─────────────────────────────────────────────────────────
-  const Field = ({
-    label,
-    children,
-    required,
-  }: {
-    label: string;
-    children: React.ReactNode;
-    required?: boolean;
-  }) => (
-    <div>
-      <label className="block text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-400 mb-1.5 sm:mb-2 uppercase tracking-wide">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-
-  const inputClass =
-    "w-full border-2 border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition";
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-gray-950 p-3 sm:p-6 md:p-8">
@@ -354,7 +355,7 @@ export default function CategoryForm() {
                         )}
                       </div>
 
-                      {/* Active pill — hidden on very small screens */}
+                      {/* Active pill */}
                       <div
                         className={`text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex-shrink-0 hidden xs:flex
                           ${slide.is_active
@@ -398,7 +399,7 @@ export default function CategoryForm() {
                           />
                         </Field>
 
-                        {/* Warning + position — stacked on mobile, side-by-side on sm+ */}
+                        {/* Warning + position */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <Field label="Warning / Note">
                             <textarea

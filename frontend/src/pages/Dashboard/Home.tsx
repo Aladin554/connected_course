@@ -4,8 +4,8 @@ export default function Home() {
   return (
     <>
       <PageMeta
-        title="React.js Ecommerce Dashboard | TailAdmin - React.js Admin Dashboard Template"
-        description="This is React.js Ecommerce Dashboard page for TailAdmin - React.js Tailwind CSS Admin Dashboard Template"
+        title="ConnectedEducation"
+        description="ConnectedEducation"
       />
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 text-white rounded-2xl p-6 shadow-lg">
