@@ -1070,7 +1070,7 @@ function MobileHome({
                 {loadingCategories ? (
                   <div
                     style={{
-                      height: 475,
+                      height: 375,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -1098,7 +1098,7 @@ function MobileHome({
                   </div>
                 ) : categories[0] ? (
                   <HeroCard
-                    height={475}
+                    height={375}
                     onContinue={() => onContinue(categories[0])}
                     category={categories[0]}
                     progress={progressByCategory[categories[0].id] || 0}

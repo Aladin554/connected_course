@@ -1,7 +1,8 @@
+// AdminUserForm.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/axios.ts";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Users, X, Plus, ShieldCheck } from "lucide-react";
 
 interface Role {
   id: number;
@@ -25,6 +26,13 @@ const isLikelyIp = (value: string): boolean => {
   const ipv6 = /^[0-9A-Fa-f:]+$/;
   return ipv4.test(value) || (value.includes(":") && ipv6.test(value));
 };
+
+const inputClass = (error?: string) =>
+  `w-full pl-3 pr-3 py-2.5 rounded-xl border-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition ${
+    error
+      ? "border-red-400 focus:ring-red-400"
+      : "border-gray-200 dark:border-gray-700 focus:ring-blue-500"
+  }`;
 
 export default function AdminUserForm() {
   const { id } = useParams<{ id: string }>();
@@ -53,28 +61,26 @@ export default function AdminUserForm() {
   const [submitting, setSubmitting] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+
   const canCreateNewUsers =
     Number(currentUser?.role_id) === 1 || Number(currentUser?.can_create_users) === 1;
 
   useEffect(() => {
     api.get("/profile")
       .then((res) => setCurrentUser(res.data))
-      .catch(() => {
+      .catch(() =>
         navigate("/dashboard/admin-users", {
           state: { message: "Failed to get current user", type: "error" },
-        });
-      });
+        })
+      );
   }, [navigate]);
 
   useEffect(() => {
     if (!currentUser) return;
-
     const roleId = Number(currentUser.role_id);
     const canCreate = Number(currentUser.can_create_users) === 1;
-
     if (roleId === 1) return;
     if (roleId === 2 && canCreate) return;
-
     navigate("/dashboard/admin-users", {
       state: { message: "You do not have access to this page.", type: "error" },
     });
@@ -107,7 +113,7 @@ export default function AdminUserForm() {
             roleId: res.data.role_id?.toString() || res.data.role?.id?.toString() || "",
             password: "",
             categoryIds: Array.isArray(res.data.categories)
-              ? res.data.categories.map((category: Category) => category.id)
+              ? res.data.categories.map((c: Category) => c.id)
               : [],
             allowed_ips: Array.isArray(res.data.allowed_ips) ? res.data.allowed_ips : [],
           });
@@ -121,7 +127,6 @@ export default function AdminUserForm() {
   const validateForm = () => {
     const newErrors = { first_name: "", last_name: "", email: "", roleId: "", password: "", allowed_ips: "" };
     let valid = true;
-
     if (!form.first_name.trim()) { newErrors.first_name = "First name is required."; valid = false; }
     if (!form.last_name.trim()) { newErrors.last_name = "Last name is required."; valid = false; }
     if (!form.email.trim()) { newErrors.email = "Email is required."; valid = false; }
@@ -129,10 +134,8 @@ export default function AdminUserForm() {
     if (!form.roleId) { newErrors.roleId = "Role is required."; valid = false; }
     if (!isEdit && !form.password.trim()) { newErrors.password = "Password is required."; valid = false; }
     if (Number(currentUser?.role_id) === 1 && form.allowed_ips.some((ip) => !isLikelyIp(ip))) {
-      newErrors.allowed_ips = "One or more IPs are invalid.";
-      valid = false;
+      newErrors.allowed_ips = "One or more IPs are invalid."; valid = false;
     }
-
     setErrors(newErrors);
     return valid;
   };
@@ -140,40 +143,25 @@ export default function AdminUserForm() {
   const addAllowedIp = () => {
     const raw = ipInput.trim();
     if (!raw) return;
-
-    const values = raw.split(/[,\s]+/).map((value) => value.trim()).filter(Boolean);
-    const invalid = values.find((value) => !isLikelyIp(value));
-
-    if (invalid) {
-      setErrors((prev) => ({ ...prev, allowed_ips: `Invalid IP: ${invalid}` }));
-      return;
-    }
-
-    setForm((prev) => ({
-      ...prev,
-      allowed_ips: Array.from(new Set([...prev.allowed_ips, ...values])),
-    }));
+    const values = raw.split(/[,\s]+/).map((v) => v.trim()).filter(Boolean);
+    const invalid = values.find((v) => !isLikelyIp(v));
+    if (invalid) { setErrors((prev) => ({ ...prev, allowed_ips: `Invalid IP: ${invalid}` })); return; }
+    setForm((prev) => ({ ...prev, allowed_ips: Array.from(new Set([...prev.allowed_ips, ...values])) }));
     setErrors((prev) => ({ ...prev, allowed_ips: "" }));
     setIpInput("");
   };
 
   const removeAllowedIp = (ip: string) => {
-    setForm((prev) => ({
-      ...prev,
-      allowed_ips: prev.allowed_ips.filter((value) => value !== ip),
-    }));
+    setForm((prev) => ({ ...prev, allowed_ips: prev.allowed_ips.filter((v) => v !== ip) }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isEdit && !canCreateNewUsers) {
-      navigate("/dashboard/admin-users", {
-        state: { message: "Add user permission is inactive.", type: "error" },
-      });
+      navigate("/dashboard/admin-users", { state: { message: "Add user permission is inactive.", type: "error" } });
       return;
     }
     if (!validateForm()) return;
-
     setSubmitting(true);
     try {
       const payload: any = {
@@ -183,10 +171,8 @@ export default function AdminUserForm() {
         role_id: Number(form.roleId),
         category_ids: form.categoryIds,
       };
-
       if (form.password) payload.password = form.password;
       if (Number(currentUser?.role_id) === 1) payload.allowed_ips = form.allowed_ips;
-
       if (isEdit) {
         await api.put(`/users/${id}`, payload);
         navigate("/dashboard/admin-users", { state: { message: "User updated successfully!", type: "success" } });
@@ -195,8 +181,9 @@ export default function AdminUserForm() {
         navigate("/dashboard/admin-users", { state: { message: "User added successfully!", type: "success" } });
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Error saving user";
-      navigate("/dashboard/admin-users", { state: { message: msg, type: "error" } });
+      navigate("/dashboard/admin-users", {
+        state: { message: err.response?.data?.message || "Error saving user", type: "error" },
+      });
     } finally {
       setSubmitting(false);
     }
@@ -206,131 +193,270 @@ export default function AdminUserForm() {
     setForm((prev) => ({
       ...prev,
       categoryIds: prev.categoryIds.includes(categoryId)
-        ? prev.categoryIds.filter((id) => id !== categoryId)
+        ? prev.categoryIds.filter((c) => c !== categoryId)
         : [...prev.categoryIds, categoryId],
     }));
   };
 
   return (
-    <div className="p-16 border border-gray-200 rounded-2xl dark:border-gray-700 dark:bg-gray-900 shadow-sm max-w-5xl mx-auto w-full">
-      <button type="button" onClick={() => navigate(-1)} className="inline-flex items-center gap-2 px-3 py-2 mb-6 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-600 transition-all duration-200 shadow-sm">
-        <ArrowLeft className="w-5 h-5" />
-        <span className="font-medium">Back</span>
-      </button>
+    <div className="min-h-screen bg-slate-100 dark:bg-gray-950 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto space-y-6">
 
-      <h1 className="text-2xl font-semibold mb-6 dark:text-gray-200">{isEdit ? "Edit User" : "Add New User"}</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-6 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">First Name</label>
-            <input type="text" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} className={`w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 ${errors.first_name ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"}`} />
-            {errors.first_name && <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>}
+        {/* ── Header ── */}
+        <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+              <Users size={20} className="text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">Management</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                {isEdit ? "Edit User" : "Add New User"}
+              </h1>
+            </div>
           </div>
 
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Last Name</label>
-            <input type="text" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} className={`w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 ${errors.last_name ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"}`} />
-            {errors.last_name && <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>}
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+        </div>
 
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Email</label>
-            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={`w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 ${errors.email ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"}`} />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-          </div>
+        {/* ── Form Card ── */}
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-5">
 
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Password {isEdit && "(leave blank to keep unchanged)"}</label>
-            <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={`w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 ${errors.password ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"}`} />
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
-          </div>
+            {/* Basic Info */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Basic Information
+                </h2>
+              </div>
+              <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          <div>
-            <label className="block mb-1 text-sm font-medium dark:text-gray-300">Role</label>
-            <select value={form.roleId} onChange={(e) => setForm({ ...form, roleId: e.target.value })} className={`w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 ${errors.roleId ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"}`}>
-              <option value="">Select role</option>
-              {roles.map((role) => <option key={role.id} value={role.id}>{role.name}</option>)}
-            </select>
-            {errors.roleId && <p className="text-red-500 text-sm mt-1">{errors.roleId}</p>}
-          </div>
+                {/* First Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={form.first_name}
+                    onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                    placeholder="John"
+                    className={inputClass(errors.first_name)}
+                  />
+                  {errors.first_name && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.first_name}</p>
+                  )}
+                </div>
 
-          {Number(currentUser?.role_id) === 1 && (
-            <div className="md:col-span-2">
-              <label className="block mb-1 text-sm font-medium dark:text-gray-300">Allowed IPs (User-wise security)</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {form.allowed_ips.map((ip) => (
-                  <span key={ip} className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
-                    {ip}
+                {/* Last Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    value={form.last_name}
+                    onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                    placeholder="Doe"
+                    className={inputClass(errors.last_name)}
+                  />
+                  {errors.last_name && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.last_name}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="john@example.com"
+                    className={inputClass(errors.email)}
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.email}</p>
+                  )}
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Password{" "}
+                    {isEdit && (
+                      <span className="text-xs font-normal text-gray-400">(leave blank to keep unchanged)</span>
+                    )}
+                  </label>
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder={isEdit ? "••••••••" : "Min. 8 characters"}
+                    className={inputClass(errors.password)}
+                  />
+                  {errors.password && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.password}</p>
+                  )}
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Role
+                  </label>
+                  <select
+                    value={form.roleId}
+                    onChange={(e) => setForm({ ...form, roleId: e.target.value })}
+                    className={inputClass(errors.roleId)}
+                  >
+                    <option value="">Select a role</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
+                  {errors.roleId && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.roleId}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Allowed IPs (admin only) */}
+            {Number(currentUser?.role_id) === 1 && (
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-blue-500" />
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    IP Allowlist
+                  </h2>
+                </div>
+                <div className="px-6 py-6">
+                  {/* Tags */}
+                  {form.allowed_ips.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {form.allowed_ips.map((ip) => (
+                        <span
+                          key={ip}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                        >
+                          {ip}
+                          <button
+                            type="button"
+                            onClick={() => removeAllowedIp(ip)}
+                            className="hover:text-blue-900 dark:hover:text-white transition"
+                            aria-label={`Remove ${ip}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={ipInput}
+                      onChange={(e) => setIpInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addAllowedIp(); } }}
+                      placeholder="e.g. 203.0.113.10 or paste multiple comma-separated"
+                      className={inputClass(errors.allowed_ips)}
+                    />
                     <button
                       type="button"
-                      onClick={() => removeAllowedIp(ip)}
-                      className="text-blue-700 hover:text-blue-900 dark:text-blue-200 dark:hover:text-white"
+                      onClick={addAllowedIp}
+                      className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition flex-shrink-0"
                     >
-                      x
+                      <Plus size={15} /> Add
                     </button>
-                  </span>
-                ))}
+                  </div>
+                  {errors.allowed_ips && (
+                    <p className="text-red-500 text-xs mt-1.5">{errors.allowed_ips}</p>
+                  )}
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    Leave empty to allow access from any IP address.
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={ipInput}
-                  onChange={(e) => setIpInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addAllowedIp();
-                    }
-                  }}
-                  placeholder="Add IP (e.g. 203.0.113.10)"
-                  className="w-full border px-3 py-2 rounded-lg text-lg dark:bg-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={addAllowedIp}
-                  className="px-4 py-2 rounded-lg border dark:border-gray-600 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  Add
-                </button>
-              </div>
-              {errors.allowed_ips && <p className="text-red-500 text-sm mt-1">{errors.allowed_ips}</p>}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block mb-3 text-sm font-medium dark:text-gray-300">Allowed Categories</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {categories.length === 0 ? (
-              <div className="text-sm text-gray-500 dark:text-gray-400">No active categories found.</div>
-            ) : (
-              categories.map((category) => (
-                <label
-                  key={category.id}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-gray-700 dark:border-gray-700 dark:text-gray-200"
-                >
-                  <input
-                    type="checkbox"
-                    checked={form.categoryIds.includes(category.id)}
-                    onChange={() => toggleCategory(category.id)}
-                    className="h-4 w-4 rounded border-gray-300"
-                  />
-                  <span className="text-base">
-                    {category.flag_emoji ? `${category.flag_emoji} ` : ""}
-                    {category.title}
-                  </span>
-                </label>
-              ))
             )}
-          </div>
-        </div>
 
-        <div className="flex justify-end gap-3 mt-8">
-          <button type="button" onClick={() => navigate("/dashboard/admin-users")} className="px-5 py-2 rounded-lg border dark:border-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button>
-          <button type="submit" disabled={submitting || (!isEdit && !canCreateNewUsers)} className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-lg disabled:opacity-50">{submitting ? "Saving..." : "Save User"}</button>
-        </div>
-      </form>
+            {/* Allowed Categories */}
+            <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Allowed Courses
+                </h2>
+                {form.categoryIds.length > 0 && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                    {form.categoryIds.length} selected
+                  </span>
+                )}
+              </div>
+              <div className="px-6 py-6">
+                {categories.length === 0 ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">No active courses found.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {categories.map((category) => {
+                      const checked = form.categoryIds.includes(category.id);
+                      return (
+                        <label
+                          key={category.id}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition ${
+                            checked
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-600"
+                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleCategory(category.id)}
+                            className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
+                          />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                            {category.flag_emoji ? `${category.flag_emoji} ` : ""}
+                            {category.title}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 pb-2">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard/admin-users")}
+                className="px-5 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={submitting || (!isEdit && !canCreateNewUsers)}
+                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {submitting ? "Saving..." : isEdit ? "Update User" : "Create User"}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

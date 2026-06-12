@@ -353,18 +353,41 @@ export const HeroCard = ({ height = 190, onContinue, category, progress = 0, mod
   </div>
 );
 
-export const HelpBox = ({ desktop }: HelpBoxProps) => (
-  <div style={{ background: "#f6faf7", borderRadius: desktop ? 16 : 12, padding: desktop ? "16px 20px" : "10px 12px", display: "flex", alignItems: "center", gap: desktop ? 14 : 10, border: "1px solid rgba(34,197,94,0.13)" }}>
-    <div style={{ width: desktop ? 42 : 36, height: desktop ? 42 : 36, borderRadius: desktop ? 12 : 9, background: "#f0fdf4", border: "1px solid rgba(34,197,94,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-      <HeadphonesIcon size={desktop ? 20 : 18} />
+interface HelpBoxProps {
+  desktop?: boolean;
+}
+
+export const HelpBox = ({ desktop = true }: HelpBoxProps) => (
+  <div className={`bg-[#f6faf7] border border-[#34c95a22] rounded-2xl flex items-center gap-3.5 ${
+    desktop 
+      ? 'p-5' 
+      : 'p-[10px]'
+  }`}>
+    {/* Icon Container */}
+    <div className={`flex-shrink-0 flex items-center justify-center rounded-xl bg-[#f0fdf4] border border-[#34c95a33] ${
+      desktop 
+        ? 'w-11 h-11' 
+        : 'w-9 h-9'
+    }`}>
+      <HeadphonesIcon 
+        size={desktop ? 22 : 18} 
+        className="text-[#34c95a]" 
+      />
     </div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontWeight: 800, fontSize: desktop ? 13 : 12, color: "#111", marginBottom: 2 }}>Need Help?</div>
-      <div style={{ fontSize: desktop ? 11 : 10, color: "#9ca3af", lineHeight: 1.4 }}>We're here to support you on your journey.</div>
+
+    {/* Text Content */}
+    <div className="flex-1 min-w-0">
+      <div className={`font-semibold text-[#111827] ${
+        desktop ? 'text-sm' : 'text-[13px]'
+      }`}>
+        Need Help?
+      </div>
+      <div className={`text-[#6b7280] leading-snug ${
+        desktop ? 'text-xs' : 'text-[10px]'
+      }`}>
+        Reach out to your admin coordinator for assistance.
+      </div>
     </div>
-    <button style={{ background: "none", border: "none", cursor: "pointer", color: "#22c55e", fontSize: desktop ? 11 : 10.5, fontWeight: 700, display: "flex", alignItems: "center", gap: 3, whiteSpace: "nowrap", padding: 0, flexShrink: 0 }}>
-      Contact Support <ArrowRight color="#22c55e" size={11} />
-    </button>
   </div>
 );
 
