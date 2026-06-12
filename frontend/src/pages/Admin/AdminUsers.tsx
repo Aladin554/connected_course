@@ -368,8 +368,6 @@ export default function AdminUsers() {
                   {currentUser?.role_id === 1 && (
                     <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Permission</th>
                   )}
-                  <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Created</th>
-                  <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Updated</th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                 </tr>
               </thead>
@@ -426,8 +424,8 @@ export default function AdminUsers() {
                           </button>
                         </td>
                       )}
-                      <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">{formatDate(user.created_at)}</td>
-                      <td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-sm">{formatDate(user.updated_at)}</td>
+                      
+                      
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <button onClick={() => navigate(`/dashboard/admin-users/${user.id}/edit`)} className="p-2.5 rounded-xl text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition" title="Edit"><Edit size={17} /></button>
