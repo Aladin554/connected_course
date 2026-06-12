@@ -111,7 +111,6 @@ export default function AdminUsers() {
 
   // ── NEW: Toggle panel status ──
   const togglePanelStatus = async (user: User) => {
-    if (currentUser?.id === user.id) { toast.error("You cannot change your own panel status!"); return; }
     const oldVal = user.panel_status;
     const optimistic = Number(oldVal) === 1 ? 0 : 1;
     setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, panel_status: optimistic } : u));
@@ -198,18 +197,15 @@ export default function AdminUsers() {
   // ── Panel status badge — now a clickable button ──
   const PanelBadge = ({ user }: { user: User }) => {
     const active = Number(user.panel_status) === 1;
-    const isSelf = currentUser?.id === user.id;
     return (
       <button
         onClick={() => togglePanelStatus(user)}
-        disabled={isSelf}
-        title={isSelf ? "Cannot change your own panel status" : `Click to ${active ? "deactivate" : "activate"}`}
-        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition
+        title={`Click to ${active ? "deactivate" : "activate"}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition
           ${active
             ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/50"
             : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-          }
-          ${isSelf ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+          }`}
       >
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? "bg-violet-500" : "bg-gray-400"}`} />
         {active ? "Active" : "Inactive"}
