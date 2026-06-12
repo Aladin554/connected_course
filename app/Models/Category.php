@@ -48,4 +48,16 @@ class Category extends Model
     {
         return $this->hasMany(UserCategoryEnrollment::class);
     }
+
+    public function adminUsers()
+    {
+        return $this->belongsToMany(User::class, 'admin_category_assignments')
+                    ->withTimestamps();
+    }
+
+    public function adminFrontendUsers()
+    {
+        return $this->belongsToMany(User::class, 'admin_frontend_category_assignments')
+                    ->withTimestamps();
+    }
 }

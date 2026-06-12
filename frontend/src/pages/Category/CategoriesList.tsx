@@ -18,12 +18,16 @@ const storageUrl = (path: string) =>
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [search, setSearch] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
+    api.get("/profile")
+      .then((res) => setIsSuperAdmin(Number(res.data?.role_id) === 1))
+      .catch(() => setIsSuperAdmin(false));
     fetchCategories();
   }, []);
 
@@ -100,12 +104,14 @@ export default function AdminCategories() {
             </div>
           </div>
 
-          <Link
-            to="/dashboard/categories/add"
-            className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold shadow-lg shadow-blue-200 dark:shadow-none transition w-full sm:w-auto"
-          >
-            <Plus size={17} /> Add Course
-          </Link>
+          {isSuperAdmin && (
+            <Link
+              to="/dashboard/categories/add"
+              className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold shadow-lg shadow-blue-200 dark:shadow-none transition w-full sm:w-auto"
+            >
+              <Plus size={17} /> Add Course
+            </Link>
+          )}
         </div>
 
         {/* ── Table Card ── */}

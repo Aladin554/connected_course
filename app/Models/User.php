@@ -72,6 +72,18 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
+    public function adminCategories()
+    {
+        return $this->belongsToMany(Category::class, 'admin_category_assignments')
+                    ->withTimestamps();
+    }
+
+    public function adminFrontendCategories()
+    {
+        return $this->belongsToMany(Category::class, 'admin_frontend_category_assignments')
+                    ->withTimestamps();
+    }
+
     public function userLessonProgress()
     {
         return $this->hasMany(UserLessonProgress::class);

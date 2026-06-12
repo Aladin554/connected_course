@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Concerns\ChecksAdminCategoryAccess;
 use App\Models\Category;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,11 +12,7 @@ use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
-    protected function canAdministerCategories(): bool
-    {
-        $roleName = Auth::user()?->role?->name;
-        return in_array($roleName, ['admin', 'superadmin'], true);
-    }
+    use ChecksAdminCategoryAccess;
 
     public function index(): JsonResponse
     {
@@ -23,7 +20,8 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $categories = Category::orderBy('created_at')
+        $categories = $this->categoriesQueryForAdmin()
+            ->orderBy('created_at')
             ->orderBy('id')
             ->get();
 
@@ -36,7 +34,8 @@ class CategoryController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $categories = Category::where('is_active', true)
+        $categories = $this->categoriesQueryForAdmin()
+            ->where('is_active', true)
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -46,8 +45,10 @@ class CategoryController extends Controller
 
     public function myCategories(): JsonResponse
     {
-        $categories = Auth::user()
-            ->categories()
+        $user = Auth::user();
+        $relation = $this->isScopedAdmin() ? 'adminFrontendCategories' : 'categories';
+
+        $categories = $user->{$relation}()
             ->where('categories.is_active', true)
             ->orderBy('categories.created_at')
             ->orderBy('categories.id')
@@ -58,9 +59,7 @@ class CategoryController extends Controller
 
     public function welcomeSlides(Category $category): JsonResponse
     {
-        $user = Auth::user();
-        $canView = $this->canAdministerCategories()
-            || $user->categories()->where('categories.id', $category->id)->exists();
+        $canView = $this->canViewFrontendCategory($category);
 
         if (!$canView || !$category->is_active) {
             return response()->json(['message' => 'Forbidden'], 403);
@@ -73,7 +72,7 @@ class CategoryController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->isSuperAdmin()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -93,7 +92,7 @@ class CategoryController extends Controller
 
     public function show(Category $category): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->canAdministerCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -102,7 +101,7 @@ class CategoryController extends Controller
 
     public function update(Request $request, Category $category): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->canAdministerCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -128,7 +127,7 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->canAdministerCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Concerns\ChecksAdminCategoryAccess;
 use App\Models\Category;
 use App\Models\CourseModule;
 use App\Models\Lesson;
@@ -14,27 +15,16 @@ use Illuminate\Validation\Rule;
 
 class LearningContentController extends Controller
 {
-    protected function canAdminister(): bool
-    {
-        $roleName = Auth::user()?->role?->name;
-        return in_array($roleName, ['admin', 'superadmin'], true);
-    }
-
-    protected function canViewCategory(Category $category): bool
-    {
-        return $this->canAdminister()
-            || Auth::user()->categories()->where('categories.id', $category->id)->exists();
-    }
+    use ChecksAdminCategoryAccess;
 
     public function categoryModules(Category $category): JsonResponse
     {
-        if (!$this->canViewCategory($category)) {
+        if (!$this->canViewFrontendCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $relation = $this->canAdminister() ? 'allLessons' : 'lessons';
-        $modules = ($this->canAdminister() ? $category->allCourseModules() : $category->courseModules())
-            ->withCount($relation)
+        $modules = $category->courseModules()
+            ->withCount('lessons')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -44,7 +34,7 @@ class LearningContentController extends Controller
 
     public function storeModule(Request $request, Category $category): JsonResponse
     {
-        if (!$this->canAdminister()) {
+        if (!$this->canAdministerCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -59,7 +49,9 @@ class LearningContentController extends Controller
 
     public function updateModule(Request $request, CourseModule $module): JsonResponse
     {
-        if (!$this->canAdminister()) {
+        $module->load('category');
+
+        if (!$this->canAdministerCategory($module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -73,7 +65,9 @@ class LearningContentController extends Controller
 
     public function destroyModule(CourseModule $module): JsonResponse
     {
-        if (!$this->canAdminister()) {
+        $module->load('category');
+
+        if (!$this->canAdministerCategory($module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -84,11 +78,13 @@ class LearningContentController extends Controller
 
     public function moduleLessons(CourseModule $module): JsonResponse
     {
-        if (!$this->canViewCategory($module->category)) {
+        $module->load('category');
+
+        if (!$this->canViewFrontendCategory($module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $lessons = ($this->canAdminister() ? $module->allLessons() : $module->lessons())
+        $lessons = $module->lessons()
             ->with(['strategies', 'lessonModelAnswer', 'commonMistakes'])
             ->get();
 
@@ -99,11 +95,11 @@ class LearningContentController extends Controller
     {
         $lesson->load(['module.category', 'strategies', 'lessonModelAnswer', 'commonMistakes']);
 
-        if (!$this->canViewCategory($lesson->module->category)) {
+        if (!$this->canViewFrontendCategory($lesson->module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        if (!$this->canAdminister() && (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active)) {
+        if (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -112,7 +108,7 @@ class LearningContentController extends Controller
 
     public function categoryProgress(Category $category): JsonResponse
     {
-        if (!$this->canViewCategory($category)) {
+        if (!$this->canViewFrontendCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -139,11 +135,11 @@ class LearningContentController extends Controller
     {
         $lesson->load('module.category');
 
-        if (!$this->canViewCategory($lesson->module->category)) {
+        if (!$this->canViewFrontendCategory($lesson->module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        if (!$this->canAdminister() && (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active)) {
+        if (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -172,7 +168,9 @@ class LearningContentController extends Controller
 
     public function storeLesson(Request $request, CourseModule $module): JsonResponse
     {
-        if (!$this->canAdminister()) {
+        $module->load('category');
+
+        if (!$this->canAdministerCategory($module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -189,7 +187,9 @@ class LearningContentController extends Controller
 
     public function updateLesson(Request $request, Lesson $lesson): JsonResponse
     {
-        if (!$this->canAdminister()) {
+        $lesson->load('module.category');
+
+        if (!$this->canAdministerCategory($lesson->module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -206,7 +206,9 @@ class LearningContentController extends Controller
 
     public function destroyLesson(Lesson $lesson): JsonResponse
     {
-        if (!$this->canAdminister()) {
+        $lesson->load('module.category');
+
+        if (!$this->canAdministerCategory($lesson->module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

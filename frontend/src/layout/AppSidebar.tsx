@@ -47,6 +47,11 @@ const AppSidebar: React.FC = () => {
   }, []);
 
   const roleId = user?.role_id ?? null;
+  const hasCourseAccess =
+    roleId === 1 ||
+    (roleId === 2 &&
+      Array.isArray(user?.admin_categories) &&
+      user.admin_categories.length > 0);
 
   // Navigation items (role-based)
   const navItems: NavItem[] = [
@@ -60,16 +65,20 @@ const AppSidebar: React.FC = () => {
       name: "Admin Users",
       path: "/dashboard/admin-users",
     },
-    {
-      icon: <BoxCubeIcon />,
-      name: "Course",
-      path: "/dashboard/categories",
-    },
-    {
-      icon: <PageIcon />,
-      name: "Learning Content",
-      path: "/dashboard/learning-content",
-    },
+    ...(hasCourseAccess
+      ? [
+          {
+            icon: <BoxCubeIcon />,
+            name: "Course",
+            path: "/dashboard/categories",
+          },
+          {
+            icon: <PageIcon />,
+            name: "Learning Content",
+            path: "/dashboard/learning-content",
+          },
+        ]
+      : []),
   ];
 
   const othersItems: NavItem[] = [];

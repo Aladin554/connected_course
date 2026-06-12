@@ -41,7 +41,7 @@ class UserController extends Controller
     protected function filterUsersForAuth()
     {
         if ($this->isSuperAdmin()) {
-            return User::with(['role', 'categories']);
+            return User::with(['role', 'categories', 'adminCategories', 'adminFrontendCategories']);
         }
 
         if ($this->isAdmin()) {
@@ -62,6 +62,16 @@ class UserController extends Controller
         $user->categories()->sync($syncData);
     }
 
+    protected function syncAdminCategories(User $user, array $categoryIds): void
+    {
+        $user->adminCategories()->sync(array_unique($categoryIds));
+    }
+
+    protected function syncAdminFrontendCategories(User $user, array $categoryIds): void
+    {
+        $user->adminFrontendCategories()->sync(array_unique($categoryIds));
+    }
+
     // --- Centralized Validation Rules ---
     protected function validationRules(bool $isUpdate = false, int $userId = 0): array
     {
@@ -76,6 +86,10 @@ class UserController extends Controller
             'max_cards'  => 'sometimes|nullable|integer|min:0', // NEW
             'category_ids' => 'sometimes|array',
             'category_ids.*' => 'integer|exists:categories,id',
+            'admin_category_ids' => 'sometimes|array',
+            'admin_category_ids.*' => 'integer|exists:categories,id',
+            'admin_frontend_category_ids' => 'sometimes|array',
+            'admin_frontend_category_ids.*' => 'integer|exists:categories,id',
             'allowed_ips' => $isUpdate ? 'sometimes|array' : 'nullable|array',
             'allowed_ips.*' => 'nullable|ip',
         ];
@@ -113,6 +127,14 @@ class UserController extends Controller
             return response()->json(['message' => 'Only superadmin can assign IP allowlist'], 403);
         }
 
+        if (!$this->isSuperAdmin() && $request->has('admin_category_ids')) {
+            return response()->json(['message' => 'Only superadmin can assign admin course access'], 403);
+        }
+
+        if (!$this->isSuperAdmin() && $request->has('admin_frontend_category_ids')) {
+            return response()->json(['message' => 'Only superadmin can assign frontend course access'], 403);
+        }
+
         try {
             $plainPassword = $request->password;
 
@@ -133,6 +155,11 @@ class UserController extends Controller
 
             $this->syncCategories($user, $request->input('category_ids', []));
 
+            if ($role->name === 'admin' && $this->isSuperAdmin()) {
+                $this->syncAdminCategories($user, $request->input('admin_category_ids', []));
+                $this->syncAdminFrontendCategories($user, $request->input('admin_frontend_category_ids', []));
+            }
+
             $token = app('auth.password.broker')->createToken($user);
 
             $resetUrl = env('FRONTEND_URL') . '/reset-password?token=' . $token . '&email=' . urlencode($user->email);
@@ -143,7 +170,7 @@ class UserController extends Controller
 
             return response()->json([
                 'message' => 'User created & email sent successfully',
-                'user'    => $user->load(['role', 'categories']),
+                'user'    => $user->load(['role', 'categories', 'adminCategories', 'adminFrontendCategories']),
             ], 201);
 
         } catch (\Exception $e) {
@@ -155,7 +182,7 @@ class UserController extends Controller
     // --- Show Single User ---
     public function show(int $id): JsonResponse
     {
-        $user = User::with(['role', 'categories'])->find($id);
+        $user = User::with(['role', 'categories', 'adminCategories', 'adminFrontendCategories'])->find($id);
 
         if (!$user) return response()->json(['message' => 'User not found'], 404);
         if (!$this->canManage($user)) return response()->json(['message' => 'Forbidden'], 403);
@@ -172,6 +199,14 @@ class UserController extends Controller
 
         if (!$this->isSuperAdmin() && $request->has('allowed_ips')) {
             return response()->json(['message' => 'Only superadmin can assign IP allowlist'], 403);
+        }
+
+        if (!$this->isSuperAdmin() && $request->has('admin_category_ids')) {
+            return response()->json(['message' => 'Only superadmin can assign admin course access'], 403);
+        }
+
+        if (!$this->isSuperAdmin() && $request->has('admin_frontend_category_ids')) {
+            return response()->json(['message' => 'Only superadmin can assign frontend course access'], 403);
         }
 
         $request->validate($this->validationRules(true, $id));
@@ -207,9 +242,24 @@ class UserController extends Controller
                 $this->syncCategories($user, $request->input('category_ids', []));
             }
 
+            $user->load('role');
+            if ($this->isSuperAdmin()) {
+                if ($user->role->name === 'admin') {
+                    if ($request->has('admin_category_ids')) {
+                        $this->syncAdminCategories($user, $request->input('admin_category_ids', []));
+                    }
+                    if ($request->has('admin_frontend_category_ids')) {
+                        $this->syncAdminFrontendCategories($user, $request->input('admin_frontend_category_ids', []));
+                    }
+                } else {
+                    $user->adminCategories()->detach();
+                    $user->adminFrontendCategories()->detach();
+                }
+            }
+
             return response()->json([
                 'message' => 'User updated successfully',
-                'user'    => $user->load(['role', 'categories']),
+                'user'    => $user->load(['role', 'categories', 'adminCategories', 'adminFrontendCategories']),
             ]);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -236,7 +286,7 @@ class UserController extends Controller
     // --- Authenticated User Profile ---
     public function showProfile(): JsonResponse
     {
-        return response()->json($this->authUser());
+        return response()->json($this->authUser()->load(['role', 'adminCategories', 'adminFrontendCategories']));
     }
 
     public function updateProfile(Request $request): JsonResponse

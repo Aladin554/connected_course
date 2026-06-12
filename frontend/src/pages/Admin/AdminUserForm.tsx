@@ -47,6 +47,8 @@ export default function AdminUserForm() {
     roleId: isEdit ? "" : "3",
     password: "",
     categoryIds: [] as number[],
+    adminCategoryIds: [] as number[],
+    adminFrontendCategoryIds: [] as number[],
     allowed_ips: [] as string[],
   });
   const [errors, setErrors] = useState({
@@ -95,12 +97,13 @@ export default function AdminUserForm() {
   }, [navigate]);
 
   useEffect(() => {
-    api.get("/categories/active")
+    const endpoint = Number(currentUser?.role_id) === 1 ? "/categories" : "/categories/active";
+    api.get(endpoint)
       .then((res) => setCategories(Array.isArray(res.data) ? res.data : []))
       .catch(() =>
         navigate("/dashboard/admin-users", { state: { message: "Failed to fetch categories", type: "error" } })
       );
-  }, [navigate]);
+  }, [navigate, currentUser]);
 
   useEffect(() => {
     if (isEdit && id) {
@@ -114,6 +117,12 @@ export default function AdminUserForm() {
             password: "",
             categoryIds: Array.isArray(res.data.categories)
               ? res.data.categories.map((c: Category) => c.id)
+              : [],
+            adminCategoryIds: Array.isArray(res.data.admin_categories)
+              ? res.data.admin_categories.map((c: Category) => c.id)
+              : [],
+            adminFrontendCategoryIds: Array.isArray(res.data.admin_frontend_categories)
+              ? res.data.admin_frontend_categories.map((c: Category) => c.id)
               : [],
             allowed_ips: Array.isArray(res.data.allowed_ips) ? res.data.allowed_ips : [],
           });
@@ -173,6 +182,10 @@ export default function AdminUserForm() {
       };
       if (form.password) payload.password = form.password;
       if (Number(currentUser?.role_id) === 1) payload.allowed_ips = form.allowed_ips;
+      if (Number(currentUser?.role_id) === 1 && Number(form.roleId) === 2) {
+        payload.admin_category_ids = form.adminCategoryIds;
+        payload.admin_frontend_category_ids = form.adminFrontendCategoryIds;
+      }
       if (isEdit) {
         await api.put(`/users/${id}`, payload);
         navigate("/dashboard/admin-users", { state: { message: "User updated successfully!", type: "success" } });
@@ -197,6 +210,28 @@ export default function AdminUserForm() {
         : [...prev.categoryIds, categoryId],
     }));
   };
+
+  const toggleAdminCategory = (categoryId: number) => {
+    setForm((prev) => ({
+      ...prev,
+      adminCategoryIds: prev.adminCategoryIds.includes(categoryId)
+        ? prev.adminCategoryIds.filter((c) => c !== categoryId)
+        : [...prev.adminCategoryIds, categoryId],
+    }));
+  };
+
+  const toggleAdminFrontendCategory = (categoryId: number) => {
+    setForm((prev) => ({
+      ...prev,
+      adminFrontendCategoryIds: prev.adminFrontendCategoryIds.includes(categoryId)
+        ? prev.adminFrontendCategoryIds.filter((c) => c !== categoryId)
+        : [...prev.adminFrontendCategoryIds, categoryId],
+    }));
+  };
+
+  const isSuperAdmin = Number(currentUser?.role_id) === 1;
+  const isAdminRole = Number(form.roleId) === 2;
+  const isUserRole = Number(form.roleId) === 3;
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-gray-950 p-4 md:p-8">
@@ -391,51 +426,159 @@ export default function AdminUserForm() {
               </div>
             )}
 
-            {/* Allowed Categories */}
-            <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  Allowed Courses
-                </h2>
-                {form.categoryIds.length > 0 && (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
-                    {form.categoryIds.length} selected
-                  </span>
-                )}
-              </div>
-              <div className="px-6 py-6">
-                {categories.length === 0 ? (
-                  <p className="text-sm text-gray-400 dark:text-gray-500">No active courses found.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {categories.map((category) => {
-                      const checked = form.categoryIds.includes(category.id);
-                      return (
-                        <label
-                          key={category.id}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition ${
-                            checked
-                              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-600"
-                              : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleCategory(category.id)}
-                            className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
-                          />
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                            {category.flag_emoji ? `${category.flag_emoji} ` : ""}
-                            {category.title}
-                          </span>
-                        </label>
-                      );
-                    })}
+            {/* Admin panel course access */}
+            {isSuperAdmin && isAdminRole && (
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Admin Panel — Course &amp; Learning Content
+                    </h2>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      Courses this admin can manage in the dashboard (backend).
+                    </p>
                   </div>
-                )}
+                  {form.adminCategoryIds.length > 0 && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                      {form.adminCategoryIds.length} selected
+                    </span>
+                  )}
+                </div>
+                <div className="px-6 py-6">
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No courses found.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {categories.map((category) => {
+                        const checked = form.adminCategoryIds.includes(category.id);
+                        return (
+                          <label
+                            key={`admin-panel-${category.id}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition ${
+                              checked
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-600"
+                                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleAdminCategory(category.id)}
+                              className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
+                            />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                              {category.flag_emoji ? `${category.flag_emoji} ` : ""}
+                              {category.title}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Frontend course access for admin learner view */}
+            {isSuperAdmin && isAdminRole && (
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      Frontend — Course &amp; Learning Content
+                    </h2>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      Courses this admin can access in the user learning view (introduction).
+                    </p>
+                  </div>
+                  {form.adminFrontendCategoryIds.length > 0 && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                      {form.adminFrontendCategoryIds.length} selected
+                    </span>
+                  )}
+                </div>
+                <div className="px-6 py-6">
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No courses found.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {categories.map((category) => {
+                        const checked = form.adminFrontendCategoryIds.includes(category.id);
+                        return (
+                          <label
+                            key={`admin-frontend-${category.id}`}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition ${
+                              checked
+                                ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-600"
+                                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleAdminFrontendCategory(category.id)}
+                              className="h-4 w-4 rounded accent-emerald-600 flex-shrink-0"
+                            />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                              {category.flag_emoji ? `${category.flag_emoji} ` : ""}
+                              {category.title}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Student course enrollment */}
+            {isUserRole && (
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Allowed Courses
+                  </h2>
+                  {form.categoryIds.length > 0 && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300">
+                      {form.categoryIds.length} selected
+                    </span>
+                  )}
+                </div>
+                <div className="px-6 py-6">
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No active courses found.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {categories.map((category) => {
+                        const checked = form.categoryIds.includes(category.id);
+                        return (
+                          <label
+                            key={category.id}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl border-2 cursor-pointer transition ${
+                              checked
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 dark:border-blue-600"
+                                : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleCategory(category.id)}
+                              className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
+                            />
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                              {category.flag_emoji ? `${category.flag_emoji} ` : ""}
+                              {category.title}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex justify-end gap-3 pb-2">
