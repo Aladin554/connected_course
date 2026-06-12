@@ -141,7 +141,7 @@ export default function AdminCategories() {
                     setPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-2.5 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value={10}>10</option>
                   <option value={25}>25</option>

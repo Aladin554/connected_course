@@ -232,7 +232,7 @@ export default function AdminUsers() {
               {/* Mobile filter toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`sm:hidden flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 text-sm font-semibold transition flex-shrink-0 ${
+                className={`sm:hidden flex items-center gap-1.5 px-.5 py-2 rounded-xl border-2 text-sm font-semibold transition flex-shrink-0 ${
                   showFilters || activeFilterCount > 0
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400"
                     : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300"
@@ -251,7 +251,7 @@ export default function AdminUsers() {
                 <select
                   value={roleFilter}
                   onChange={(e) => { setRoleFilter(e.target.value as any); setCurrentPage(1); }}
-                  className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="all">All roles</option>
                   <option value="admin">Admin</option>
@@ -260,7 +260,7 @@ export default function AdminUsers() {
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as any)}
-                  className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="desc">Newest first</option>
                   <option value="asc">Oldest first</option>
@@ -270,7 +270,7 @@ export default function AdminUsers() {
                   <select
                     value={perPage}
                     onChange={(e) => { setPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                    className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
