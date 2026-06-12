@@ -93,7 +93,7 @@ export default function AdminUsers() {
   const togglePermission = async (user: User) => {
     if (currentUser?.id === user.id) { toast.error("You cannot change your own permissions!"); return; }
     const oldVal = user.can_create_users;
-    const optimistic = oldVal === 1 ? 0 : 1;
+    const optimistic = Number(oldVal) === 1 ? 0 : 1;
     setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, can_create_users: optimistic } : u));
     try {
       const res = await api.patch(`/users/${user.id}/toggle-permission`);
@@ -106,6 +106,26 @@ export default function AdminUsers() {
     } catch (err: any) {
       setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, can_create_users: oldVal } : u));
       toast.error(err?.response?.data?.message || "Failed to update permission");
+    }
+  };
+
+  // ── NEW: Toggle panel status ──
+  const togglePanelStatus = async (user: User) => {
+    if (currentUser?.id === user.id) { toast.error("You cannot change your own panel status!"); return; }
+    const oldVal = user.panel_status;
+    const optimistic = Number(oldVal) === 1 ? 0 : 1;
+    setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, panel_status: optimistic } : u));
+    try {
+      const res = await api.patch(`/users/${user.id}/toggle-panel-status`);
+      const body = res.data ?? {};
+      if (body.hasOwnProperty("panel_status")) applyServerUpdate(user.id, { panel_status: body.panel_status });
+      else if (body.user || body.id) applyServerUpdate(user.id, body.user ?? body);
+      else fetchUsers();
+      const finalValue = body.panel_status ?? body.user?.panel_status;
+      toast.success(`Panel status: ${Number(finalValue) === 1 ? "Active" : "Inactive"}`);
+    } catch (err: any) {
+      setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, panel_status: oldVal } : u));
+      toast.error(err?.response?.data?.message || "Failed to update panel status");
     }
   };
 
@@ -174,6 +194,31 @@ export default function AdminUsers() {
   }, [totalPages, currentPage]);
 
   const activeFilterCount = (roleFilter !== "all" ? 1 : 0) + (sortOrder !== "desc" ? 1 : 0);
+
+  // ── Panel status badge — now a clickable button ──
+  const PanelBadge = ({ user }: { user: User }) => {
+    const active = Number(user.panel_status) === 1;
+    const isSelf = currentUser?.id === user.id;
+    return (
+      <button
+        onClick={() => togglePanelStatus(user)}
+        disabled={isSelf}
+        title={isSelf ? "Cannot change your own panel status" : `Click to ${active ? "deactivate" : "activate"}`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition
+          ${active
+            ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/50"
+            : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+          }
+          ${isSelf ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${active ? "bg-violet-500" : "bg-gray-400"}`} />
+        {active ? "Active" : "Inactive"}
+      </button>
+    );
+  };
+
+  // desktop col count
+  const desktopColCount = currentUser?.role_id === 1 ? 8 : 7;
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-gray-950 p-3 sm:p-6 md:p-8">
@@ -323,6 +368,7 @@ export default function AdminUsers() {
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">User</th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Role</th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Panel</th>
                   {currentUser?.role_id === 1 && (
                     <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Permission</th>
                   )}
@@ -335,7 +381,7 @@ export default function AdminUsers() {
                 {loading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: currentUser?.role_id === 1 ? 7 : 6 }).map((__, j) => (
+                      {Array.from({ length: desktopColCount }).map((__, j) => (
                         <td key={j} className="px-6 py-4">
                           <div className="h-4 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" style={{ width: j === 1 ? "60%" : "40%" }} />
                         </td>
@@ -344,7 +390,7 @@ export default function AdminUsers() {
                   ))
                 ) : paginated.length === 0 ? (
                   <tr>
-                    <td colSpan={currentUser?.role_id === 1 ? 7 : 6} className="py-16 text-center">
+                    <td colSpan={desktopColCount} className="py-16 text-center">
                       <Users className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
                       <p className="text-gray-400 font-medium">No users found</p>
                       {search && <p className="text-sm text-gray-400 mt-1">Try a different search term</p>}
@@ -369,6 +415,9 @@ export default function AdminUsers() {
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${user.role?.name.toLowerCase() === "admin" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}>
                           {user.role?.name || "—"}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <PanelBadge user={user} />
                       </td>
                       {currentUser?.role_id === 1 && (
                         <td className="px-6 py-4">
@@ -448,6 +497,8 @@ export default function AdminUsers() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${user.role?.name.toLowerCase() === "admin" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}>
                           {user.role?.name || "—"}
                         </span>
+
+                        <PanelBadge user={user} />
 
                         {currentUser?.role_id === 1 && (
                           <button
