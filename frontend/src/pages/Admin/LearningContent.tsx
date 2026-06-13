@@ -4,7 +4,7 @@ import {
   ChevronRight, CheckCircle2, Layers, Video, Paperclip, ExternalLink,
 } from "lucide-react";
 import api from "../../api/axios";
-import { LearningCategory, LearningLesson, LearningModule, formatLessonDuration } from "../User/pages/shared";
+import { LearningCategory, LearningLesson, LearningModule, formatLessonDuration, hasLessonDuration } from "../User/pages/shared";
 import RichTextEditor from "../../components/form/RichTextEditor";
 
 type LessonSectionForm = {
@@ -161,13 +161,14 @@ export default function LearningContent() {
     e.preventDefault();
     if (!lessonForm.title.trim()) return;
     setIsSaving(true);
+    const videoValue = lessonForm.video_value.trim();
     const payload = {
       title: lessonForm.title.trim(),
       warning: lessonForm.warning.trim(),
-      duration_mins: Number(lessonForm.duration_mins),
+      duration_mins: lessonForm.duration_mins ? Number(lessonForm.duration_mins) : 0,
       duration_unit: lessonForm.duration_unit,
-      video_type: "youtube",
-      video_value: lessonForm.video_value.trim(),
+      video_type: videoValue ? "youtube" : null,
+      video_value: videoValue || null,
       is_active: lessonForm.is_active ? 1 : 0,
       strategies: lessonForm.strategies
         .filter(s => s.title.trim() || s.description.trim() || s.file_path)
@@ -539,9 +540,13 @@ export default function LearningContent() {
                       <div className="min-w-0">
                         <div className="font-medium text-gray-800 dark:text-gray-200 text-sm truncate">{lesson.title}</div>
                         <div className="text-xs text-gray-400 mt-0.5">
-                          {formatLessonDuration(lesson.duration_mins, lesson.duration_unit === "seconds" ? "seconds" : "minutes")}
+                          {hasLessonDuration(lesson.duration_mins) && (
+                            <>
+                              {formatLessonDuration(lesson.duration_mins, lesson.duration_unit === "seconds" ? "seconds" : "minutes")}
+                            </>
+                          )}
                           {!lesson.is_active && (
-                            <span className="ml-2 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500">
+                            <span className={`${hasLessonDuration(lesson.duration_mins) ? "ml-2 " : ""}px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500`}>
                               inactive
                             </span>
                           )}
@@ -728,7 +733,7 @@ export default function LearningContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
-                    Duration
+                    Duration <span className="text-xs font-normal text-gray-400">(optional)</span>
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -755,14 +760,13 @@ export default function LearningContent() {
                 </div>
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
-                    YouTube Video ID / URL <span className="text-red-500">*</span>
+                    YouTube Video ID / URL <span className="text-xs font-normal text-gray-400">(optional)</span>
                   </label>
                   <input
-                    required
                     value={lessonForm.video_value}
                     onChange={(e) => setLessonForm({ ...lessonForm, video_value: e.target.value })}
                     className={`${inputClass} focus:ring-2 focus:ring-emerald-500`}
-                    placeholder="dQw4w9WgXcQ"
+                    placeholder="dQw4w9WgXcQ or full YouTube URL"
                   />
                 </div>
               </div>

@@ -32,10 +32,10 @@ export interface LearningLesson {
   module_id: number;
   title: string;
   warning?: string | null;
-  duration_mins: number;
+  duration_mins?: number | null;
   duration_unit?: "minutes" | "seconds";
-  video_type: "upload" | "youtube" | "vimeo" | "bunny";
-  video_value: string;
+  video_type?: "upload" | "youtube" | "vimeo" | "bunny" | null;
+  video_value?: string | null;
   video_thumbnail?: string | null;
   sort_order: number;
   is_active: boolean;
@@ -68,8 +68,8 @@ export interface LayoutProps   { tab: string; setTab: (t: string) => void; onCon
 
 export type DurationUnit = "minutes" | "seconds";
 
-export const formatLessonDuration = (value = 0, unit: DurationUnit = "minutes"): string => {
-  if (!value) return unit === "seconds" ? "0 sec" : "0 min";
+export const formatLessonDuration = (value = 0, unit: DurationUnit = "minutes"): string | null => {
+  if (!value) return null;
   if (unit === "seconds") {
     if (value < 60) return `${value} sec`;
     const mins = Math.floor(value / 60);
@@ -81,6 +81,8 @@ export const formatLessonDuration = (value = 0, unit: DurationUnit = "minutes"):
   if (!hours) return `${mins} min`;
   return mins ? `${hours}h ${mins}m` : `${hours}h`;
 };
+
+export const hasLessonDuration = (value?: number | null): boolean => Number(value) > 0;
 
 export const lessonDurationSeconds = (value = 0, unit: DurationUnit = "minutes"): number =>
   unit === "seconds" ? value : value * 60;

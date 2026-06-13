@@ -6,6 +6,7 @@ import {
   ChevRight,
   ClockIcon,
   formatLessonDuration,
+  hasLessonDuration,
   LearningCategory,
   LearningLesson,
   LearningModule,
@@ -29,11 +30,10 @@ interface ModuleLessonsPageProps {
 const moduleLabel = (moduleNumber?: number | null) =>
   moduleNumber ? `Module ${moduleNumber}` : "Module";
 
-// ─── Duration formatter ───────────────────────────────────────────────────────
 const formatDuration = (value: number, unit?: "minutes" | "seconds") =>
   formatLessonDuration(value, unit === "seconds" ? "seconds" : "minutes");
 
-// ─── Lesson row (shared between mobile + desktop list) ────────────────────────
+// ─── Lesson row ───────────────────────────────────────────────────────────────
 
 function LessonRow({
   lesson,
@@ -41,7 +41,6 @@ function LessonRow({
   completed,
   current,
   unlocked,
-  isLast,
   isDesktop,
   onLessonClick,
 }: {
@@ -56,6 +55,8 @@ function LessonRow({
 }) {
   const [hovered, setHovered] = useState(false);
 
+  const orbSize = isDesktop ? 52 : 48;
+
   return (
     <div
       onClick={() => unlocked && onLessonClick(lesson)}
@@ -64,44 +65,43 @@ function LessonRow({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: isDesktop ? 16 : 12,
-        padding: isDesktop ? "0px 20px" : "0px 16px",
+        gap: isDesktop ? 16 : 14,
+        padding: isDesktop ? "16px 20px" : "14px 16px",
         background: "white",
-        marginBottom: 10,
-        borderRadius: 16,
-        border: current
-          ? "2px solid #ff5a2c"
-          : "1px solid #eef2f7",
+        marginBottom: 12,
+        borderRadius: 18,
+        border: current ? "2px solid #ff5a2c" : "1.5px solid #eef2f7",
         boxShadow: hovered
-          ? "0 6px 20px rgba(0,0,0,0.07)"
-          : "0 3px 12px rgba(0,0,0,0.04)",
+          ? "0 8px 24px rgba(0,0,0,0.09)"
+          : current
+          ? "0 4px 16px rgba(255,90,44,0.12)"
+          : "0 2px 10px rgba(0,0,0,0.05)",
         cursor: unlocked ? "pointer" : "default",
         position: "relative",
         transition: "all 0.18s cubic-bezier(.22,1,.36,1)",
-        transform: hovered ? "translateY(-1px)" : "none",
+        transform: hovered && unlocked ? "translateY(-2px)" : "none",
       }}
     >
-      {/* Orange accent for current */}
+      {/* Orange left accent for current lesson */}
       {current && (
         <div
           style={{
             position: "absolute",
-            left: -2,
-            top: "50%",
-            transform: "translateY(-50%)",
+            left: 0,
+            top: "20%",
+            bottom: "20%",
             width: 4,
-            height: "65%",
             borderRadius: "0 4px 4px 0",
             background: "#ff5a2c",
           }}
         />
       )}
 
-      {/* ── Status orb ── */}
+      {/* Status orb */}
       <div
         style={{
-          width: isDesktop ? 48 : 44,
-          height: isDesktop ? 48 : 44,
+          width: orbSize,
+          height: orbSize,
           borderRadius: "50%",
           flexShrink: 0,
           display: "flex",
@@ -113,21 +113,20 @@ function LessonRow({
             ? "#ff5a2c"
             : "#f3f4f6",
           boxShadow: completed
-            ? "0 3px 12px rgba(34,197,94,0.3)"
+            ? "0 4px 12px rgba(34,197,94,0.3)"
             : current
-            ? "0 3px 12px rgba(255,90,44,0.3)"
+            ? "0 4px 12px rgba(255,90,44,0.3)"
             : "none",
-          transition: "all 0.15s",
         }}
       >
         {completed ? (
-          <CheckIcon size={isDesktop ? 20 : 18} />
+          <CheckIcon size={isDesktop ? 22 : 20} />
         ) : current ? (
-          <PlayIcon size={isDesktop ? 18 : 17} />
+          <PlayIcon size={isDesktop ? 20 : 18} />
         ) : (
           <span
             style={{
-              fontSize: isDesktop ? 15 : 14,
+              fontSize: isDesktop ? 16 : 15,
               fontWeight: 800,
               color: "#9ca3af",
             }}
@@ -137,20 +136,21 @@ function LessonRow({
         )}
       </div>
 
-      {/* ── Text block ── */}
+      {/* Text block */}
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* Lesson badge */}
         <div
           style={{
             display: "inline-flex",
-            padding: "0px 9px",
+            alignItems: "center",
+            padding: "3px 10px",
             borderRadius: 999,
-            background: "#f8fafc",
-            fontSize: 10,
+            background: current ? "#fff4f0" : "#f8fafc",
+            fontSize: 11,
             fontWeight: 700,
-            color: "#6b7280",
-            marginBottom: 5,
-            letterSpacing: 0.4,
+            color: current ? "#ff5a2c" : "#9ca3af",
+            marginBottom: 6,
+            letterSpacing: 0.5,
           }}
         >
           LESSON {index + 1}
@@ -160,34 +160,36 @@ function LessonRow({
         <div
           style={{
             fontWeight: 800,
-            fontSize: isDesktop ? 16 : 14.5,
-            color: unlocked ? "#111827" : "#9ca3af",
-            marginBottom: 3,
-            lineHeight: 1.3,
+            fontSize: isDesktop ? 16 : 15,
+            color: unlocked ? "#111827" : "#b0b8c5",
+            lineHeight: 1.35,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
+            marginBottom: hasLessonDuration(lesson.duration_mins) ? 5 : 0,
           }}
         >
           {lesson.title}
         </div>
 
         {/* Duration */}
-        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <ClockIcon size={11} color={current ? "#ff5a2c" : "#9ca3af"} />
-          <span
-            style={{
-              fontSize: 12,
-              color: current ? "#ff5a2c" : "#6b7280",
-              fontWeight: 600,
-            }}
-          >
-            {formatDuration(lesson.duration_mins, lesson.duration_unit)}
-          </span>
-        </div>
+        {hasLessonDuration(lesson.duration_mins) && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <ClockIcon size={12} color={current ? "#ff5a2c" : "#9ca3af"} />
+            <span
+              style={{
+                fontSize: 12,
+                color: current ? "#ff5a2c" : "#9ca3af",
+                fontWeight: 600,
+              }}
+            >
+              {formatDuration(lesson.duration_mins, lesson.duration_unit)}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* ── Right action ── */}
+      {/* Right action */}
       {current ? (
         <button
           onClick={(e) => {
@@ -195,34 +197,61 @@ function LessonRow({
             onLessonClick(lesson);
           }}
           style={{
-            padding: isDesktop ? "8px 20px" : "7px 16px",
+            padding: isDesktop ? "10px 22px" : "9px 18px",
             background: "#ff5a2c",
             color: "white",
             border: "none",
-            borderRadius: 10,
+            borderRadius: 12,
             fontSize: 13,
             fontWeight: 700,
             cursor: "pointer",
             flexShrink: 0,
-            boxShadow: "0 3px 12px rgba(255,90,44,0.35)",
+            boxShadow: "0 4px 14px rgba(255,90,44,0.35)",
             transition: "all 0.12s",
             letterSpacing: 0.2,
+            whiteSpace: "nowrap",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 5px 16px rgba(255,90,44,0.45)";
+            e.currentTarget.style.boxShadow = "0 6px 18px rgba(255,90,44,0.45)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 3px 12px rgba(255,90,44,0.35)";
+            e.currentTarget.style.boxShadow = "0 4px 14px rgba(255,90,44,0.35)";
           }}
         >
           Continue
         </button>
       ) : completed ? (
-        <ChevRight size={18} color="#111827" />
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            background: "#f0fdf4",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <ChevRight size={16} color="#22c55e" />
+        </div>
       ) : (
-        <LockIcon size={16} color="#9ca3af" />
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: "50%",
+            background: "#f3f4f6",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <LockIcon size={14} color="#9ca3af" />
+        </div>
       )}
     </div>
   );
@@ -254,22 +283,21 @@ function LessonList({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 12,
-              padding: isDesktop ? "0px 20px" : "0px 16px",
-              marginBottom: 10,
-              borderRadius: 16,
+              gap: 14,
+              padding: isDesktop ? "16px 20px" : "14px 16px",
+              marginBottom: 12,
+              borderRadius: 18,
               background: "white",
-              border: "1px solid #eef2f7",
-              boxShadow: "0 3px 12px rgba(0,0,0,0.04)",
+              border: "1.5px solid #eef2f7",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
             }}
           >
             <div
               style={{
-                width: isDesktop ? 48 : 44,
-                height: isDesktop ? 48 : 44,
+                width: isDesktop ? 52 : 48,
+                height: isDesktop ? 52 : 48,
                 borderRadius: "50%",
-                background:
-                  "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
                 backgroundSize: "200% 100%",
                 animation: "shimmer 1.4s infinite",
                 flexShrink: 0,
@@ -278,35 +306,32 @@ function LessonList({
             <div style={{ flex: 1 }}>
               <div
                 style={{
-                  height: 9,
-                  width: "30%",
+                  height: 10,
+                  width: "28%",
                   borderRadius: 999,
-                  background:
-                    "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                  background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
                   backgroundSize: "200% 100%",
                   animation: "shimmer 1.4s infinite",
-                  marginBottom: 7,
+                  marginBottom: 8,
                 }}
               />
               <div
                 style={{
-                  height: 14,
-                  width: "65%",
+                  height: 15,
+                  width: "60%",
                   borderRadius: 6,
-                  background:
-                    "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                  background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
                   backgroundSize: "200% 100%",
                   animation: "shimmer 1.4s infinite",
-                  marginBottom: 5,
+                  marginBottom: 6,
                 }}
               />
               <div
                 style={{
-                  height: 9,
-                  width: "22%",
+                  height: 10,
+                  width: "20%",
                   borderRadius: 6,
-                  background:
-                    "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                  background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
                   backgroundSize: "200% 100%",
                   animation: "shimmer 1.4s infinite",
                 }}
@@ -333,14 +358,14 @@ function LessonList({
       >
         <div
           style={{
-            width: 56,
-            height: 56,
-            borderRadius: 18,
+            width: 60,
+            height: 60,
+            borderRadius: 20,
             background: "#f3f4f6",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 26,
+            fontSize: 28,
           }}
         >
           📭
@@ -348,14 +373,7 @@ function LessonList({
         <div style={{ fontSize: 15, fontWeight: 800, color: "#111827" }}>
           No lessons yet
         </div>
-        <div
-          style={{
-            fontSize: 13,
-            color: "#9ca3af",
-            lineHeight: 1.5,
-            maxWidth: 220,
-          }}
-        >
+        <div style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.6, maxWidth: 220 }}>
           Lessons for this module haven't been added yet. Check back soon.
         </div>
       </div>
@@ -387,10 +405,10 @@ function LessonList({
   );
 }
 
-// ─── Module header remains unchanged ─────────────────────────────────────────
+// ─── Module header ────────────────────────────────────────────────────────────
+
 function ModuleHeader({
   module,
-  moduleNumber,
   category,
   lessons,
   progressPct,
@@ -476,14 +494,7 @@ function ModuleHeader({
             }}
           />
         ) : (
-          <p
-            style={{
-              fontSize: 13,
-              color: "rgba(255,255,255,0.6)",
-              lineHeight: 1.6,
-              margin: "0 0 18px 0",
-            }}
-          >
+          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: "0 0 18px 0" }}>
             Choose a lesson to continue.
           </p>
         )}
@@ -503,22 +514,10 @@ function ModuleHeader({
               marginBottom: 9,
             }}
           >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "rgba(255,255,255,0.85)",
-              }}
-            >
+            <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>
               {lessons.length} Lesson{lessons.length !== 1 ? "s" : ""}
             </span>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "#22c55e",
-              }}
-            >
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>
               {statusLabel}
             </span>
           </div>
@@ -543,14 +542,7 @@ function ModuleHeader({
             />
           </div>
 
-          <div
-            style={{
-              textAlign: "right",
-              fontSize: 13,
-              fontWeight: 800,
-              color: "rgba(255,255,255,0.55)",
-            }}
-          >
+          <div style={{ textAlign: "right", fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.55)" }}>
             {progressPct}%
           </div>
         </div>
@@ -560,6 +552,7 @@ function ModuleHeader({
 }
 
 // ─── Mobile layout ────────────────────────────────────────────────────────────
+
 function MobileLayout({
   module,
   moduleNumber,
@@ -597,6 +590,7 @@ function MobileLayout({
         position: "relative",
       }}
     >
+      {/* Top nav overlay */}
       <div
         style={{
           position: "absolute",
@@ -627,14 +621,7 @@ function MobileLayout({
         >
           <ArrowLeft size={16} />
         </button>
-        <span
-          style={{
-            fontSize: 15,
-            fontWeight: 700,
-            color: "white",
-            textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-          }}
-        >
+        <span style={{ fontSize: 15, fontWeight: 700, color: "white", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
           {moduleLabel(moduleNumber)}
         </span>
         <div style={{ width: 36 }} />
@@ -650,36 +637,26 @@ function MobileLayout({
         isDesktop={false}
       />
 
+      {/* Scrollable white sheet */}
       <div
         className="hs"
         style={{
-          flex: 1,
+          flex: "1 1 0",
           minHeight: 0,
           background: "white",
           borderRadius: "22px 22px 0 0",
           overflowY: "auto",
-          padding: "0px 16px 40px",
+          WebkitOverflowScrolling: "touch",
+          padding: "0 16px 40px",
           marginTop: -22,
           position: "relative",
           zIndex: 2,
           boxShadow: "0 -4px 20px rgba(0,0,0,0.1)",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            paddingBottom: 10,
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 4,
-              borderRadius: 99,
-              background: "#e5e7eb",
-            }}
-          />
+        {/* Drag handle */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
+          <div style={{ width: 36, height: 4, borderRadius: 99, background: "#e5e7eb" }} />
         </div>
 
         <LessonList
@@ -696,6 +673,7 @@ function MobileLayout({
 }
 
 // ─── Desktop layout ───────────────────────────────────────────────────────────
+
 function DesktopLayout({
   module,
   moduleNumber,
@@ -732,6 +710,7 @@ function DesktopLayout({
         position: "relative",
       }}
     >
+      {/* Top nav overlay */}
       <div
         style={{
           position: "absolute",
@@ -761,23 +740,12 @@ function DesktopLayout({
             flexShrink: 0,
             transition: "background 0.15s",
           }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.25)")
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "rgba(255,255,255,0.15)")
-          }
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
         >
           <ArrowLeft size={16} />
         </button>
-        <span
-          style={{
-            fontSize: 13,
-            color: "rgba(255,255,255,0.65)",
-            fontWeight: 600,
-            textShadow: "0 1px 4px rgba(0,0,0,0.4)",
-          }}
-        >
+        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>
           {category?.title || "Course"}
           <span style={{ margin: "0 7px", opacity: 0.4 }}>›</span>
           {moduleLabel(moduleNumber)}
@@ -805,13 +773,7 @@ function DesktopLayout({
           zIndex: 2,
         }}
       >
-        <div
-          style={{
-            maxWidth: 760,
-            margin: "0 auto",
-            padding: "24px 0 60px",
-          }}
-        >
+        <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 0 60px" }}>
           <LessonList
             lessons={lessons}
             loading={loading}
@@ -859,9 +821,7 @@ export default function ModuleLessonsPage({
     loadLearningProgress(category?.id).then((ids) => {
       if (!cancelled) setCompletedLessonIds(ids);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [category, lessons]);
 
   const isLessonUnlocked = (index: number) =>
@@ -871,10 +831,10 @@ export default function ModuleLessonsPage({
   const completedCount = completedLessonIds.filter((id) =>
     lessons.some((l) => l.id === id)
   ).length;
+
   const progressPct =
-    lessons.length > 0
-      ? Math.round((completedCount / lessons.length) * 100)
-      : 0;
+    lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+
   const statusLabel =
     completedCount === 0
       ? "Not Started"

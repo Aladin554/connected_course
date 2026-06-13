@@ -185,6 +185,7 @@ class LearningContentController extends Controller
         }
 
         $data = $request->validate($this->lessonRules());
+        $this->normalizeLessonData($data);
         $children = $this->extractLessonChildren($data);
         $lesson = $module->allLessons()->create($data);
         $this->syncLessonChildren($lesson, $children);
@@ -204,6 +205,7 @@ class LearningContentController extends Controller
         }
 
         $data = $request->validate($this->lessonRules());
+        $this->normalizeLessonData($data);
         $children = $this->extractLessonChildren($data);
         $lesson->update($data);
         $this->syncLessonChildren($lesson, $children);
@@ -265,8 +267,8 @@ class LearningContentController extends Controller
             'warning' => ['nullable', 'string'],
             'duration_mins' => ['nullable', 'integer', 'min:0'],
             'duration_unit' => ['sometimes', Rule::in(['minutes', 'seconds'])],
-            'video_type' => ['required', Rule::in(['youtube'])],
-            'video_value' => ['required', 'string', 'max:2048'],
+            'video_type' => ['nullable', Rule::in(['youtube'])],
+            'video_value' => ['nullable', 'string', 'max:2048'],
             'video_thumbnail' => ['nullable', 'string', 'max:2048'],
             'is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
             'strategies' => ['sometimes', 'array'],
@@ -293,6 +295,23 @@ class LearningContentController extends Controller
         unset($data['strategies'], $data['model_answer'], $data['common_mistakes']);
 
         return $children;
+    }
+
+    protected function normalizeLessonData(array &$data): void
+    {
+        $videoValue = trim((string) ($data['video_value'] ?? ''));
+
+        if ($videoValue === '') {
+            $data['video_value'] = null;
+            $data['video_type'] = null;
+        } else {
+            $data['video_value'] = $videoValue;
+            $data['video_type'] = 'youtube';
+        }
+
+        $data['duration_mins'] = isset($data['duration_mins']) && $data['duration_mins'] !== ''
+            ? (int) $data['duration_mins']
+            : 0;
     }
 
     protected function syncLessonChildren(Lesson $lesson, array $children): void

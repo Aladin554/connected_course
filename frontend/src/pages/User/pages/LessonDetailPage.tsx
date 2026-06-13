@@ -9,6 +9,7 @@ import {
   ClockIcon,
   LearningLesson,
   formatLessonDuration,
+  hasLessonDuration,
   parseLessonContentBlock,
   RichTextContent,
   WarningNotice,
@@ -52,10 +53,12 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
   const toggleSection = (key: string) =>
     setExpanded((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
 
-  const durationLabel = formatLessonDuration(
-    detail?.duration_mins || 0,
-    detail?.duration_unit === "seconds" ? "seconds" : "minutes"
-  );
+  const durationLabel = hasLessonDuration(detail?.duration_mins)
+    ? formatLessonDuration(
+        detail?.duration_mins || 0,
+        detail?.duration_unit === "seconds" ? "seconds" : "minutes"
+      )
+    : null;
   const embedUrl = youtubeEmbedUrl(detail?.video_value);
 
   return (
@@ -73,17 +76,19 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
       </div>
 
       <div style={{ padding: "0 18px 10px", flexShrink: 0 }}>
-        <h1 style={{ fontWeight: 900, fontSize: 22, color: "white", letterSpacing: -0.6, marginBottom: 6, lineHeight: 1.15 }}>
+        <h1 style={{ fontWeight: 900, fontSize: 22, color: "white", letterSpacing: -0.6, marginBottom: durationLabel ? 6 : 0, lineHeight: 1.15 }}>
           {loading ? "Loading..." : detail?.title || "Lesson"}
         </h1>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <ClockIcon size={13} color="rgba(255,255,255,.5)" />
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>{durationLabel}</span>
-        </div>
+        {durationLabel && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <ClockIcon size={13} color="rgba(255,255,255,.5)" />
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>{durationLabel}</span>
+          </div>
+        )}
       </div>
 
+      {embedUrl && (
       <div style={{ position: "relative", margin: "0 18px 0", borderRadius: 14, overflow: "hidden", flexShrink: 0, background: "#071224" }}>
-        {embedUrl ? (
           <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", height: 0, background: "#000" }}>
             <iframe
               src={embedUrl}
@@ -93,25 +98,10 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
               allowFullScreen
             />
           </div>
-        ) : (
-          <div
-            style={{
-              height: 200,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "rgba(255,255,255,.6)",
-              fontSize: 13,
-              padding: 20,
-              textAlign: "center",
-            }}
-          >
-            No YouTube video configured for this lesson.
-          </div>
-        )}
       </div>
+      )}
 
-      <div style={{ flex: 1, minHeight: 0, background: "white", borderRadius: "20px 20px 0 0", marginTop: 14, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flex: 1, minHeight: 0, background: "white", borderRadius: "20px 20px 0 0", marginTop: embedUrl ? 14 : 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px 0" }} className="hs">
           <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14 }}>Expand the sections below to learn more.</p>
 
