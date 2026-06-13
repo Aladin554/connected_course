@@ -11,6 +11,7 @@ use App\Models\UserModuleProgress;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class LearningContentController extends Controller
@@ -19,12 +20,15 @@ class LearningContentController extends Controller
 
     public function categoryModules(Category $category): JsonResponse
     {
-        if (!$this->canViewFrontendCategory($category)) {
+        $canAdminister = $this->canAdministerCategory($category);
+        $canViewFrontend = $this->canViewFrontendCategory($category);
+
+        if (!$canAdminister && !$canViewFrontend) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $modules = $category->courseModules()
-            ->withCount('lessons')
+        $modules = ($canAdminister ? $category->allCourseModules() : $category->courseModules())
+            ->withCount($canAdminister ? 'allLessons' : 'lessons')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -80,11 +84,14 @@ class LearningContentController extends Controller
     {
         $module->load('category');
 
-        if (!$this->canViewFrontendCategory($module->category)) {
+        $canAdminister = $this->canAdministerCategory($module->category);
+        $canViewFrontend = $this->canViewFrontendCategory($module->category);
+
+        if (!$canAdminister && !$canViewFrontend) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $lessons = $module->lessons()
+        $lessons = ($canAdminister ? $module->allLessons() : $module->lessons())
             ->with(['strategies', 'lessonModelAnswer', 'commonMistakes'])
             ->get();
 
@@ -95,11 +102,14 @@ class LearningContentController extends Controller
     {
         $lesson->load(['module.category', 'strategies', 'lessonModelAnswer', 'commonMistakes']);
 
-        if (!$this->canViewFrontendCategory($lesson->module->category)) {
+        $canAdminister = $this->canAdministerCategory($lesson->module->category);
+
+        if (!$canAdminister && !$this->canViewFrontendCategory($lesson->module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        if (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active) {
+        if (!$canAdminister
+            && (!$lesson->is_active || !$lesson->module->is_active || !$lesson->module->category->is_active)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -217,6 +227,25 @@ class LearningContentController extends Controller
         return response()->json(['message' => 'Lesson deleted successfully']);
     }
 
+    public function uploadStrategyFile(Request $request): JsonResponse
+    {
+        if (!$this->canAdministerCategories()) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('strategy-files', 'public');
+
+        return response()->json([
+            'file_path' => $path,
+            'file_name' => $file->getClientOriginalName(),
+        ]);
+    }
+
     protected function moduleRules(): array
     {
         return [
@@ -235,6 +264,7 @@ class LearningContentController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'warning' => ['nullable', 'string'],
             'duration_mins' => ['nullable', 'integer', 'min:0'],
+            'duration_unit' => ['sometimes', Rule::in(['minutes', 'seconds'])],
             'video_type' => ['required', Rule::in(['youtube'])],
             'video_value' => ['required', 'string', 'max:2048'],
             'video_thumbnail' => ['nullable', 'string', 'max:2048'],
@@ -243,6 +273,8 @@ class LearningContentController extends Controller
             'strategies.*.id' => ['nullable', 'integer', 'exists:lesson_strategies,id'],
             'strategies.*.step_number' => ['required_with:strategies', 'integer', 'min:1'],
             'strategies.*.content' => ['required_with:strategies', 'string'],
+            'strategies.*.file_path' => ['nullable', 'string', 'max:2048'],
+            'strategies.*.file_name' => ['nullable', 'string', 'max:255'],
             'model_answer' => ['nullable', 'string'],
             'common_mistakes' => ['sometimes', 'array'],
             'common_mistakes.*.id' => ['nullable', 'integer', 'exists:lesson_common_mistakes,id'],
@@ -270,11 +302,16 @@ class LearningContentController extends Controller
             $payload = [
                 'step_number' => $strategy['step_number'] ?? $index + 1,
                 'content' => $strategy['content'] ?? '',
+                'file_path' => $strategy['file_path'] ?? null,
+                'file_name' => $strategy['file_name'] ?? null,
             ];
 
             if (!empty($strategy['id'])) {
                 $row = $lesson->strategies()->whereKey($strategy['id'])->first();
                 if ($row) {
+                    if ($row->file_path && $row->file_path !== $payload['file_path']) {
+                        Storage::disk('public')->delete($row->file_path);
+                    }
                     $row->update($payload);
                     $strategyIds[] = $row->id;
                 }
@@ -284,7 +321,20 @@ class LearningContentController extends Controller
             $row = $lesson->strategies()->create($payload);
             $strategyIds[] = $row->id;
         }
-        $lesson->strategies()->when($strategyIds !== [], fn ($query) => $query->whereNotIn('id', $strategyIds))->delete();
+
+        $removedStrategies = $lesson->strategies()
+            ->when($strategyIds !== [], fn ($query) => $query->whereNotIn('id', $strategyIds))
+            ->get();
+
+        foreach ($removedStrategies as $removed) {
+            if ($removed->file_path) {
+                Storage::disk('public')->delete($removed->file_path);
+            }
+        }
+
+        $lesson->strategies()
+            ->when($strategyIds !== [], fn ($query) => $query->whereNotIn('id', $strategyIds))
+            ->delete();
 
         if ($children['model_answer'] !== null) {
             $lesson->lessonModelAnswer()->updateOrCreate([], ['content' => $children['model_answer']]);

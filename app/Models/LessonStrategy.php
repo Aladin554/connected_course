@@ -13,6 +13,8 @@ class LessonStrategy extends Model
         'lesson_id',
         'step_number',
         'content',
+        'file_path',
+        'file_name',
     ];
 
     protected $casts = [

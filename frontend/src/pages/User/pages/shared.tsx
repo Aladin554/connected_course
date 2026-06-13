@@ -1,7 +1,4 @@
 // src/pages/User/pages/shared.tsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared icons, data, and small components reused across all learning pages.
-// ─────────────────────────────────────────────────────────────────────────────
 import React from "react";
 import parse from "html-react-parser";
 import api from "../../../api/axios";
@@ -11,6 +8,7 @@ export type Page = "home" | "welcome" | "course" | "module" | "lesson";
 export interface LearningCategory {
   id: number;
   title: string;
+  type?: "training" | "resource" | null;
   flag_emoji?: string | null;
   description?: string | null;
   thumbnail_image?: string | null;
@@ -35,12 +33,13 @@ export interface LearningLesson {
   title: string;
   warning?: string | null;
   duration_mins: number;
+  duration_unit?: "minutes" | "seconds";
   video_type: "upload" | "youtube" | "vimeo" | "bunny";
   video_value: string;
   video_thumbnail?: string | null;
   sort_order: number;
   is_active: boolean;
-  strategies?: { id: number; step_number: number; content: string }[];
+  strategies?: { id: number; step_number: number; content: string; file_path?: string | null; file_name?: string | null }[];
   lesson_model_answer?: { id: number; content: string } | null;
   common_mistakes?: { id: number; content: string; sort_order: number }[];
 }
@@ -48,36 +47,84 @@ export interface LessonContentBlock {
   id: number;
   title: string;
   description: string;
+  file_path?: string | null;
+  file_name?: string | null;
 }
 export interface IconProps  { active: boolean }
 export interface BarProps   { value: number; light?: boolean }
 export interface SectionHeaderProps { title: string; action?: string }
-export interface HeroCardProps { height?: number; onContinue: () => void; category?: LearningCategory | null; progress?: number; moduleNumber?: number | null; moduleName?: string | null }
+export interface HeroCardProps {
+  height?: number;
+  onContinue: () => void;
+  category?: LearningCategory | null;
+  progress?: number;
+  moduleNumber?: number | null;
+  moduleName?: string | null;
+  /** mobile = pill + title only (whole card clickable), desktop = full info panel */
+  variant?: "mobile" | "desktop";
+}
 export interface HelpBoxProps  { desktop: boolean }
 export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: (category?: LearningCategory) => void }
 
+export type DurationUnit = "minutes" | "seconds";
+
+export const formatLessonDuration = (value = 0, unit: DurationUnit = "minutes"): string => {
+  if (!value) return unit === "seconds" ? "0 sec" : "0 min";
+  if (unit === "seconds") {
+    if (value < 60) return `${value} sec`;
+    const mins = Math.floor(value / 60);
+    const secs = value % 60;
+    return secs ? `${mins} min ${secs} sec` : `${mins} min`;
+  }
+  const hours = Math.floor(value / 60);
+  const mins = value % 60;
+  if (!hours) return `${mins} min`;
+  return mins ? `${hours}h ${mins}m` : `${hours}h`;
+};
+
+export const lessonDurationSeconds = (value = 0, unit: DurationUnit = "minutes"): number =>
+  unit === "seconds" ? value : value * 60;
+
+export const extractYouTubeId = (value?: string | null): string | null => {
+  const raw = (value || "").trim();
+  if (!raw) return null;
+  if (/^[a-zA-Z0-9_-]{11}$/.test(raw)) return raw;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtube\.com\/shorts\/|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = raw.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return null;
+};
+
+export const youtubeThumbnail = (value?: string | null): string | null => {
+  const id = extractYouTubeId(value);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+};
+
+export const youtubeEmbedUrl = (value?: string | null): string | null => {
+  const id = extractYouTubeId(value);
+  return id ? `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1` : null;
+};
+
 /* ════════ ICONS ════════ */
 export const HomeIcon = ({ active }: IconProps) => (
-  <svg width="20" height="20" viewBox="0 0 24 24"
-    fill={active ? "#22c55e" : "none"}
-    stroke={active ? "#22c55e" : "#9ca3af"}
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill={active ? "#22c55e" : "none"} stroke={active ? "#22c55e" : "#9ca3af"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/>
     <path d="M9 21V12h6v9"/>
   </svg>
 );
 export const BookIcon = ({ active }: IconProps) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-    stroke={active ? "#22c55e" : "#9ca3af"}
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#22c55e" : "#9ca3af"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
     <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
   </svg>
 );
 export const MicIcon = ({ active }: IconProps) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-    stroke={active ? "#22c55e" : "#9ca3af"}
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#22c55e" : "#9ca3af"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="9" y="2" width="6" height="12" rx="3"/>
     <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
     <line x1="12" y1="19" x2="12" y2="23"/>
@@ -85,56 +132,47 @@ export const MicIcon = ({ active }: IconProps) => (
   </svg>
 );
 export const UserIcon = ({ active }: IconProps) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-    stroke={active ? "#22c55e" : "#9ca3af"}
-    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={active ? "#22c55e" : "#9ca3af"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="7" r="4"/>
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
   </svg>
 );
 export const ArrowRight = ({ color = "white", size = 12 }: { color?: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="5" y1="12" x2="19" y2="12"/>
     <polyline points="12 5 19 12 12 19"/>
   </svg>
 );
 export const ArrowLeft = ({ color = "#fff", size = 18 }: { color?: string; size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="19" y1="12" x2="5" y2="12"/>
     <polyline points="12 19 5 12 12 5"/>
   </svg>
 );
 export const ChevRight = ({ color = "#22c55e" }: { color?: string }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="9 18 15 12 9 6"/>
   </svg>
 );
 export const ChevDown = ({ color = "#111" }: { color?: string }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="6 9 12 15 18 9"/>
   </svg>
 );
 export const ChevUp = ({ color = "#ff5a2c" }: { color?: string }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="18 15 12 9 6 15"/>
   </svg>
 );
 export const HeadphonesIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
     <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/>
     <path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
   </svg>
 );
 export const BookmarkIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-    stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
   </svg>
 );
@@ -144,28 +182,24 @@ export const PlayIcon = ({ size = 16, color = "white" }: { size?: number; color?
   </svg>
 );
 export const CheckIcon = ({ size = 12, color = "white" }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12"/>
   </svg>
 );
 export const LockIcon = ({ size = 14, color = "#9ca3af" }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
   </svg>
 );
 export const ClockIcon = ({ size = 12, color = "#9ca3af" }: { size?: number; color?: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="12" r="10"/>
     <polyline points="12 6 12 12 16 14"/>
   </svg>
 );
 export const FullscreenIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="15 3 21 3 21 9"/>
     <polyline points="9 21 3 21 3 15"/>
     <line x1="21" y1="3" x2="14" y2="10"/>
@@ -173,18 +207,15 @@ export const FullscreenIcon = () => (
   </svg>
 );
 export const WarningIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-    stroke="#e67e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e67e22" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
     <line x1="12" y1="9" x2="12" y2="13"/>
     <line x1="12" y1="17" x2="12.01" y2="17"/>
   </svg>
 );
-
 export const WarningNotice = ({ message }: { message?: string | null }) => {
   const text = (message || "").trim();
   if (!text) return null;
-
   return (
     <div style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 12px", borderRadius: 12, background: "#fff7ed", border: "1px solid #fed7aa", color: "#9a3412", marginBottom: 12 }}>
       <div style={{ flexShrink: 0, marginTop: 1 }}><WarningIcon /></div>
@@ -192,26 +223,13 @@ export const WarningNotice = ({ message }: { message?: string | null }) => {
     </div>
   );
 };
-
-export const RichTextContent = ({
-  html,
-  emptyText,
-  style,
-}: {
-  html?: string | null;
-  emptyText?: string;
-  style?: React.CSSProperties;
-}) => {
+export const RichTextContent = ({ html, emptyText, style }: { html?: string | null; emptyText?: string; style?: React.CSSProperties }) => {
   const content = (html || "").trim();
-  if (!content) {
-    return emptyText ? <p style={style}>{emptyText}</p> : null;
-  }
-
+  if (!content) return emptyText ? <p style={style}>{emptyText}</p> : null;
   return <div style={style}>{parse(content)}</div>;
 };
 export const XIcon = ({ color = "#666" }: { color?: string }) => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-    stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18"/>
     <line x1="6" y1="6" x2="18" y2="18"/>
   </svg>
@@ -238,11 +256,8 @@ export const SectionHeader = ({ title, action }: SectionHeaderProps) => (
   </div>
 );
 
-export const categoryImage = (category?: LearningCategory | null, size = 800) => {
-  if (!category?.thumbnail_image) {
-    return null;
-  }
-
+export const categoryImage = (category?: LearningCategory | null) => {
+  if (!category?.thumbnail_image) return null;
   return category.thumbnail_image.startsWith("http")
     ? category.thumbnail_image
     : `/api/storage/${category.thumbnail_image}`;
@@ -252,13 +267,10 @@ export const progressKey = (categoryId: number) => `learning-progress:${category
 
 export const readLearningProgress = (categoryId?: number | null): number[] => {
   if (!categoryId || typeof window === "undefined") return [];
-
   try {
     const parsed = JSON.parse(window.localStorage.getItem(progressKey(categoryId)) || "[]");
     return Array.isArray(parsed) ? parsed.map(Number).filter(Boolean) : [];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 };
 
 export const writeLearningProgress = (categoryId: number, lessonIds: number[]) => {
@@ -272,129 +284,446 @@ export const markLessonComplete = (categoryId: number, lessonId: number) => {
 
 export const loadLearningProgress = async (categoryId?: number | null): Promise<number[]> => {
   if (!categoryId) return [];
-
   try {
     const res = await api.get(`/categories/${categoryId}/progress`);
     const ids = Array.isArray(res.data?.completed_lesson_ids)
-      ? res.data.completed_lesson_ids.map(Number).filter(Boolean)
-      : [];
+      ? res.data.completed_lesson_ids.map(Number).filter(Boolean) : [];
     writeLearningProgress(categoryId, ids);
     return ids;
-  } catch {
-    return readLearningProgress(categoryId);
-  }
+  } catch { return readLearningProgress(categoryId); }
 };
 
 export const completeLearningLesson = async (categoryId: number, lessonId: number): Promise<number[]> => {
   const fallbackIds = [...readLearningProgress(categoryId), lessonId];
   writeLearningProgress(categoryId, fallbackIds);
-
   try {
     await api.post(`/lessons/${lessonId}/complete`);
     return loadLearningProgress(categoryId);
-  } catch {
-    return Array.from(new Set(fallbackIds));
-  }
+  } catch { return Array.from(new Set(fallbackIds)); }
 };
 
-export const parseLessonContentBlock = (item: { id: number; content: string }): LessonContentBlock => {
+export const parseLessonContentBlock = (item: { id: number; content: string; file_path?: string | null; file_name?: string | null }): LessonContentBlock => {
   try {
     const parsed = JSON.parse(item.content);
     if (parsed && typeof parsed === "object") {
-      return {
-        id: item.id,
-        title: typeof parsed.title === "string" ? parsed.title : "",
-        description: typeof parsed.description === "string" ? parsed.description : "",
-      };
+      return { id: item.id, title: typeof parsed.title === "string" ? parsed.title : "", description: typeof parsed.description === "string" ? parsed.description : "", file_path: item.file_path ?? null, file_name: item.file_name ?? null };
     }
-  } catch {
-    // Keep old plain text lessons readable after the admin form changed shape.
-  }
-
-  return { id: item.id, title: "", description: item.content || "" };
+  } catch {}
+  return { id: item.id, title: "", description: item.content || "", file_path: item.file_path ?? null, file_name: item.file_name ?? null };
 };
 
-export const HeroCard = ({ height = 190, onContinue, category, progress = 0, moduleNumber, moduleName }: HeroCardProps) => (
-  <div style={{ borderRadius: 16, overflow: "hidden", position: "relative", height, boxShadow: "0 4px 24px rgba(0,0,0,0.18)", background: category?.background_color || "#071224" }}>
-    {categoryImage(category) && (
-      <img src={categoryImage(category) || ""} alt={category?.title || "Category"}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
-    )}
-    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(95deg,rgba(4,12,28,0.95) 0%,rgba(4,12,28,0.78) 42%,rgba(4,12,28,0.08) 100%)" }} />
-    <div style={{ position: "relative", zIndex: 1, padding: "16px 18px", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 8, background: "rgba(255,255,255,0.13)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🏛️</div>
+/* ════════════════════════════════════════════════════════════
+   HERO CARD
+   ─ mobile variant: entire card is one big clickable button.
+     Shows only: Course pill + bold title overlaid on image.
+     No progress bar, no Continue button.
+   ─ desktop variant: image top half + info panel bottom half
+     with module badge, progress bar, and Continue button.
+════════════════════════════════════════════════════════════ */
+export const HeroCard = ({
+  height = 300,
+  onContinue,
+  category,
+  progress = 0,
+  moduleNumber,
+  moduleName,
+  variant = "mobile",
+}: HeroCardProps) => {
+  const moduleLabel = (() => {
+    if (!moduleName) return null;
+    if (/^module\s+\d+$/i.test(moduleName.trim())) return null;
+    return moduleName;
+  })();
+
+  const imgSrc = categoryImage(category);
+
+  /* ── MOBILE: whole card is a button ── */
+  if (variant === "mobile") {
+    return (
+      <button
+        type="button"
+        onClick={onContinue}
+        style={{
+          display: "block",
+          width: "100%",
+          height,
+          borderRadius: 18,
+          overflow: "hidden",
+          position: "relative",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          background: category?.background_color || "#071224",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
+          flexShrink: 0,
+          textAlign: "left",
+        }}
+      >
+        {/* Background image */}
+        {imgSrc && (
+          <img
+            src={imgSrc}
+            alt={category?.title || "Course"}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+          />
+        )}
+        {/* Bottom gradient scrim */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(180deg, transparent 40%, rgba(4,12,28,0.55) 68%, rgba(4,12,28,0.88) 85%, rgba(4,12,28,0.96) 100%)",
+          pointerEvents: "none",
+        }} />
+        {/* Overlay content */}
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "0 16px 18px" }}>
+          {/* Course pill */}
+          <div style={{ marginBottom: 7 }}>
+            <span style={{
+              fontSize: 11, fontWeight: 800, color: "#22c55e",
+              background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.45)",
+              borderRadius: 20, padding: "4px 12px",
+              display: "inline-flex", alignItems: "center", gap: 6,
+            }}>
+              Course
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
+            </span>
+          </div>
+          {/* Title */}
+          <div style={{
+            fontWeight: 900, fontSize: 20, color: "white",
+            letterSpacing: -0.5, lineHeight: 1.2,
+          }}>
+            {category?.title || "Course"}
+          </div>
         </div>
-        <div style={{ fontWeight: 900, fontSize: height > 200 ? 22 : 15, color: "white", letterSpacing: -0.5, marginBottom: 6 }}>
+      </button>
+    );
+  }
+
+  /* ── DESKTOP: image + info panel ── */
+  return (
+    <div style={{
+      borderRadius: 20, overflow: "hidden", position: "relative",
+      height, background: category?.background_color || "#071224",
+      boxShadow: "0 6px 28px rgba(0,0,0,0.20)", flexShrink: 0,
+      cursor: "pointer",
+    }} onClick={onContinue}>
+      {imgSrc && (
+        <img src={imgSrc} alt={category?.title || "Course"}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+      )}
+      {/* Full gradient */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(180deg, transparent 30%, rgba(4,12,28,0.5) 58%, rgba(4,12,28,0.92) 78%, rgba(4,12,28,1) 100%)",
+        pointerEvents: "none",
+      }} />
+      {/* Info panel */}
+      <div style={{
+        position: "absolute", left: 0, right: 0, bottom: 0,
+        padding: "0 20px 20px",
+        display: "flex", flexDirection: "column", gap: 0,
+      }}>
+        {/* Pill */}
+        <div style={{ marginBottom: 7 }}>
+          <span style={{
+            fontSize: 11, fontWeight: 800, color: "#22c55e",
+            background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.45)",
+            borderRadius: 20, padding: "4px 12px",
+            display: "inline-flex", alignItems: "center", gap: 6,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
+            Course
+          </span>
+        </div>
+        {/* Title */}
+        <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 6 }}>
           {category?.title || "Course"}
         </div>
-        {moduleNumber && (
-          <div style={{ fontSize: height > 200 ? 13 : 11, color: "#22c55e", fontWeight: 700, marginBottom: 2 }}>
-            Module {moduleNumber}
+        {/* Module badge */}
+        {(moduleNumber || moduleLabel) && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+            {moduleNumber && (
+              <span style={{
+                fontSize: 10, fontWeight: 800, color: "#22c55e",
+                background: "rgba(34,197,94,0.14)", border: "1px solid rgba(34,197,94,0.30)",
+                borderRadius: 6, padding: "2px 8px",
+              }}>Module {moduleNumber}</span>
+            )}
+            {moduleLabel && (
+              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {moduleLabel}
+              </span>
+            )}
           </div>
         )}
-        <div style={{ fontSize: height > 200 ? 13 : 10.5, color: "rgba(255,255,255,0.85)", lineHeight: 1.45 }}>
-          {moduleName
-            ? (/^module\s+\d+$/i.test(moduleName.trim()) ? "" : moduleName)
-            : "No module available yet."}
+        {/* Progress bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+          <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,0.18)", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${progress}%`, background: "#22c55e", borderRadius: 8, transition: "width 0.4s ease" }} />
+          </div>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", flexShrink: 0, fontWeight: 600 }}>{progress}% Complete</span>
         </div>
-      </div>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", flexShrink: 0 }}>{progress}% Complete</span>
-          <Bar value={progress} light />
-        </div>
-        <button onClick={onContinue} style={{ background: "#22c55e", color: "white", border: "none", borderRadius: 9, padding: "8px 18px", fontSize: 12, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer", boxShadow: "0 3px 12px rgba(34,197,94,0.4)" }}>
-          Continue <ArrowRight />
+        {/* Continue */}
+        <button onClick={(e) => { e.stopPropagation(); onContinue(); }} style={{
+          alignSelf: "flex-start",
+          background: "#22c55e", color: "white", border: "none",
+          borderRadius: 9, padding: "8px 18px", fontSize: 12, fontWeight: 800,
+          display: "inline-flex", alignItems: "center", gap: 5,
+          cursor: "pointer", boxShadow: "0 3px 12px rgba(34,197,94,0.40)",
+        }}>
+          Continue <ArrowRight color="white" size={11} />
         </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-interface HelpBoxProps {
-  desktop?: boolean;
-}
-
+/* ════════ HELP BOX ════════ */
+interface HelpBoxProps { desktop?: boolean }
 export const HelpBox = ({ desktop = true }: HelpBoxProps) => (
-  <div className={`bg-[#f6faf7] border border-[#34c95a22] rounded-2xl flex items-center gap-3.5 ${
-    desktop 
-      ? 'p-5' 
-      : 'p-[10px]'
-  }`}>
-    {/* Icon Container */}
-    <div className={`flex-shrink-0 flex items-center justify-center rounded-xl bg-[#f0fdf4] border border-[#34c95a33] ${
-      desktop 
-        ? 'w-11 h-11' 
-        : 'w-9 h-9'
-    }`}>
-      <HeadphonesIcon 
-        size={desktop ? 22 : 18} 
-        className="text-[#34c95a]" 
-      />
+  <div style={{
+    background: "#f6faf7", border: "1px solid rgba(52,201,90,0.13)",
+    borderRadius: 16, display: "flex", alignItems: "center",
+    gap: 12, padding: desktop ? "14px 16px" : "10px 12px",
+  }}>
+    <div style={{
+      flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+      borderRadius: 12, background: "#f0fdf4", border: "1px solid rgba(52,201,90,0.20)",
+      width: desktop ? 40 : 34, height: desktop ? 40 : 34,
+    }}>
+      <HeadphonesIcon size={desktop ? 20 : 17} />
     </div>
+    <div
+  style={{
+    fontSize: desktop ? 11.5 : 10.5,
+    color: "#6b7280",
+    lineHeight: 1.4,
+    marginTop: 1,
+  }}
+>
+  Have questions?{" "}
+  <span
+    style={{
+      fontWeight: 700,
+      color: "#000000",
+    }}
+  >
+    Simply contact your counsellor on WhatsApp.
+  </span>
+</div>
+  </div>
+);
 
-    {/* Text Content */}
-    <div className="flex-1 min-w-0">
-      <div className={`font-semibold text-[#111827] ${
-        desktop ? 'text-sm' : 'text-[13px]'
-      }`}>
-        Need Help?
-      </div>
-      <div className={`text-[#6b7280] leading-snug ${
-        desktop ? 'text-xs' : 'text-[10px]'
-      }`}>
-        Reach out to your admin coordinator for assistance.
-      </div>
+/* ════════ NEW DESIGN COMPONENTS ════════ */
+export const UnlockIcon = ({ size = 18, color = "#111827" }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+  </svg>
+);
+
+export const ConnectedWordmark = ({ color = "#111827", size = 22 }: { color?: string; size?: number }) => (
+  <span style={{ fontFamily: "'Fraunces','Georgia',serif", fontWeight: 800, fontSize: size, color, letterSpacing: -0.5 }}>
+    Connected.
+  </span>
+);
+
+export const LightHeaderBar = ({ children, px = 0 }: { children?: React.ReactNode; px?: number }) => (
+  <div>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 12 }}>
+      <ConnectedWordmark />
+      {children}
+    </div>
+    <div style={{ height: 1, background: "#e5e7eb" }} />
+  </div>
+);
+
+export const GreetingHeader = ({ name, compact = false }: { name: string; compact?: boolean }) => (
+  <div style={{ padding: compact ? "10px 0 12px" : "16px 0 18px" }}>
+    <div style={{
+      fontWeight: 900, fontSize: compact ? 24 : 28, color: "#111827",
+      letterSpacing: -0.8, lineHeight: 1.15, marginBottom: compact ? 4 : 6,
+    }}>
+      Hello {name}.
+    </div>
+    <div style={{ fontSize: compact ? 12 : 13, color: "#9ca3af", lineHeight: 1.5, fontWeight: 500 }}>
+      Below you will find{" "}
+      <span style={{ color: "#374151", fontWeight: 800 }}>courses personalized</span>
+      {" "}to your study abroad journey. Enjoy!
     </div>
   </div>
 );
 
-/* ════════ GLOBAL STYLES (inject once at top-level) ════════ */
+export const PlainSectionTitle = ({ title, compact = false }: { title: string; compact?: boolean }) => (
+  <div style={{ fontWeight: 900, fontSize: compact ? 14 : 17, color: "#111827", letterSpacing: -0.3, marginBottom: compact ? 8 : 12 }}>
+    {title}
+  </div>
+);
+
+export const CoursePill = () => (
+  <span style={{
+    fontSize: 11, fontWeight: 800, color: "#22c55e",
+    background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)",
+    borderRadius: 20, padding: "4px 12px",
+    display: "inline-flex", alignItems: "center", gap: 6,
+  }}>
+    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
+    Course
+  </span>
+);
+
+/* ════════ TRAINING CAROUSEL ════════ */
+export const TrainingCarousel = ({
+  categories, loading, progressByCategory, continueByCategory,
+  onContinue, emptyText, cardWidth = 260, cardHeight = 300, variant = "mobile",
+}: {
+  categories: LearningCategory[];
+  loading: boolean;
+  progressByCategory: Record<number, number>;
+  continueByCategory: Record<number, { moduleNumber: number; moduleName: string }>;
+  onContinue: (category?: LearningCategory) => void;
+  emptyText: string;
+  cardWidth?: number;
+  cardHeight?: number;
+  variant?: "mobile" | "desktop";
+}) => {
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const scrollerRef = React.useRef<HTMLDivElement | null>(null);
+  const GAP = 12;
+
+  const handleScroll = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const index = Math.round(el.scrollLeft / (cardWidth + GAP));
+    setActiveIndex(Math.max(0, Math.min(index, categories.length - 1)));
+  };
+
+  if (loading) {
+    return (
+      <div style={{ height: cardHeight, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", background: "#f9fafb", borderRadius: 18, gap: 8, fontSize: 13 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+        Loading…
+      </div>
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <div style={{ padding: "20px 16px", color: "#6b7280", background: "#f9fafb", borderRadius: 18, fontSize: 13, textAlign: "center" }}>
+        {emptyText}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div
+        ref={scrollerRef}
+        onScroll={handleScroll}
+        className="hs"
+        style={{
+          display: "flex", gap: GAP, overflowX: "auto",
+          scrollSnapType: "x mandatory", paddingBottom: 2,
+          marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16,
+        }}
+      >
+        {categories.map((category) => (
+          <div key={category.id} style={{ flex: `0 0 ${cardWidth}px`, scrollSnapAlign: "start" }}>
+            <HeroCard
+              height={cardHeight}
+              variant={variant}
+              onContinue={() => onContinue(category)}
+              category={category}
+              progress={progressByCategory[category.id] || 0}
+              moduleNumber={continueByCategory[category.id]?.moduleNumber}
+              moduleName={continueByCategory[category.id]?.moduleName}
+            />
+          </div>
+        ))}
+      </div>
+      {categories.length > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 12 }}>
+          {categories.map((_, index) => (
+            <div key={index} style={{
+              width: index === activeIndex ? 20 : 6, height: 6, borderRadius: 3,
+              background: index === activeIndex ? "#ff5a2c" : "#d1d5db",
+              transition: "width 0.2s, background 0.2s",
+            }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ════════ RESOURCE CARD / GRID ════════ */
+const RESOURCE_CARD_PALETTE = [
+  { bg: "#fdebd2", accent: "#ff5a2c", iconBg: "rgba(255,255,255,0.60)" },
+  { bg: "#e7e6f6", accent: "#6c5ce7", iconBg: "rgba(255,255,255,0.60)" },
+  { bg: "#dff3e6", accent: "#16a34a", iconBg: "rgba(255,255,255,0.60)" },
+  { bg: "#fde2e2", accent: "#dc2626", iconBg: "rgba(255,255,255,0.60)" },
+];
+
+export const ResourceCard = ({ category, index, onContinue }: { category: LearningCategory; index: number; onContinue: () => void }) => {
+  const palette = RESOURCE_CARD_PALETTE[index % RESOURCE_CARD_PALETTE.length];
+  return (
+    <button type="button" onClick={onContinue} style={{
+      background: palette.bg, borderRadius: 16, border: "none",
+      padding: "12px 14px", textAlign: "left", cursor: "pointer",
+      display: "flex", flexDirection: "column", justifyContent: "space-between",
+      gap: 10, minHeight: 100, width: "100%", fontFamily: "inherit",
+    }}>
+      <div style={{ width: 30, height: 30, borderRadius: 9, background: palette.iconBg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <UnlockIcon size={14} color="#111827" />
+      </div>
+      <div>
+        <div style={{ fontWeight: 800, fontSize: 12.5, color: "#111827", lineHeight: 1.3, marginBottom: 7 }}>
+          {category.title}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, color: palette.accent, fontWeight: 800, fontSize: 11 }}>
+          Get Access <ArrowRight color={palette.accent} size={11} />
+        </div>
+      </div>
+    </button>
+  );
+};
+
+export const ResourceGrid = ({ categories, loading, onContinue, emptyText }: {
+  categories: LearningCategory[]; loading: boolean;
+  onContinue: (category?: LearningCategory) => void; emptyText: string;
+}) => {
+  if (loading) {
+    return (
+      <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", background: "#f9fafb", borderRadius: 16, gap: 8, fontSize: 13 }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
+        Loading…
+      </div>
+    );
+  }
+  if (categories.length === 0) {
+    return (
+      <div style={{ padding: "16px", color: "#6b7280", background: "#f9fafb", borderRadius: 16, fontSize: 13, textAlign: "center" }}>
+        {emptyText}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      {categories.map((category, index) => (
+        <ResourceCard key={category.id} category={category} index={index} onContinue={() => onContinue(category)} />
+      ))}
+    </div>
+  );
+};
+
+/* ════════ GLOBAL STYLES ════════ */
 export const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500..900&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Plus Jakarta Sans',sans-serif;background:#071224;-webkit-font-smoothing:antialiased;}
     .hs::-webkit-scrollbar{display:none;} .hs{-ms-overflow-style:none;scrollbar-width:none;}

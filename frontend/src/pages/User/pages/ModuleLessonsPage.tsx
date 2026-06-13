@@ -5,6 +5,7 @@ import {
   CheckIcon,
   ChevRight,
   ClockIcon,
+  formatLessonDuration,
   LearningCategory,
   LearningLesson,
   LearningModule,
@@ -29,12 +30,8 @@ const moduleLabel = (moduleNumber?: number | null) =>
   moduleNumber ? `Module ${moduleNumber}` : "Module";
 
 // ─── Duration formatter ───────────────────────────────────────────────────────
-const formatDuration = (mins: number): string => {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  if (!h) return `${m} min`;
-  return `${h}h ${m}m`;
-};
+const formatDuration = (value: number, unit?: "minutes" | "seconds") =>
+  formatLessonDuration(value, unit === "seconds" ? "seconds" : "minutes");
 
 // ─── Lesson row (shared between mobile + desktop list) ────────────────────────
 
@@ -185,7 +182,7 @@ function LessonRow({
               fontWeight: 600,
             }}
           >
-            {formatDuration(lesson.duration_mins)}
+            {formatDuration(lesson.duration_mins, lesson.duration_unit)}
           </span>
         </div>
       </div>

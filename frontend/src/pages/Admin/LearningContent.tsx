@@ -1,13 +1,47 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Edit, Plus, Save, Trash2, X, BookOpen, PlayCircle,
-  ChevronRight, CheckCircle2, Layers, Video,
+  ChevronRight, CheckCircle2, Layers, Video, Paperclip, ExternalLink,
 } from "lucide-react";
 import api from "../../api/axios";
-import { LearningCategory, LearningLesson, LearningModule } from "../User/pages/shared";
+import { LearningCategory, LearningLesson, LearningModule, formatLessonDuration } from "../User/pages/shared";
 import RichTextEditor from "../../components/form/RichTextEditor";
 
-type LessonSectionForm = { id?: number; step_number: number; title: string; description: string };
+type LessonSectionForm = {
+  id?: number;
+  step_number: number;
+  title: string;
+  description: string;
+  file_path?: string | null;
+  file_name?: string | null;
+  uploading?: boolean;
+};
+
+const storageUrl = (path: string) =>
+  path.startsWith("http") ? path : `/api/storage/${path}`;
+
+const parseLessonSection = (item: any): LessonSectionForm => {
+  try {
+    const parsed = JSON.parse(item.content);
+    return {
+      id: item.id,
+      step_number: item.step_number,
+      title: parsed?.title || "",
+      description: parsed?.description || "",
+      file_path: item.file_path || null,
+      file_name: item.file_name || null,
+    };
+  } catch {
+    return {
+      id: item.id,
+      step_number: item.step_number,
+      title: "",
+      description: item.content || "",
+      file_path: item.file_path || null,
+      file_name: item.file_name || null,
+    };
+  }
+};
 
 const blankModule = {
   title: "",
@@ -21,19 +55,11 @@ const blankLesson = {
   title: "",
   warning: "",
   duration_mins: 0,
+  duration_unit: "minutes" as "minutes" | "seconds",
   video_type: "youtube" as LearningLesson["video_type"],
   video_value: "",
   is_active: true,
   strategies: [{ step_number: 1, title: "", description: "" }] as LessonSectionForm[],
-};
-
-const parseLessonSection = (item: any): LessonSectionForm => {
-  try {
-    const parsed = JSON.parse(item.content);
-    return { id: item.id, step_number: item.step_number, title: parsed?.title || "", description: parsed?.description || "" };
-  } catch {
-    return { id: item.id, step_number: item.step_number, title: "", description: item.content || "" };
-  }
 };
 
 type ActivePanel = "module-form" | "lesson-form" | null;
@@ -85,17 +111,28 @@ export default function LearningContent() {
   }, [moduleId]);
 
   const loadModules = async () => {
-    const res = await api.get(`/categories/${categoryId}/modules`);
-    const data = Array.isArray(res.data) ? res.data : [];
-    setModules(data);
-    setModuleId(data[0] ? String(data[0].id) : "");
-    resetModuleForm();
+    try {
+      const res = await api.get(`/categories/${categoryId}/modules`);
+      const data = Array.isArray(res.data) ? res.data : [];
+      setModules(data);
+      setModuleId(data[0] ? String(data[0].id) : "");
+      resetModuleForm();
+    } catch {
+      setModules([]);
+      setModuleId("");
+      resetModuleForm();
+    }
   };
 
   const loadLessons = async () => {
-    const res = await api.get(`/modules/${moduleId}/lessons`);
-    setLessons(Array.isArray(res.data) ? res.data : []);
-    resetLessonForm();
+    try {
+      const res = await api.get(`/modules/${moduleId}/lessons`);
+      setLessons(Array.isArray(res.data) ? res.data : []);
+      resetLessonForm();
+    } catch {
+      setLessons([]);
+      resetLessonForm();
+    }
   };
 
   const resetModuleForm = () => { setEditingModuleId(null); setModuleForm(blankModule); };
@@ -128,15 +165,18 @@ export default function LearningContent() {
       title: lessonForm.title.trim(),
       warning: lessonForm.warning.trim(),
       duration_mins: Number(lessonForm.duration_mins),
+      duration_unit: lessonForm.duration_unit,
       video_type: "youtube",
       video_value: lessonForm.video_value.trim(),
       is_active: lessonForm.is_active ? 1 : 0,
       strategies: lessonForm.strategies
-        .filter(s => s.title.trim() || s.description.trim())
+        .filter(s => s.title.trim() || s.description.trim() || s.file_path)
         .map((s, i) => ({
           id: s.id,
           step_number: i + 1,
           content: JSON.stringify({ title: s.title.trim(), description: s.description.trim() }),
+          file_path: s.file_path || null,
+          file_name: s.file_name || null,
         })),
     };
     if (editingLessonId) {
@@ -167,6 +207,7 @@ export default function LearningContent() {
       title: lesson.title || "",
       warning: lesson.warning || "",
       duration_mins: lesson.duration_mins || 0,
+      duration_unit: lesson.duration_unit === "seconds" ? "seconds" : "minutes",
       video_value: lesson.video_value || "",
       is_active: Boolean(lesson.is_active),
       video_type: "youtube",
@@ -205,6 +246,29 @@ export default function LearningContent() {
 
   const removeStrategy = (index: number) => {
     setLessonForm(prev => ({ ...prev, strategies: prev.strategies.filter((_, i) => i !== index) }));
+  };
+
+  const uploadStrategyFile = async (index: number, file: File) => {
+    updateStrategy(index, { uploading: true });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await api.post("/strategy-files", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      updateStrategy(index, {
+        file_path: res.data.file_path,
+        file_name: res.data.file_name,
+        uploading: false,
+      });
+    } catch {
+      updateStrategy(index, { uploading: false });
+      alert("Failed to upload file.");
+    }
+  };
+
+  const removeStrategyFile = (index: number) => {
+    updateStrategy(index, { file_path: null, file_name: null });
   };
 
   // ─── Breadcrumb Step Indicator ─────────────────────────────────────────────
@@ -475,7 +539,7 @@ export default function LearningContent() {
                       <div className="min-w-0">
                         <div className="font-medium text-gray-800 dark:text-gray-200 text-sm truncate">{lesson.title}</div>
                         <div className="text-xs text-gray-400 mt-0.5">
-                          {lesson.duration_mins} mins
+                          {formatLessonDuration(lesson.duration_mins, lesson.duration_unit === "seconds" ? "seconds" : "minutes")}
                           {!lesson.is_active && (
                             <span className="ml-2 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500">
                               inactive
@@ -664,15 +728,30 @@ export default function LearningContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
-                    Duration (minutes)
+                    Duration
                   </label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={lessonForm.duration_mins}
-                    onChange={(e) => setLessonForm({ ...lessonForm, duration_mins: Number(e.target.value) })}
-                    className={`${inputClass} focus:ring-2 focus:ring-emerald-500`}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      value={lessonForm.duration_mins}
+                      onChange={(e) => setLessonForm({ ...lessonForm, duration_mins: Number(e.target.value) })}
+                      className={`${inputClass} focus:ring-2 focus:ring-emerald-500 flex-1`}
+                    />
+                    <select
+                      value={lessonForm.duration_unit}
+                      onChange={(e) =>
+                        setLessonForm({
+                          ...lessonForm,
+                          duration_unit: e.target.value === "seconds" ? "seconds" : "minutes",
+                        })
+                      }
+                      className={`${inputClass} focus:ring-2 focus:ring-emerald-500 w-28 sm:w-32`}
+                    >
+                      <option value="minutes">Minutes</option>
+                      <option value="seconds">Seconds</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
@@ -747,6 +826,50 @@ export default function LearningContent() {
                         onChange={(desc) => updateStrategy(index, { description: desc })}
                         height={130}
                       />
+                      <div className="mt-3">
+                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">
+                          File Attachment
+                        </label>
+                        {strategy.file_path ? (
+                          <div className="flex items-center justify-between gap-2 p-3 rounded-xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30">
+                            <a
+                              href={storageUrl(strategy.file_path)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 text-sm font-medium text-emerald-700 dark:text-emerald-300 hover:underline min-w-0"
+                            >
+                              <Paperclip size={14} className="flex-shrink-0" />
+                              <span className="truncate">{strategy.file_name || "Uploaded file"}</span>
+                              <ExternalLink size={12} className="flex-shrink-0" />
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => removeStrategyFile(index)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition flex-shrink-0"
+                              aria-label="Remove file"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ) : (
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              disabled={strategy.uploading}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) uploadStrategyFile(index, file);
+                                e.target.value = "";
+                              }}
+                            />
+                            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:border-emerald-400 transition">
+                              <Paperclip size={14} />
+                              {strategy.uploading ? "Uploading..." : "Upload file"}
+                            </span>
+                          </label>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

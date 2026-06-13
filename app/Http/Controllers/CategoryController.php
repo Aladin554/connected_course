@@ -144,6 +144,7 @@ class CategoryController extends Controller
     {
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
+            'type' => ['sometimes', Rule::in(['training', 'resource'])],
             'flag_emoji' => ['nullable', 'string', 'max:32'],
             'description' => ['nullable', 'string'],
             'thumbnail_image' => ['nullable', 'image', 'max:2048'],

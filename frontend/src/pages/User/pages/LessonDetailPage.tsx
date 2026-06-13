@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../../../api/axios";
 import {
   ArrowLeft,
@@ -7,12 +7,12 @@ import {
   ChevDown,
   ChevUp,
   ClockIcon,
-  FullscreenIcon,
   LearningLesson,
+  formatLessonDuration,
   parseLessonContentBlock,
-  PlayIcon,
   RichTextContent,
   WarningNotice,
+  youtubeEmbedUrl,
 } from "./shared";
 
 interface LessonDetailPageProps {
@@ -27,10 +27,7 @@ interface LessonDetailPageProps {
 export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, totalLessons }: LessonDetailPageProps) {
   const [detail, setDetail] = useState<LearningLesson | null>(lesson);
   const [loading, setLoading] = useState(true);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [expanded, setExpanded] = useState<string[]>([]);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!lesson) {
@@ -52,35 +49,14 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
     setExpanded([]);
   }, [detail?.id]);
 
-  const togglePlay = () => {
-    if (playing) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setPlaying(false);
-      return;
-    }
-
-    setPlaying(true);
-    intervalRef.current = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 100) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          setPlaying(false);
-          return 100;
-        }
-        return p + 0.4;
-      });
-    }, 100);
-  };
-
-  useEffect(() => () => { if (intervalRef.current) clearInterval(intervalRef.current); }, []);
-
   const toggleSection = (key: string) =>
     setExpanded((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
 
-  const totalSecs = Math.max(1, (detail?.duration_mins || 1) * 60);
-  const currentSecs = Math.floor((progress / 100) * totalSecs);
-  const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  const thumb = detail?.video_thumbnail || "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80";
+  const durationLabel = formatLessonDuration(
+    detail?.duration_mins || 0,
+    detail?.duration_unit === "seconds" ? "seconds" : "minutes"
+  );
+  const embedUrl = youtubeEmbedUrl(detail?.video_value);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#0d1f35", animation: "pageIn .35s cubic-bezier(.22,1,.36,1)", overflow: "hidden" }}>
@@ -102,40 +78,37 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
         </h1>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <ClockIcon size={13} color="rgba(255,255,255,.5)" />
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>{detail?.duration_mins || 0} mins</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>{durationLabel}</span>
         </div>
       </div>
 
       <div style={{ position: "relative", margin: "0 18px 0", borderRadius: 14, overflow: "hidden", flexShrink: 0, background: "#071224" }}>
-        <img src={thumb} alt="lesson" style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }} />
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.3)" }} />
-
-        <button
-          onClick={togglePlay}
-          style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-60%)", width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,.9)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 16px rgba(0,0,0,.3)" }}
-        >
-          {playing ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#111" stroke="none">
-              <rect x="6" y="4" width="4" height="16"/>
-              <rect x="14" y="4" width="4" height="16"/>
-            </svg>
-          ) : (
-            <PlayIcon size={18} color="#111" />
-          )}
-        </button>
-
-        <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 12px", background: "linear-gradient(to top,rgba(0,0,0,.7),transparent)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 11, color: "white", fontWeight: 600, flexShrink: 0 }}>{fmt(currentSecs)}</span>
-            <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,.3)", borderRadius: 2, overflow: "hidden", cursor: "pointer" }}>
-              <div style={{ width: `${progress}%`, height: "100%", background: "#ff5a2c", borderRadius: 2 }} />
-            </div>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,.7)", flexShrink: 0 }}>{fmt(totalSecs)}</span>
-            <button style={{ background: "none", border: "none", cursor: "pointer", lineHeight: 0, padding: 0 }}>
-              <FullscreenIcon />
-            </button>
+        {embedUrl ? (
+          <div style={{ position: "relative", width: "100%", paddingBottom: "56.25%", height: 0, background: "#000" }}>
+            <iframe
+              src={embedUrl}
+              title={detail?.title || "Lesson video"}
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </div>
-        </div>
+        ) : (
+          <div
+            style={{
+              height: 200,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "rgba(255,255,255,.6)",
+              fontSize: 13,
+              padding: 20,
+              textAlign: "center",
+            }}
+          >
+            No YouTube video configured for this lesson.
+          </div>
+        )}
       </div>
 
       <div style={{ flex: 1, minHeight: 0, background: "white", borderRadius: "20px 20px 0 0", marginTop: 14, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -164,10 +137,38 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
                   {isOpen ? <ChevUp /> : <ChevDown />}
                 </button>
                 {isOpen && (
-                  <RichTextContent
-                    html={block.description}
-                    style={{ fontSize: 13, color: "#444", lineHeight: 1.75, margin: 0, paddingBottom: 16 }}
-                  />
+                  <>
+                    <RichTextContent
+                      html={block.description}
+                      style={{ fontSize: 13, color: "#444", lineHeight: 1.75, margin: 0, paddingBottom: block.file_path ? 10 : 16 }}
+                    />
+                    {block.file_path && (
+                      <a
+                        href={block.file_path.startsWith("http") ? block.file_path : `/api/storage/${block.file_path}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 8,
+                          marginBottom: 16,
+                          padding: "10px 14px",
+                          borderRadius: 12,
+                          background: "#f0fdf4",
+                          border: "1px solid #bbf7d0",
+                          color: "#15803d",
+                          fontSize: 13,
+                          fontWeight: 700,
+                          textDecoration: "none",
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        </svg>
+                        {block.file_name || "Download attachment"}
+                      </a>
+                    )}
+                  </>
                 )}
               </div>
             );

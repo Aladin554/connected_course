@@ -11,6 +11,7 @@ class Category extends Model
 
     protected $fillable = [
         'title',
+        'type',
         'flag_emoji',
         'description',
         'thumbnail_image',

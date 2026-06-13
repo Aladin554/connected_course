@@ -14,6 +14,7 @@ class Lesson extends Model
         'title',
         'warning',
         'duration_mins',
+        'duration_unit',
         'video_type',
         'video_value',
         'video_thumbnail',

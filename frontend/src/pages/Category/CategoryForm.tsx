@@ -53,7 +53,7 @@ export default function CategoryForm() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [form, setForm] = useState({ title: "", description: "", is_active: true });
+  const [form, setForm] = useState({ title: "", description: "", type: "training" as "training" | "resource", is_active: true });
   const [slides, setSlides] = useState<WelcomeSlideForm[]>([emptySlide()]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -67,6 +67,7 @@ export default function CategoryForm() {
         setForm({
           title: res.data.title || "",
           description: res.data.description || "",
+          type: res.data.type === "resource" ? "resource" : "training",
           is_active: Boolean(res.data.is_active),
         });
         const loadedSlides = Array.isArray(res.data.all_welcome_slides)
@@ -102,6 +103,7 @@ export default function CategoryForm() {
     setSubmitting(true);
     const payload = new FormData();
     payload.append("title", form.title);
+    payload.append("type", form.type);
     payload.append("description", form.description);
     payload.append("is_active", form.is_active ? "1" : "0");
     slides.forEach((slide, index) => {
@@ -235,6 +237,22 @@ export default function CategoryForm() {
                   className={inputClass}
                   placeholder="e.g. UK Interview Training"
                 />
+              </Field>
+
+              <Field label="Course Type" required>
+                <select
+                  value={form.type}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      type: e.target.value === "resource" ? "resource" : "training",
+                    })
+                  }
+                  className={inputClass}
+                >
+                  <option value="training">Training</option>
+                  <option value="resource">Resource</option>
+                </select>
               </Field>
 
               {/* <Field label="Description">

@@ -83,6 +83,7 @@ Route::middleware(['auth:sanctum', 'admin.ip'])->group(function () {
     Route::post('/modules/{module}/lessons', [LearningContentController::class, 'storeLesson']);
     Route::put('/lessons/{lesson}', [LearningContentController::class, 'updateLesson']);
     Route::delete('/lessons/{lesson}', [LearningContentController::class, 'destroyLesson']);
+    Route::post('/strategy-files', [LearningContentController::class, 'uploadStrategyFile']);
 
 });
 Route::get('/show-ip', function (Request $request) {

@@ -6,6 +6,7 @@ import api from "../../api/axios";
 interface Category {
   id: number;
   title: string;
+  type?: "training" | "resource" | null;
   flag_emoji?: string | null;
   description?: string | null;
   thumbnail_image?: string | null;
@@ -55,9 +56,17 @@ export default function AdminCategories() {
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
     return categories.filter((c) =>
-      [c.title, c.description || ""].some((v) => v.toLowerCase().includes(term))
+      [c.title, c.description || "", c.type || ""].some((v) => v.toLowerCase().includes(term))
     );
   }, [categories, search]);
+
+  const typeLabel = (type?: string | null) =>
+    type === "resource" ? "Resource" : "Training";
+
+  const typeBadgeClass = (type?: string | null) =>
+    type === "resource"
+      ? "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300"
+      : "bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300";
 
   const totalRows = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / perPage));
@@ -172,6 +181,9 @@ export default function AdminCategories() {
                     Thumbnail
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Type
+                  </th>
+                  <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Status
                   </th>
                   {/* <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -186,7 +198,7 @@ export default function AdminCategories() {
                 {loading ? (
                   Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>
-                      {Array.from({ length: 5 }).map((__, j) => (
+                      {Array.from({ length: 6 }).map((__, j) => (
                         <td key={j} className="px-6 py-4">
                           <div
                             className="h-4 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse"
@@ -198,7 +210,7 @@ export default function AdminCategories() {
                   ))
                 ) : paginated.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-16 text-center">
+                    <td colSpan={6} className="py-16 text-center">
                       <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
                       <p className="text-gray-400 font-medium">No courses found</p>
                       {search && (
@@ -238,6 +250,14 @@ export default function AdminCategories() {
                         ) : (
                           <span className="text-gray-300 dark:text-gray-700 text-sm">—</span>
                         )}
+                      </td>
+
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${typeBadgeClass(category.type)}`}
+                        >
+                          {typeLabel(category.type)}
+                        </span>
                       </td>
 
                       <td className="px-6 py-4">
@@ -337,6 +357,11 @@ export default function AdminCategories() {
                           {category.title}
                         </p>
                         {/* Status badge inline on mobile */}
+                        <span
+                          className={`inline-flex items-center mt-0.5 mr-1.5 px-2 py-0.5 rounded-full text-xs font-bold ${typeBadgeClass(category.type)}`}
+                        >
+                          {typeLabel(category.type)}
+                        </span>
                         <span
                           className={`inline-flex items-center mt-0.5 px-2 py-0.5 rounded-full text-xs font-bold
                             ${category.is_active
