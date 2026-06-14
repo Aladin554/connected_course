@@ -1,3 +1,17 @@
+export const isPanelActive = (user?: { panel_status?: number | string | boolean | null } | null) =>
+  Number(user?.panel_status) === 1;
+
+export const getAdminHomePath = () => {
+  const roleId = Number(sessionStorage.getItem("role_id"));
+  const user = getStoredUser<{ panel_status?: number | string | boolean | null }>();
+
+  if (roleId === 2 && isPanelActive(user)) {
+    return "/choose-dashboard";
+  }
+
+  return "/dashboard";
+};
+
 export const clearAuthSession = () => {
   sessionStorage.removeItem("token");
   sessionStorage.removeItem("role_id");

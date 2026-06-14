@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { clearAuthSession, isAuthSessionExpired, persistAuthSession } from "../../utils/session";
+import { clearAuthSession, getStoredUser, isAuthSessionExpired, isPanelActive, persistAuthSession } from "../../utils/session";
 
 const MOBILE_BG = "/images/bg-mobile.jpeg";
 const DESKTOP_BG = "/images/bg-desktop.jpeg";
@@ -29,6 +29,9 @@ export default function SignInPage() {
       }
       if (roleId && parseInt(roleId, 10) === 3) {
         navigate("/introduction", { replace: true });
+      } else if (roleId && parseInt(roleId, 10) === 2) {
+        const user = getStoredUser();
+        navigate(isPanelActive(user) ? "/choose-dashboard" : "/dashboard", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }
@@ -61,7 +64,7 @@ export default function SignInPage() {
       if (user.role_id === 3) {
         navigate("/introduction", { replace: true });
       } else if (user.role_id === 2) {
-        navigate(user.panel_status ? "/choose-dashboard" : "/dashboard", { replace: true });
+        navigate(isPanelActive(user) ? "/choose-dashboard" : "/dashboard", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }

@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import Button from "../ui/button/Button";
+import { isPanelActive } from "../../utils/session";
 
 export default function ChooseDashboard() {
   const navigate = useNavigate();
   const [hasFrontendAccess, setHasFrontendAccess] = useState(false);
-  const [hasAdminPanelAccess, setHasAdminPanelAccess] = useState(true);
+  const [hasAdminPanelAccess, setHasAdminPanelAccess] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,33 +15,37 @@ export default function ChooseDashboard() {
       .get("/profile")
       .then((res) => {
         const roleId = Number(res.data?.role_id);
-        const frontendCategories = Array.isArray(res.data?.admin_frontend_categories)
-          ? res.data.admin_frontend_categories
-          : [];
+        const panelActive = isPanelActive(res.data);
+
+        if (roleId !== 2 || !panelActive) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
         const adminCategories = Array.isArray(res.data?.admin_categories)
           ? res.data.admin_categories
           : [];
 
-        setHasFrontendAccess(roleId === 2 && frontendCategories.length > 0);
-        setHasAdminPanelAccess(roleId === 1 || adminCategories.length > 0);
+        const adminAccess =
+          adminCategories.length > 0 ||
+          Number(res.data?.can_add_courses) === 1 ||
+          Number(res.data?.can_edit_courses) === 1;
+        // Active panel_status unlocks the user/learner dashboard for admins
+        const frontendAccess = panelActive;
+
+        if (!adminAccess && !frontendAccess) {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
+        setHasAdminPanelAccess(adminAccess);
+        setHasFrontendAccess(frontendAccess);
       })
       .catch(() => {
-        setHasFrontendAccess(false);
-        setHasAdminPanelAccess(true);
+        navigate("/dashboard", { replace: true });
       })
       .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    if (loading) return;
-    if (hasAdminPanelAccess && !hasFrontendAccess) {
-      navigate("/dashboard", { replace: true });
-    } else if (!hasAdminPanelAccess && hasFrontendAccess) {
-      navigate("/introduction", { replace: true });
-    } else if (!hasAdminPanelAccess && !hasFrontendAccess) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [loading, hasAdminPanelAccess, hasFrontendAccess, navigate]);
+  }, [navigate]);
 
   if (loading) return null;
 

@@ -79,6 +79,9 @@ export default function LearningContent() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const [canAddCourses, setCanAddCourses] = useState(false);
+  const [canEditCourses, setCanEditCourses] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // Mobile: which column is visible ("modules" | "lessons")
   const [mobileView, setMobileView] = useState<"modules" | "lessons">("modules");
@@ -91,6 +94,19 @@ export default function LearningContent() {
     () => modules.find((m) => m.id === Number(moduleId)),
     [modules, moduleId]
   );
+
+  useEffect(() => {
+    api.get("/profile").then((res) => {
+      const roleId = Number(res.data?.role_id);
+      setIsSuperAdmin(roleId === 1);
+      setCanAddCourses(roleId === 1 || Number(res.data?.can_add_courses) === 1);
+      setCanEditCourses(roleId === 1 || Number(res.data?.can_edit_courses) === 1);
+    }).catch(() => {
+      setIsSuperAdmin(false);
+      setCanAddCourses(false);
+      setCanEditCourses(false);
+    });
+  }, []);
 
   useEffect(() => {
     api.get("/categories/active").then((res) => {
@@ -387,12 +403,14 @@ export default function LearningContent() {
                 <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
                   <Layers size={18} /> Modules
                 </h2>
-                <button
-                  onClick={openNewModulePanel}
-                  className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
-                >
-                  <Plus size={14} /> New Module
-                </button>
+                {canAddCourses && (
+                  <button
+                    onClick={openNewModulePanel}
+                    className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
+                  >
+                    <Plus size={14} /> New Module
+                  </button>
+                )}
               </div>
             </div>
 
@@ -444,23 +462,27 @@ export default function LearningContent() {
                         </div>
                       </div>
                       {/* Actions — always visible on mobile, hover on desktop */}
-                      <div className={`flex gap-0.5 sm:gap-1 flex-shrink-0 transition
-                        ${isSelected ? "opacity-100" : "opacity-100 lg:opacity-0 lg:group-hover:opacity-100"}`}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); editModule(module); }}
-                          className="p-2 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-xl transition"
-                          title="Edit module"
-                        >
-                          <Edit size={15} />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); deleteModule(module); }}
-                          className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition"
-                          title="Delete module"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
+                      {canEditCourses && (
+                        <div className={`flex gap-0.5 sm:gap-1 flex-shrink-0 transition
+                          ${isSelected ? "opacity-100" : "opacity-100 lg:opacity-0 lg:group-hover:opacity-100"}`}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); editModule(module); }}
+                            className="p-2 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-xl transition"
+                            title="Edit module"
+                          >
+                            <Edit size={15} />
+                          </button>
+                          {isSuperAdmin && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteModule(module); }}
+                              className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition"
+                              title="Delete module"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })
@@ -486,13 +508,15 @@ export default function LearningContent() {
                     {selectedModule ? `Lessons — ${selectedModule.title}` : "Lessons"}
                   </span>
                 </h2>
-                <button
-                  onClick={openNewLessonPanel}
-                  disabled={!selectedModule}
-                  className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 active:bg-white/40 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
-                >
-                  <Plus size={14} /> New Lesson
-                </button>
+                {canAddCourses && (
+                  <button
+                    onClick={openNewLessonPanel}
+                    disabled={!selectedModule}
+                    className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 active:bg-white/40 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
+                  >
+                    <Plus size={14} /> New Lesson
+                  </button>
+                )}
               </div>
             </div>
 
@@ -554,22 +578,26 @@ export default function LearningContent() {
                       </div>
                     </div>
                     {/* Actions — always visible on mobile */}
-                    <div className="flex gap-0.5 sm:gap-1 flex-shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
-                      <button
-                        onClick={() => editLesson(lesson)}
-                        className="p-2 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-xl transition"
-                        title="Edit lesson"
-                      >
-                        <Edit size={15} />
-                      </button>
-                      <button
-                        onClick={() => deleteLesson(lesson)}
-                        className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition"
-                        title="Delete lesson"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
+                    {canEditCourses && (
+                      <div className="flex gap-0.5 sm:gap-1 flex-shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
+                        <button
+                          onClick={() => editLesson(lesson)}
+                          className="p-2 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 rounded-xl transition"
+                          title="Edit lesson"
+                        >
+                          <Edit size={15} />
+                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => deleteLesson(lesson)}
+                            className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-xl transition"
+                            title="Delete lesson"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))
               )}

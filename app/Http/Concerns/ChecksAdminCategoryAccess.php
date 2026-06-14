@@ -31,7 +31,47 @@ trait ChecksAdminCategoryAccess
         return in_array($roleName, ['admin', 'superadmin'], true);
     }
 
-    protected function canAdministerCategory(Category $category): bool
+    protected function canDeleteCourses(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    protected function canAccessCourseAdminPanel(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (!$this->isScopedAdmin()) {
+            return false;
+        }
+
+        if ((int) $this->authUser()->can_add_courses === 1 || (int) $this->authUser()->can_edit_courses === 1) {
+            return true;
+        }
+
+        return $this->authUser()->adminCategories()->exists();
+    }
+
+    protected function canAddCourses(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->isScopedAdmin() && (int) $this->authUser()->can_add_courses === 1;
+    }
+
+    protected function canEditCourses(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->isScopedAdmin() && (int) $this->authUser()->can_edit_courses === 1;
+    }
+
+    protected function hasAdminCategoryAssignment(Category $category): bool
     {
         if ($this->isSuperAdmin()) {
             return true;
@@ -45,6 +85,16 @@ trait ChecksAdminCategoryAccess
         }
 
         return false;
+    }
+
+    protected function canAdministerCategory(Category $category): bool
+    {
+        return $this->canEditCourses() && $this->hasAdminCategoryAssignment($category);
+    }
+
+    protected function canViewAdminCategory(Category $category): bool
+    {
+        return $this->hasAdminCategoryAssignment($category);
     }
 
     protected function categoriesQueryForAdmin(): Builder

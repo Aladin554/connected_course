@@ -72,7 +72,7 @@ class CategoryController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if (!$this->isSuperAdmin()) {
+        if (!$this->canAddCourses()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -84,6 +84,10 @@ class CategoryController extends Controller
         $category = Category::create($data);
         $this->syncWelcomeSlides($category, $slides);
 
+        if ($this->isScopedAdmin()) {
+            $this->authUser()->adminCategories()->syncWithoutDetaching([$category->id]);
+        }
+
         return response()->json([
             'message' => 'Category created successfully',
             'category' => $category->load('allWelcomeSlides'),
@@ -92,7 +96,7 @@ class CategoryController extends Controller
 
     public function show(Category $category): JsonResponse
     {
-        if (!$this->canAdministerCategory($category)) {
+        if (!$this->canViewAdminCategory($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -127,7 +131,7 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): JsonResponse
     {
-        if (!$this->canAdministerCategory($category)) {
+        if (!$this->canDeleteCourses()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

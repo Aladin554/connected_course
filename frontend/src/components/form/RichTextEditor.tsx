@@ -25,20 +25,84 @@ export default function RichTextEditor({
         init={{
           height,
           menubar: false,
+
           plugins: [
-            "advlist autolink lists link charmap preview anchor",
-            "searchreplace visualblocks code fullscreen",
-            "insertdatetime table code help wordcount",
+            "advlist",
+            "autolink",
+            "lists",
+            "link",
+            "image",
+            "charmap",
+            "preview",
+            "anchor",
+            "searchreplace",
+            "visualblocks",
+            "code",
+            "fullscreen",
+            "insertdatetime",
+            "table",
+            "help",
+            "wordcount",
           ],
+
           toolbar:
-            "undo redo | blocks | bold italic underline | alignleft aligncenter alignright | bullist numlist outdent indent | link | removeformat | code",
+            "undo redo | " +
+            "blocks fontfamily fontsize | " +
+            "bold italic underline strikethrough | " +
+            "forecolor backcolor | " +
+            "alignleft aligncenter alignright alignjustify | " +
+            "bullist numlist outdent indent | " +
+            "link image table | " +
+            "removeformat | code fullscreen",
+
+          toolbar_mode: "sliding",
+
           branding: false,
           promotion: false,
+
           skin: "oxide-dark",
           content_css: "dark",
+
+          content_style: `
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 14px;
+              line-height: 1.6;
+            }
+
+            ul {
+              list-style-type: disc !important;
+              padding-left: 24px !important;
+              margin: 0.5rem 0 !important;
+            }
+
+            ol {
+              list-style-type: decimal !important;
+              padding-left: 24px !important;
+              margin: 0.5rem 0 !important;
+            }
+
+            li {
+              display: list-item !important;
+              margin-bottom: 4px;
+            }
+          `,
+
+          valid_elements: "*[*]",
+          extended_valid_elements: "*[*]",
         }}
       />
-      {required && <input tabIndex={-1} autoComplete="off" value={value.replace(/<[^>]*>/g, "").trim()} required onChange={() => undefined} className="sr-only" />}
+
+      {required && (
+        <input
+          tabIndex={-1}
+          autoComplete="off"
+          value={value.replace(/<[^>]*>/g, "").trim()}
+          required
+          onChange={() => undefined}
+          className="sr-only"
+        />
+      )}
     </>
   );
 }

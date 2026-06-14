@@ -59,6 +59,21 @@ export default function CategoryForm() {
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [expandedSlides, setExpandedSlides] = useState<Set<number>>(new Set([0]));
+  const [canAddCourses, setCanAddCourses] = useState(false);
+  const [canEditCourses, setCanEditCourses] = useState(false);
+
+  useEffect(() => {
+    api.get("/profile")
+      .then((res) => {
+        const roleId = Number(res.data?.role_id);
+        setCanAddCourses(roleId === 1 || Number(res.data?.can_add_courses) === 1);
+        setCanEditCourses(roleId === 1 || Number(res.data?.can_edit_courses) === 1);
+      })
+      .catch(() => {
+        setCanAddCourses(false);
+        setCanEditCourses(false);
+      });
+  }, []);
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -100,6 +115,14 @@ export default function CategoryForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isEdit && !canEditCourses) {
+      alert("You do not have permission to edit courses.");
+      return;
+    }
+    if (!isEdit && !canAddCourses) {
+      alert("You do not have permission to add courses.");
+      return;
+    }
     setSubmitting(true);
     const payload = new FormData();
     payload.append("title", form.title);

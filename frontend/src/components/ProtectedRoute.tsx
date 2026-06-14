@@ -35,7 +35,7 @@ const ProtectedRoute = ({
 
     setToken(storedToken);
     setRoleId(storedRole ? parseInt(storedRole, 10) : null);
-    setPanelStatus(panel === 1 || panel === true);
+    setPanelStatus(Number(panel) === 1);
     setLoading(false);
   }, []);
 

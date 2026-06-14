@@ -14,6 +14,7 @@ import {
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import api from "../api/axios";
+import { getStoredUser, isPanelActive } from "../utils/session";
 
 type NavItem = {
   name: string;
@@ -36,6 +37,7 @@ const AppSidebar: React.FC = () => {
       try {
         const res = await api.get("/profile");
         setUser(res.data);
+        sessionStorage.setItem("user", JSON.stringify(res.data));
         localStorage.setItem("user", JSON.stringify(res.data));
       } catch (err) {
         console.error("Failed to load user:", err);
@@ -47,11 +49,18 @@ const AppSidebar: React.FC = () => {
   }, []);
 
   const roleId = user?.role_id ?? null;
+  const profileUser = user ?? getStoredUser();
+  const effectiveRoleId = Number(profileUser?.role_id ?? roleId);
+  const logoHomePath =
+    effectiveRoleId === 2 && isPanelActive(profileUser)
+      ? "/choose-dashboard"
+      : "/dashboard";
   const hasCourseAccess =
     roleId === 1 ||
     (roleId === 2 &&
-      Array.isArray(user?.admin_categories) &&
-      user.admin_categories.length > 0);
+      (Number(user?.can_add_courses) === 1 ||
+        Number(user?.can_edit_courses) === 1 ||
+        (Array.isArray(user?.admin_categories) && user.admin_categories.length > 0)));
 
   // Navigation items (role-based)
   const navItems: NavItem[] = [
@@ -258,7 +267,7 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered && !isMobileOpen ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/dashboard" className="group">
+        <Link to={logoHomePath} className="group">
     {isExpanded || isHovered || isMobileOpen ? (
       <>
         {/* LIGHT MODE */}

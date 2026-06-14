@@ -50,6 +50,8 @@ export default function AdminUserForm() {
     categoryIds: [] as number[],
     adminCategoryIds: [] as number[],
     adminFrontendCategoryIds: [] as number[],
+    canAddCourses: false,
+    canEditCourses: true,
     allowed_ips: [] as string[],
   });
   const [errors, setErrors] = useState({
@@ -125,6 +127,8 @@ export default function AdminUserForm() {
             adminFrontendCategoryIds: Array.isArray(res.data.admin_frontend_categories)
               ? res.data.admin_frontend_categories.map((c: Category) => c.id)
               : [],
+            canAddCourses: Number(res.data.can_add_courses) === 1,
+            canEditCourses: Number(res.data.can_edit_courses) !== 0,
             allowed_ips: Array.isArray(res.data.allowed_ips) ? res.data.allowed_ips : [],
           });
         })
@@ -186,6 +190,8 @@ export default function AdminUserForm() {
       if (Number(currentUser?.role_id) === 1 && Number(form.roleId) === 2) {
         payload.admin_category_ids = form.adminCategoryIds;
         payload.admin_frontend_category_ids = form.adminFrontendCategoryIds;
+        payload.can_add_courses = form.canAddCourses;
+        payload.can_edit_courses = form.canEditCourses;
       }
       if (isEdit) {
         await api.put(`/users/${id}`, payload);
@@ -541,6 +547,45 @@ export default function AdminUserForm() {
             )}
 
             {/* Admin panel course access — split into Training / Resource */}
+            {isSuperAdmin && isAdminRole && (
+              <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                  <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    Admin Panel — Course Permissions
+                  </h2>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Control whether this admin can add or edit courses and learning content.
+                  </p>
+                </div>
+                <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <input
+                      type="checkbox"
+                      checked={form.canAddCourses}
+                      onChange={(e) => setForm({ ...form, canAddCourses: e.target.checked })}
+                      className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
+                    />
+                    <div>
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Can add</span>
+                      <span className="text-xs text-gray-400">Create courses, modules, and lessons</span>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <input
+                      type="checkbox"
+                      checked={form.canEditCourses}
+                      onChange={(e) => setForm({ ...form, canEditCourses: e.target.checked })}
+                      className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
+                    />
+                    <div>
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Can edit</span>
+                      <span className="text-xs text-gray-400">Update courses and learning content (delete is superadmin only)</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
             {isSuperAdmin && isAdminRole && renderCourseSection(
               "Admin Panel — Course & Learning Content",
               "Courses this admin can manage in the dashboard (backend).",

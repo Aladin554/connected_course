@@ -20,6 +20,8 @@ export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [canAddCourses, setCanAddCourses] = useState(false);
+  const [canEditCourses, setCanEditCourses] = useState(false);
   const [search, setSearch] = useState("");
   const [perPage, setPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,8 +29,17 @@ export default function AdminCategories() {
 
   useEffect(() => {
     api.get("/profile")
-      .then((res) => setIsSuperAdmin(Number(res.data?.role_id) === 1))
-      .catch(() => setIsSuperAdmin(false));
+      .then((res) => {
+        const roleId = Number(res.data?.role_id);
+        setIsSuperAdmin(roleId === 1);
+        setCanAddCourses(roleId === 1 || Number(res.data?.can_add_courses) === 1);
+        setCanEditCourses(roleId === 1 || Number(res.data?.can_edit_courses) === 1);
+      })
+      .catch(() => {
+        setIsSuperAdmin(false);
+        setCanAddCourses(false);
+        setCanEditCourses(false);
+      });
     fetchCategories();
   }, []);
 
@@ -113,7 +124,7 @@ export default function AdminCategories() {
             </div>
           </div>
 
-          {isSuperAdmin && (
+          {canAddCourses && (
             <Link
               to="/dashboard/categories/add"
               className="flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-semibold shadow-lg shadow-blue-200 dark:shadow-none transition w-full sm:w-auto"
@@ -289,26 +300,34 @@ export default function AdminCategories() {
                       </td> */}
 
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              navigate(`/dashboard/categories/${category.id}/edit`)
-                            }
-                            className="p-2.5 rounded-xl text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"
-                            aria-label="Edit course"
-                            title="Edit"
-                          >
-                            <Edit size={17} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(category.id)}
-                            className="p-2.5 rounded-xl text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition"
-                            aria-label="Delete course"
-                            title="Delete"
-                          >
-                            <Trash2 size={17} />
-                          </button>
-                        </div>
+                        {(canEditCourses || isSuperAdmin) ? (
+                          <div className="flex items-center gap-2">
+                            {canEditCourses && (
+                              <button
+                                onClick={() =>
+                                  navigate(`/dashboard/categories/${category.id}/edit`)
+                                }
+                                className="p-2.5 rounded-xl text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition"
+                                aria-label="Edit course"
+                                title="Edit"
+                              >
+                                <Edit size={17} />
+                              </button>
+                            )}
+                            {isSuperAdmin && (
+                              <button
+                                onClick={() => handleDelete(category.id)}
+                                className="p-2.5 rounded-xl text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition"
+                                aria-label="Delete course"
+                                title="Delete"
+                              >
+                                <Trash2 size={17} />
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">View only</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -380,24 +399,30 @@ export default function AdminCategories() {
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button
-                        onClick={() =>
-                          navigate(`/dashboard/categories/${category.id}/edit`)
-                        }
-                        className="p-2.5 rounded-xl text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition"
-                        aria-label="Edit course"
-                      >
-                        <Edit size={17} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category.id)}
-                        className="p-2.5 rounded-xl text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-95 transition"
-                        aria-label="Delete course"
-                      >
-                        <Trash2 size={17} />
-                      </button>
-                    </div>
+                    {(canEditCourses || isSuperAdmin) && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {canEditCourses && (
+                          <button
+                            onClick={() =>
+                              navigate(`/dashboard/categories/${category.id}/edit`)
+                            }
+                            className="p-2.5 rounded-xl text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition"
+                            aria-label="Edit course"
+                          >
+                            <Edit size={17} />
+                          </button>
+                        )}
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => handleDelete(category.id)}
+                            className="p-2.5 rounded-xl text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-95 transition"
+                            aria-label="Delete course"
+                          >
+                            <Trash2 size={17} />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Description */}

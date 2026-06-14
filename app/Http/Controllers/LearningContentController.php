@@ -20,25 +20,34 @@ class LearningContentController extends Controller
 
     public function categoryModules(Category $category): JsonResponse
     {
-        $canAdminister = $this->canAdministerCategory($category);
+        $canManage = $this->canAdministerCategory($category);
+        $canViewAdmin = $this->canViewAdminCategory($category);
         $canViewFrontend = $this->canViewFrontendCategory($category);
 
-        if (!$canAdminister && !$canViewFrontend) {
+        if (!$canManage && !$canViewAdmin && !$canViewFrontend) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $modules = ($canAdminister ? $category->allCourseModules() : $category->courseModules())
-            ->withCount($canAdminister ? 'allLessons' : 'lessons')
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->get();
+        if ($canManage || $canViewAdmin) {
+            $modules = ($canManage ? $category->allCourseModules() : $category->courseModules())
+                ->withCount($canManage ? 'allLessons' : 'lessons')
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get();
+        } else {
+            $modules = $category->courseModules()
+                ->withCount('lessons')
+                ->orderBy('created_at')
+                ->orderBy('id')
+                ->get();
+        }
 
         return response()->json($modules);
     }
 
     public function storeModule(Request $request, Category $category): JsonResponse
     {
-        if (!$this->canAdministerCategory($category)) {
+        if (!$this->canAddCourses() || !$this->hasAdminCategoryAssignment($category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -69,11 +78,11 @@ class LearningContentController extends Controller
 
     public function destroyModule(CourseModule $module): JsonResponse
     {
-        $module->load('category');
-
-        if (!$this->canAdministerCategory($module->category)) {
+        if (!$this->canDeleteCourses()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+
+        $module->load('category');
 
         $module->delete();
 
@@ -84,14 +93,15 @@ class LearningContentController extends Controller
     {
         $module->load('category');
 
-        $canAdminister = $this->canAdministerCategory($module->category);
+        $canManage = $this->canAdministerCategory($module->category);
+        $canViewAdmin = $this->canViewAdminCategory($module->category);
         $canViewFrontend = $this->canViewFrontendCategory($module->category);
 
-        if (!$canAdminister && !$canViewFrontend) {
+        if (!$canManage && !$canViewAdmin && !$canViewFrontend) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        $lessons = ($canAdminister ? $module->allLessons() : $module->lessons())
+        $lessons = ($canManage ? $module->allLessons() : $module->lessons())
             ->with(['strategies', 'lessonModelAnswer', 'commonMistakes'])
             ->get();
 
@@ -180,7 +190,7 @@ class LearningContentController extends Controller
     {
         $module->load('category');
 
-        if (!$this->canAdministerCategory($module->category)) {
+        if (!$this->canAddCourses() || !$this->hasAdminCategoryAssignment($module->category)) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -218,11 +228,11 @@ class LearningContentController extends Controller
 
     public function destroyLesson(Lesson $lesson): JsonResponse
     {
-        $lesson->load('module.category');
-
-        if (!$this->canAdministerCategory($lesson->module->category)) {
+        if (!$this->canDeleteCourses()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+
+        $lesson->load('module.category');
 
         $lesson->delete();
 
@@ -231,7 +241,7 @@ class LearningContentController extends Controller
 
     public function uploadStrategyFile(Request $request): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->canAddCourses() && !$this->canEditCourses()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
