@@ -662,7 +662,7 @@ export default function LearningContent() {
                 <RichTextEditor
                   value={moduleForm.description}
                   onChange={(desc) => setModuleForm({ ...moduleForm, description: desc })}
-                  height={160}
+                  height={300}
                 />
               </div>
 
@@ -856,7 +856,7 @@ export default function LearningContent() {
                       <RichTextEditor
                         value={strategy.description}
                         onChange={(desc) => updateStrategy(index, { description: desc })}
-                        height={130}
+                        height={300}
                       />
                       <div className="mt-3">
                         <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-2">

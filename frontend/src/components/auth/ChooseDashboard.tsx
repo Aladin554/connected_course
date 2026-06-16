@@ -28,6 +28,7 @@ export default function ChooseDashboard() {
 
         const adminAccess =
           adminCategories.length > 0 ||
+          Number(res.data?.can_view_courses) === 1 ||
           Number(res.data?.can_add_courses) === 1 ||
           Number(res.data?.can_edit_courses) === 1;
         // Active panel_status unlocks the user/learner dashboard for admins

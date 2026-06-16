@@ -82,7 +82,6 @@ function LessonRow({
         transform: hovered && unlocked ? "translateY(-2px)" : "none",
       }}
     >
-      {/* Orange left accent for current lesson */}
       {current && (
         <div
           style={{
@@ -97,7 +96,6 @@ function LessonRow({
         />
       )}
 
-      {/* Status orb */}
       <div
         style={{
           width: orbSize,
@@ -136,9 +134,7 @@ function LessonRow({
         )}
       </div>
 
-      {/* Text block */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Lesson badge */}
         <div
           style={{
             display: "inline-flex",
@@ -156,7 +152,6 @@ function LessonRow({
           LESSON {index + 1}
         </div>
 
-        {/* Title */}
         <div
           style={{
             fontWeight: 800,
@@ -172,7 +167,6 @@ function LessonRow({
           {lesson.title}
         </div>
 
-        {/* Duration */}
         {hasLessonDuration(lesson.duration_mins) && (
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             <ClockIcon size={12} color={current ? "#ff5a2c" : "#9ca3af"} />
@@ -189,7 +183,6 @@ function LessonRow({
         )}
       </div>
 
-      {/* Right action */}
       {current ? (
         <button
           onClick={(e) => {
@@ -425,13 +418,16 @@ function ModuleHeader({
 }) {
   const bgImage = categoryImage(category, 900);
 
+  // Nav height offset: mobile = 64px, desktop = 86px
+  const navOffset = isDesktop ? 86 : 64;
+
   return (
     <div
       style={{
         position: "relative",
         overflow: "hidden",
         flexShrink: 0,
-        minHeight: isDesktop ? 320 : 290,
+        minHeight: isDesktop ? 340 : 300,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
@@ -463,11 +459,14 @@ function ModuleHeader({
         }}
       />
 
+      {/* Content pushed below nav bar */}
       <div
         style={{
           position: "relative",
           zIndex: 1,
-          padding: isDesktop ? "0 60px 36px" : "0 20px 36px",
+          padding: isDesktop
+            ? `${navOffset}px 60px 36px`
+            : `${navOffset}px 20px 36px`,
         }}
       >
         <h1
@@ -494,7 +493,14 @@ function ModuleHeader({
             }}
           />
         ) : (
-          <p style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: "0 0 18px 0" }}>
+          <p
+            style={{
+              fontSize: 13,
+              color: "rgba(255,255,255,0.6)",
+              lineHeight: 1.6,
+              margin: "0 0 18px 0",
+            }}
+          >
             Choose a lesson to continue.
           </p>
         )}
@@ -514,7 +520,13 @@ function ModuleHeader({
               marginBottom: 9,
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
               {lessons.length} Lesson{lessons.length !== 1 ? "s" : ""}
             </span>
             <span style={{ fontSize: 13, fontWeight: 700, color: "#22c55e" }}>
@@ -542,7 +554,14 @@ function ModuleHeader({
             />
           </div>
 
-          <div style={{ textAlign: "right", fontSize: 13, fontWeight: 800, color: "rgba(255,255,255,0.55)" }}>
+          <div
+            style={{
+              textAlign: "right",
+              fontSize: 13,
+              fontWeight: 800,
+              color: "rgba(255,255,255,0.55)",
+            }}
+          >
             {progressPct}%
           </div>
         </div>
@@ -590,18 +609,19 @@ function MobileLayout({
         position: "relative",
       }}
     >
-      {/* Top nav overlay */}
+      {/* Top nav overlay — fixed height 64px */}
       <div
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
+          height: 64,
           zIndex: 10,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "14px 20px",
+          padding: "0 20px",
         }}
       >
         <button
@@ -617,13 +637,22 @@ function MobileLayout({
             alignItems: "center",
             justifyContent: "center",
             cursor: "pointer",
+            flexShrink: 0,
           }}
         >
           <ArrowLeft size={16} />
         </button>
-        <span style={{ fontSize: 15, fontWeight: 700, color: "white", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+        <span
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: "white",
+            textShadow: "0 1px 4px rgba(0,0,0,0.5)",
+          }}
+        >
           {moduleLabel(moduleNumber)}
         </span>
+        {/* Spacer to keep title centred */}
         <div style={{ width: 36 }} />
       </div>
 
@@ -655,8 +684,12 @@ function MobileLayout({
         }}
       >
         {/* Drag handle */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}>
-          <div style={{ width: 36, height: 4, borderRadius: 99, background: "#e5e7eb" }} />
+        <div
+          style={{ display: "flex", justifyContent: "center", padding: "12px 0 8px" }}
+        >
+          <div
+            style={{ width: 36, height: 4, borderRadius: 99, background: "#e5e7eb" }}
+          />
         </div>
 
         <LessonList
@@ -710,18 +743,19 @@ function DesktopLayout({
         position: "relative",
       }}
     >
-      {/* Top nav overlay */}
+      {/* Top nav overlay — fixed height 86px */}
       <div
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
+          height: 86,
           zIndex: 10,
           display: "flex",
           alignItems: "center",
           gap: 14,
-          padding: "24px 60px",
+          padding: "0 60px",
         }}
       >
         <button
@@ -740,12 +774,23 @@ function DesktopLayout({
             flexShrink: 0,
             transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "rgba(255,255,255,0.25)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "rgba(255,255,255,0.15)")
+          }
         >
           <ArrowLeft size={16} />
         </button>
-        <span style={{ fontSize: 13, color: "rgba(255,255,255,0.65)", fontWeight: 600, textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>
+        <span
+          style={{
+            fontSize: 13,
+            color: "rgba(255,255,255,0.65)",
+            fontWeight: 600,
+            textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+          }}
+        >
           {category?.title || "Course"}
           <span style={{ margin: "0 7px", opacity: 0.4 }}>›</span>
           {moduleLabel(moduleNumber)}
@@ -773,7 +818,9 @@ function DesktopLayout({
           zIndex: 2,
         }}
       >
-        <div style={{ maxWidth: 760, margin: "0 auto", padding: "28px 0 60px" }}>
+        <div
+          style={{ maxWidth: 760, margin: "0 auto", padding: "28px 0 60px" }}
+        >
           <LessonList
             lessons={lessons}
             loading={loading}
@@ -821,7 +868,9 @@ export default function ModuleLessonsPage({
     loadLearningProgress(category?.id).then((ids) => {
       if (!cancelled) setCompletedLessonIds(ids);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [category, lessons]);
 
   const isLessonUnlocked = (index: number) =>
@@ -833,7 +882,9 @@ export default function ModuleLessonsPage({
   ).length;
 
   const progressPct =
-    lessons.length > 0 ? Math.round((completedCount / lessons.length) * 100) : 0;
+    lessons.length > 0
+      ? Math.round((completedCount / lessons.length) * 100)
+      : 0;
 
   const statusLabel =
     completedCount === 0

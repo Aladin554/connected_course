@@ -28,6 +28,7 @@ import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CourseViewRoute from "./components/CourseViewRoute";
 import RootRedirect from "./components/RootRedirect";
 
 import Home from "./pages/Dashboard/Home";
@@ -113,10 +114,38 @@ export default function App() {
           <Route path="admin-users"           element={<AdminUsers />} />
           <Route path="admin-users/add"       element={<AdminUserForm />} />
           <Route path="admin-users/:id/edit"  element={<AdminUserForm />} />
-          <Route path="categories"            element={<AdminCategories />} />
-          <Route path="categories/add"        element={<CategoryForm />} />
-          <Route path="categories/:id/edit"   element={<CategoryForm />} />
-          <Route path="learning-content"      element={<LearningContent />} />
+          <Route
+            path="categories"
+            element={
+              <CourseViewRoute>
+                <AdminCategories />
+              </CourseViewRoute>
+            }
+          />
+          <Route
+            path="categories/add"
+            element={
+              <CourseViewRoute>
+                <CategoryForm />
+              </CourseViewRoute>
+            }
+          />
+          <Route
+            path="categories/:id/edit"
+            element={
+              <CourseViewRoute>
+                <CategoryForm />
+              </CourseViewRoute>
+            }
+          />
+          <Route
+            path="learning-content"
+            element={
+              <CourseViewRoute>
+                <LearningContent />
+              </CourseViewRoute>
+            }
+          />
           <Route
             path="admin-allowed-ips"
             element={

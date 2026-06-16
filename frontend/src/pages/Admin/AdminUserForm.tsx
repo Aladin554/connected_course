@@ -52,6 +52,7 @@ export default function AdminUserForm() {
     adminFrontendCategoryIds: [] as number[],
     canAddCourses: false,
     canEditCourses: true,
+    canViewCourses: true,
     allowed_ips: [] as string[],
   });
   const [errors, setErrors] = useState({
@@ -129,6 +130,7 @@ export default function AdminUserForm() {
               : [],
             canAddCourses: Number(res.data.can_add_courses) === 1,
             canEditCourses: Number(res.data.can_edit_courses) !== 0,
+            canViewCourses: Number(res.data.can_view_courses) !== 0,
             allowed_ips: Array.isArray(res.data.allowed_ips) ? res.data.allowed_ips : [],
           });
         })
@@ -190,6 +192,7 @@ export default function AdminUserForm() {
       if (Number(currentUser?.role_id) === 1 && Number(form.roleId) === 2) {
         payload.admin_category_ids = form.adminCategoryIds;
         payload.admin_frontend_category_ids = form.adminFrontendCategoryIds;
+        payload.can_view_courses = form.canViewCourses;
         payload.can_add_courses = form.canAddCourses;
         payload.can_edit_courses = form.canEditCourses;
       }
@@ -554,10 +557,22 @@ export default function AdminUserForm() {
                     Admin Panel — Course Permissions
                   </h2>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                    Control whether this admin can add or edit courses and learning content.
+                    Control access to Course and Learning Content in the admin panel.
                   </p>
                 </div>
-                <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="px-6 py-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <label className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
+                    <input
+                      type="checkbox"
+                      checked={form.canViewCourses}
+                      onChange={(e) => setForm({ ...form, canViewCourses: e.target.checked })}
+                      className="h-4 w-4 rounded accent-blue-600 flex-shrink-0"
+                    />
+                    <div>
+                      <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Can view</span>
+                      <span className="text-xs text-gray-400">Show Course &amp; Learning Content in sidebar and allow page access</span>
+                    </div>
+                  </label>
                   <label className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                     <input
                       type="checkbox"

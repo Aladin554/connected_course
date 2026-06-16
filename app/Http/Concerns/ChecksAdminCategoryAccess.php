@@ -36,21 +36,13 @@ trait ChecksAdminCategoryAccess
         return $this->isSuperAdmin();
     }
 
-    protected function canAccessCourseAdminPanel(): bool
+    protected function canViewCourses(): bool
     {
         if ($this->isSuperAdmin()) {
             return true;
         }
 
-        if (!$this->isScopedAdmin()) {
-            return false;
-        }
-
-        if ((int) $this->authUser()->can_add_courses === 1 || (int) $this->authUser()->can_edit_courses === 1) {
-            return true;
-        }
-
-        return $this->authUser()->adminCategories()->exists();
+        return $this->isScopedAdmin() && (int) $this->authUser()->can_view_courses === 1;
     }
 
     protected function canAddCourses(): bool
@@ -69,6 +61,11 @@ trait ChecksAdminCategoryAccess
         }
 
         return $this->isScopedAdmin() && (int) $this->authUser()->can_edit_courses === 1;
+    }
+
+    protected function canAccessCourseAdminPanel(): bool
+    {
+        return $this->canViewCourses();
     }
 
     protected function hasAdminCategoryAssignment(Category $category): bool
@@ -94,7 +91,11 @@ trait ChecksAdminCategoryAccess
 
     protected function canViewAdminCategory(Category $category): bool
     {
-        return $this->hasAdminCategoryAssignment($category);
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->canViewCourses() && $this->hasAdminCategoryAssignment($category);
     }
 
     protected function categoriesQueryForAdmin(): Builder

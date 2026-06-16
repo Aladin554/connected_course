@@ -16,7 +16,7 @@ class CategoryController extends Controller
 
     public function index(): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->canAccessCourseAdminPanel()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
@@ -30,7 +30,7 @@ class CategoryController extends Controller
 
     public function active(): JsonResponse
     {
-        if (!$this->canAdministerCategories()) {
+        if (!$this->canAccessCourseAdminPanel()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 

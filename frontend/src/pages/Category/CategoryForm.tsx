@@ -68,12 +68,23 @@ export default function CategoryForm() {
         const roleId = Number(res.data?.role_id);
         setCanAddCourses(roleId === 1 || Number(res.data?.can_add_courses) === 1);
         setCanEditCourses(roleId === 1 || Number(res.data?.can_edit_courses) === 1);
+        if (roleId === 2) {
+          if (isEdit && Number(res.data?.can_edit_courses) !== 1) {
+            navigate("/dashboard/categories", {
+              state: { message: "You do not have permission to edit courses.", type: "error" },
+            });
+          } else if (!isEdit && Number(res.data?.can_add_courses) !== 1) {
+            navigate("/dashboard/categories", {
+              state: { message: "You do not have permission to add courses.", type: "error" },
+            });
+          }
+        }
       })
       .catch(() => {
         setCanAddCourses(false);
         setCanEditCourses(false);
       });
-  }, []);
+  }, [navigate, isEdit]);
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -436,7 +447,7 @@ export default function CategoryForm() {
                             value={slide.body_content}
                             onChange={(body_content) => updateSlide(index, { body_content })}
                             disabled={submitting}
-                            height={240}
+                            height={350}
                           />
                         </Field>
 

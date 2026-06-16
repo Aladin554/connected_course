@@ -57,10 +57,7 @@ const AppSidebar: React.FC = () => {
       : "/dashboard";
   const hasCourseAccess =
     roleId === 1 ||
-    (roleId === 2 &&
-      (Number(user?.can_add_courses) === 1 ||
-        Number(user?.can_edit_courses) === 1 ||
-        (Array.isArray(user?.admin_categories) && user.admin_categories.length > 0)));
+    (roleId === 2 && Number(user?.can_view_courses) === 1);
 
   // Navigation items (role-based)
   const navItems: NavItem[] = [

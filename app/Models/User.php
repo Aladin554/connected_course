@@ -30,6 +30,7 @@ class User extends Authenticatable
         'can_create_users',
         'can_add_courses',
         'can_edit_courses',
+        'can_view_courses',
         'allowed_ips',
     ];
 
@@ -50,6 +51,7 @@ class User extends Authenticatable
         'can_create_users' => 'integer',
         'can_add_courses' => 'integer',
         'can_edit_courses' => 'integer',
+        'can_view_courses' => 'integer',
         'allowed_ips' => 'array',
     ];
 

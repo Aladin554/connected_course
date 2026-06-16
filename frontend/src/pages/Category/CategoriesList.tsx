@@ -300,7 +300,7 @@ export default function AdminCategories() {
                       </td> */}
 
                       <td className="px-6 py-4">
-                        {(canEditCourses || isSuperAdmin) ? (
+                        {(canEditCourses || isSuperAdmin) && (
                           <div className="flex items-center gap-2">
                             {canEditCourses && (
                               <button
@@ -325,8 +325,6 @@ export default function AdminCategories() {
                               </button>
                             )}
                           </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">View only</span>
                         )}
                       </td>
                     </tr>

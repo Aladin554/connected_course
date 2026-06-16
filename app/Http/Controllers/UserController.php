@@ -92,6 +92,7 @@ class UserController extends Controller
             'admin_frontend_category_ids.*' => 'integer|exists:categories,id',
             'can_add_courses' => 'sometimes|boolean',
             'can_edit_courses' => 'sometimes|boolean',
+            'can_view_courses' => 'sometimes|boolean',
             'allowed_ips' => $isUpdate ? 'sometimes|array' : 'nullable|array',
             'allowed_ips.*' => 'nullable|ip',
         ];
@@ -137,7 +138,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Only superadmin can assign frontend course access'], 403);
         }
 
-        if (!$this->isSuperAdmin() && ($request->has('can_add_courses') || $request->has('can_edit_courses'))) {
+        if (!$this->isSuperAdmin() && ($request->has('can_add_courses') || $request->has('can_edit_courses') || $request->has('can_view_courses'))) {
             return response()->json(['message' => 'Only superadmin can assign course permissions'], 403);
         }
 
@@ -157,6 +158,9 @@ class UserController extends Controller
                 'allowed_ips' => $this->isSuperAdmin()
                     ? $this->sanitizeAllowedIps($request->input('allowed_ips', []))
                     : [],
+                'can_view_courses' => $role->name === 'admin' && $this->isSuperAdmin()
+                    ? (int) filter_var($request->input('can_view_courses', true), FILTER_VALIDATE_BOOLEAN)
+                    : 0,
                 'can_add_courses' => $role->name === 'admin' && $this->isSuperAdmin()
                     ? (int) filter_var($request->input('can_add_courses', false), FILTER_VALIDATE_BOOLEAN)
                     : 0,
@@ -221,7 +225,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Only superadmin can assign frontend course access'], 403);
         }
 
-        if (!$this->isSuperAdmin() && ($request->has('can_add_courses') || $request->has('can_edit_courses'))) {
+        if (!$this->isSuperAdmin() && ($request->has('can_add_courses') || $request->has('can_edit_courses') || $request->has('can_view_courses'))) {
             return response()->json(['message' => 'Only superadmin can assign course permissions'], 403);
         }
 
@@ -267,6 +271,9 @@ class UserController extends Controller
                     if ($request->has('admin_frontend_category_ids')) {
                         $this->syncAdminFrontendCategories($user, $request->input('admin_frontend_category_ids', []));
                     }
+                    if ($request->has('can_view_courses')) {
+                        $user->can_view_courses = (int) filter_var($request->can_view_courses, FILTER_VALIDATE_BOOLEAN);
+                    }
                     if ($request->has('can_add_courses')) {
                         $user->can_add_courses = (int) filter_var($request->can_add_courses, FILTER_VALIDATE_BOOLEAN);
                     }
@@ -277,6 +284,7 @@ class UserController extends Controller
                 } else {
                     $user->adminCategories()->detach();
                     $user->adminFrontendCategories()->detach();
+                    $user->can_view_courses = 0;
                     $user->can_add_courses = 0;
                     $user->can_edit_courses = 0;
                     $user->save();
