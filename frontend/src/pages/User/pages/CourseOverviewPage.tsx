@@ -3,7 +3,6 @@ import api from "../../../api/axios";
 import {
   ArrowLeft,
   ArrowRight,
-  BookmarkIcon,
   categoryImage,
   CheckIcon,
   ChevRight,
@@ -12,12 +11,14 @@ import {
   LearningModule,
   LockIcon,
   loadLearningProgress,
+  NavHomeIcon,
   PlayIcon,
   FadeInImage,
 } from "./shared";
 
 interface CourseOverviewPageProps {
   onBack: () => void;
+  onHome: () => void;
   onModuleClick: (module: LearningModule) => void;
   isDesktop: boolean;
   category: LearningCategory | null;
@@ -25,6 +26,7 @@ interface CourseOverviewPageProps {
 
 export default function CourseOverviewPage({
   onBack,
+  onHome,
   onModuleClick,
   isDesktop,
   category,
@@ -251,8 +253,9 @@ export default function CourseOverviewPage({
             </button>
 
             <button
+              onClick={onHome}
               className="cop-icon-btn"
-              aria-label="Bookmark"
+              aria-label="Home"
               style={{
                 width: 40, height: 40,
                 borderRadius: "50%",
@@ -264,7 +267,7 @@ export default function CourseOverviewPage({
                 cursor: "pointer",
               }}
             >
-              <BookmarkIcon />
+              <NavHomeIcon size={17} color="white" />
             </button>
           </div>
 

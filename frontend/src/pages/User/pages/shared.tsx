@@ -151,6 +151,12 @@ export const ArrowLeft = ({ color = "#fff", size = 18 }: { color?: string; size?
     <polyline points="12 19 5 12 12 5"/>
   </svg>
 );
+export const NavHomeIcon = ({ color = "#fff", size = 18 }: { color?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/>
+    <path d="M9 21V12h6v9"/>
+  </svg>
+);
 export const ChevRight = ({ color = "#22c55e" }: { color?: string }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="9 18 15 12 9 6"/>

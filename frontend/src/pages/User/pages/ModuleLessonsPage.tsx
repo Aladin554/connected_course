@@ -12,6 +12,7 @@ import {
   LearningModule,
   LockIcon,
   loadLearningProgress,
+  NavHomeIcon,        // ← Added
   PlayIcon,
   RichTextContent,
   WarningNotice,
@@ -21,6 +22,7 @@ import {
 
 interface ModuleLessonsPageProps {
   onBack: () => void;
+  onHome: () => void;           // ← Added
   onLessonClick: (lesson: LearningLesson) => void;
   isDesktop: boolean;
   module: LearningModule | null;
@@ -589,6 +591,7 @@ function MobileLayout({
   statusLabel,
   isLessonUnlocked,
   onBack,
+  onHome,           // ← Added
   onLessonClick,
 }: {
   module: LearningModule | null;
@@ -601,6 +604,7 @@ function MobileLayout({
   statusLabel: string;
   isLessonUnlocked: (i: number) => boolean;
   onBack: () => void;
+  onHome: () => void;       // ← Added
   onLessonClick: (lesson: LearningLesson) => void;
 }) {
   return (
@@ -648,6 +652,7 @@ function MobileLayout({
         >
           <ArrowLeft size={16} />
         </button>
+
         <span
           style={{
             fontSize: 15,
@@ -658,7 +663,26 @@ function MobileLayout({
         >
           {moduleLabel(moduleNumber)}
         </span>
-        <div style={{ width: 36 }} />
+
+        {/* Home Button */}
+        <button
+          onClick={onHome}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
+          }}
+        >
+          <NavHomeIcon size={17} color="white" />
+        </button>
       </div>
 
       <ModuleHeader
@@ -723,6 +747,7 @@ function DesktopLayout({
   statusLabel,
   isLessonUnlocked,
   onBack,
+  onHome,           // ← Added
   onLessonClick,
 }: {
   module: LearningModule | null;
@@ -735,6 +760,7 @@ function DesktopLayout({
   statusLabel: string;
   isLessonUnlocked: (i: number) => boolean;
   onBack: () => void;
+  onHome: () => void;       // ← Added
   onLessonClick: (lesson: LearningLesson) => void;
 }) {
   return (
@@ -788,6 +814,7 @@ function DesktopLayout({
         >
           <ArrowLeft size={16} />
         </button>
+
         <span
           style={{
             fontSize: 13,
@@ -800,6 +827,34 @@ function DesktopLayout({
           <span style={{ margin: "0 7px", opacity: 0.4 }}>›</span>
           {moduleLabel(moduleNumber)}
         </span>
+
+        {/* Home Button */}
+        <button
+          onClick={onHome}
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.15)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            backdropFilter: "blur(8px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            flexShrink: 0,
+            marginLeft: "auto",   // Pushes it to the right
+            transition: "background 0.15s",
+          }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.background = "rgba(255,255,255,0.25)")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.background = "rgba(255,255,255,0.15)")
+          }
+        >
+          <NavHomeIcon size={17} color="white" />
+        </button>
       </div>
 
       <ModuleHeader
@@ -844,6 +899,7 @@ function DesktopLayout({
 
 export default function ModuleLessonsPage({
   onBack,
+  onHome,           // ← Added
   onLessonClick,
   module,
   moduleNumber,
@@ -909,6 +965,7 @@ export default function ModuleLessonsPage({
     statusLabel,
     isLessonUnlocked,
     onBack,
+    onHome,           // ← Added
     onLessonClick,
   };
 

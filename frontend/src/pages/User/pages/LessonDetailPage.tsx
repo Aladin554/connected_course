@@ -3,7 +3,6 @@ import api from "../../../api/axios";
 import {
   ArrowLeft,
   ArrowRight,
-  BookmarkIcon,
   ChevDown,
   ChevUp,
   ClockIcon,
@@ -15,11 +14,14 @@ import {
   WarningNotice,
   youtubeEmbedUrl,
   type LessonNextAction,
+  NavHomeIcon,        // ← Added
 } from "./shared";
 
 interface LessonDetailPageProps {
   onBack: () => void;
-  onNext: () => void;
+  onHome: () => void;           // ← Added
+  onNext: () => void | Promise<void>;
+  onFinishCourse?: () => void;
   isDesktop: boolean;
   lesson: LearningLesson | null;
   lessonIndex: number;
@@ -298,7 +300,7 @@ function CourseCompleteModal({
             letterSpacing: -0.2,
           }}
         >
-          Back to Home 🎉
+          Continue
         </button>
       </div>
 
@@ -322,7 +324,9 @@ function CourseCompleteModal({
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function LessonDetailPage({
   onBack,
+  onHome,                    // ← Added
   onNext,
+  onFinishCourse,
   lesson,
   lessonIndex,
   totalLessons,
@@ -369,18 +373,20 @@ export default function LessonDetailPage({
     : null;
   const embedUrl = youtubeEmbedUrl(detail?.video_value);
 
-  // Handle next / complete
-  const handleNext = () => {
+  const handleNext = async () => {
     if (nextAction === "complete-course") {
+      await onNext();
       setShowComplete(true);
-    } else {
-      onNext();
+      return;
     }
+    onNext();
   };
 
   const handleContinueAfterComplete = () => {
     setShowComplete(false);
-    onNext();
+    if (onFinishCourse) {
+      onFinishCourse();
+    }
   };
 
   return (
@@ -430,10 +436,14 @@ export default function LessonDetailPage({
           >
             <ArrowLeft size={15} />
           </button>
+
           <span style={{ color: "rgba(255,255,255,.75)", fontSize: 13, fontWeight: 600 }}>
             Lesson {lessonIndex + 1} of {totalLessons}
           </span>
+
+          {/* Home Button */}
           <button
+            onClick={onHome}
             style={{
               width: 32,
               height: 32,
@@ -446,7 +456,7 @@ export default function LessonDetailPage({
               cursor: "pointer",
             }}
           >
-            <BookmarkIcon />
+            <NavHomeIcon size={17} color="white" />
           </button>
         </div>
 

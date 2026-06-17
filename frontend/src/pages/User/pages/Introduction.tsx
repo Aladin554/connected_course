@@ -19,86 +19,6 @@ import CourseOverviewPage from "./CourseOverviewPage";
 import ModuleLessonsPage  from "./ModuleLessonsPage";
 import LessonDetailPage   from "./LessonDetailPage";
 
-function CourseCompleteModal({
-  categoryTitle,
-  onClose,
-}: {
-  categoryTitle: string;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 80,
-        background: "rgba(7,18,36,0.72)",
-        backdropFilter: "blur(8px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 380,
-          borderRadius: 24,
-          background: "white",
-          overflow: "hidden",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
-          textAlign: "center",
-        }}
-      >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #071224 0%, #0d2a4a 100%)",
-            padding: "36px 24px 28px",
-          }}
-        >
-          <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 14 }}>🎉</div>
-          <h2 style={{ margin: 0, color: "white", fontSize: 26, fontWeight: 900, letterSpacing: -0.6 }}>
-            Congratulations!
-          </h2>
-          <p style={{ margin: "10px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14, lineHeight: 1.5 }}>
-            You have completed <strong style={{ color: "white" }}>{categoryTitle}</strong>.
-          </p>
-        </div>
-        <div style={{ padding: "22px 24px 24px" }}>
-          <p style={{ margin: "0 0 18px", color: "#6b7280", fontSize: 13, lineHeight: 1.6 }}>
-            Great work — you finished every lesson in this course.
-          </p>
-          <button
-            onClick={onClose}
-            style={{
-              width: "100%",
-              padding: "14px",
-              background: "#ff5a2c",
-              color: "white",
-              border: "none",
-              borderRadius: 14,
-              fontSize: 15,
-              fontWeight: 800,
-              cursor: "pointer",
-              boxShadow: "0 6px 20px rgba(255,90,44,.35)",
-            }}
-          >
-            Continue
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const resolveLessonNextAction = (
   lessonIndex: number,
   totalLessons: number,
@@ -123,7 +43,6 @@ export default function Introduction() {
   const [totalLessonsInModule, setTotalLessonsInModule] = useState<number>(0);
   const [lessonNextAction, setLessonNextAction] = useState<LessonNextAction>("next-lesson");
   const [lessonAdvancing, setLessonAdvancing] = useState(false);
-  const [showCourseComplete, setShowCourseComplete] = useState(false);
   const [routeLoading, setRouteLoading] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 768 : false
@@ -147,7 +66,6 @@ export default function Introduction() {
       setSelectedLessonIndex(0);
       setTotalLessonsInModule(0);
       setLessonNextAction("next-lesson");
-      setShowCourseComplete(false);
       setPage("home");
       setRouteLoading(false);
     };
@@ -193,8 +111,6 @@ export default function Introduction() {
         setSelectedLessonIndex(0);
         setTotalLessonsInModule(0);
         setLessonNextAction("next-lesson");
-        setShowCourseComplete(false);
-
         if (routeKind === "welcome") {
           setPage("welcome");
           return;
@@ -312,7 +228,6 @@ export default function Introduction() {
       await completeLearningLesson(selectedCategory.id, selectedLesson.id);
 
       if (lessonNextAction === "complete-course") {
-        setShowCourseComplete(true);
         return;
       }
 
@@ -358,6 +273,7 @@ export default function Introduction() {
       ) : page === "course" ? (
         <CourseOverviewPage
           onBack        ={() => selectedCategory ? showWelcome(selectedCategory) : showHome()}
+          onHome        ={showHome}
           onModuleClick ={(module) => showModule(module)}
           isDesktop     ={isDesktop}
           category      ={selectedCategory}
@@ -365,6 +281,7 @@ export default function Introduction() {
       ) : page === "module" ? (
         <ModuleLessonsPage
           onBack        ={() => showCourse()}
+          onHome        ={showHome}
           onLessonClick ={(lesson) => showLesson(lesson)}
           isDesktop     ={isDesktop}
           module        ={selectedModule}
@@ -374,7 +291,9 @@ export default function Introduction() {
       ) : page === "lesson" ? (
         <LessonDetailPage
           onBack      ={() => selectedModule ? showModule(selectedModule) : showCourse()}
+          onHome      ={showHome}
           onNext      ={handleLessonNext}
+          onFinishCourse={() => selectedCategory && showCourse(selectedCategory)}
           isDesktop   ={isDesktop}
           lesson      ={selectedLesson}
           lessonIndex ={selectedLessonIndex}
@@ -394,15 +313,6 @@ export default function Introduction() {
         />
       )}
 
-      {showCourseComplete && selectedCategory && (
-        <CourseCompleteModal
-          categoryTitle={selectedCategory.title}
-          onClose={() => {
-            setShowCourseComplete(false);
-            showCourse(selectedCategory);
-          }}
-        />
-      )}
     </>
   );
 }
