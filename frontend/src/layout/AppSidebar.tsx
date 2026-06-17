@@ -271,13 +271,13 @@ const AppSidebar: React.FC = () => {
         <img
           src="/images/logo/connected_logo.png"
           alt="Connected Logo"
-          className="dark:hidden transition-transform duration-300 group-hover:scale-105 w-[180px] h-[37px]"
+          className="dark:hidden transition-transform duration-300 group-hover:scale-105 w-[150px] h-[29px]"
         />
 
         <img
           src="/images/logo/connected_logo_dark.png"
           alt="Connected Logo Dark"
-          className="hidden dark:block transition-transform duration-300 group-hover:scale-105 w-[215px] h-[60px]"
+          className="hidden dark:block transition-transform duration-300 group-hover:scale-105 w-[166px] h-[43px]"
         />
       </>
     ) : (
