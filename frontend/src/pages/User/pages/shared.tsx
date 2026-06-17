@@ -265,6 +265,48 @@ export const categoryImage = (category?: LearningCategory | null) => {
     : `/api/storage/${category.thumbnail_image}`;
 };
 
+export const preloadImage = (src?: string | null) => {
+  if (typeof window === "undefined") return;
+  const url = (src || "").trim();
+  if (!url) return;
+  const img = new Image();
+  img.decoding = "async";
+  img.src = url;
+};
+
+export const FadeInImage = ({
+  src,
+  alt,
+  eager = false,
+  style,
+  imgStyle,
+}: {
+  src: string;
+  alt: string;
+  eager?: boolean;
+  style?: React.CSSProperties;
+  imgStyle?: React.CSSProperties;
+}) => {
+  const [loaded, setLoaded] = React.useState(false);
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onLoad={() => setLoaded(true)}
+      decoding="async"
+      loading={eager ? "eager" : "lazy"}
+      fetchPriority={eager ? "high" : "auto"}
+      style={{
+        ...style,
+        opacity: loaded ? 1 : 0,
+        transition: "opacity 220ms ease",
+        ...imgStyle,
+      }}
+    />
+  );
+};
+
 export const progressKey = (categoryId: number) => `learning-progress:${categoryId}`;
 
 export const readLearningProgress = (categoryId?: number | null): number[] => {
@@ -348,8 +390,12 @@ export const HeroCard = ({
         }}
       >
         {imgSrc && (
-          <img src={imgSrc} alt={category?.title || "Course"}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+          <FadeInImage
+            src={imgSrc}
+            alt={category?.title || "Course"}
+            eager
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+          />
         )}
         <div style={{
           position: "absolute", inset: 0,
@@ -392,8 +438,12 @@ export const HeroCard = ({
       boxShadow: "0 6px 28px rgba(0,0,0,0.20)", flexShrink: 0, cursor: "pointer",
     }} onClick={onContinue}>
       {imgSrc && (
-        <img src={imgSrc} alt={category?.title || "Course"}
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
+        <FadeInImage
+          src={imgSrc}
+          alt={category?.title || "Course"}
+          eager
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
+        />
       )}
       <div style={{
         position: "absolute", inset: 0,

@@ -3,6 +3,7 @@ import api from "../../../api/axios";
 import {
   ArrowLeft,
   categoryImage,
+  FadeInImage,
   LearningCategory,
   RichTextContent,
   WarningNotice,
@@ -104,9 +105,10 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
         zIndex: 0,
       }}>
         {image && (
-          <img
+          <FadeInImage
             src={image}
             alt={category?.title || "Category"}
+            eager
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%" }}
           />
         )}

@@ -7,6 +7,8 @@ import {
   LightHeaderBar, GreetingHeader, PlainSectionTitle,
   TrainingCarousel, ResourceGrid,
   HomeIcon, BookIcon, MicIcon, UserIcon,
+  categoryImage,
+  preloadImage,
 } from "./shared";
 import { clearAuthSession, getStoredUser } from "../../../utils/session";
 
@@ -676,6 +678,11 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
       .catch(() => setCategories([]))
       .finally(() => setLoadingCategories(false));
   }, []);
+
+  useEffect(() => {
+    // Preload thumbnails so reloads don't show "pop-in" images.
+    categories.forEach((c) => preloadImage(categoryImage(c)));
+  }, [categories]);
 
   useEffect(() => {
     let cancelled = false;

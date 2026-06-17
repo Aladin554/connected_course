@@ -13,6 +13,7 @@ import {
   LockIcon,
   loadLearningProgress,
   PlayIcon,
+  FadeInImage,
 } from "./shared";
 
 interface CourseOverviewPageProps {
@@ -194,9 +195,10 @@ export default function CourseOverviewPage({
           }}
         >
           {image && (
-            <img
+            <FadeInImage
               src={image}
               alt={category?.title || ""}
+              eager
               style={{
                 position: "absolute",
                 inset: 0,

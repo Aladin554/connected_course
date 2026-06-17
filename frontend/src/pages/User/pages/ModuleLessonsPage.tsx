@@ -16,6 +16,7 @@ import {
   RichTextContent,
   WarningNotice,
   categoryImage,
+  FadeInImage,
 } from "./shared";
 
 interface ModuleLessonsPageProps {
@@ -439,9 +440,10 @@ function ModuleHeader({
       }}
     >
       {bgImage && (
-        <img
+        <FadeInImage
           src={bgImage}
           alt=""
+          eager
           style={{
             position: "absolute",
             inset: 0,
