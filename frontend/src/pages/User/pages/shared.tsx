@@ -5,6 +5,7 @@ import api from "../../../api/axios";
 
 /* ── Types ── */
 export type Page = "home" | "welcome" | "course" | "module" | "lesson";
+export type LessonNextAction = "next-lesson" | "next-module" | "complete-course";
 export interface LearningCategory {
   id: number;
   title: string;
@@ -60,8 +61,7 @@ export interface HeroCardProps {
   progress?: number;
   moduleNumber?: number | null;
   moduleName?: string | null;
-  /** mobile = pill + title only (whole card clickable), desktop = full info panel */
-  variant?: "mobile" | "desktop";
+  variant?: "mobile" | "tablet" | "desktop";
 }
 export interface HelpBoxProps  { desktop: boolean }
 export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: (category?: LearningCategory) => void }
@@ -316,11 +316,6 @@ export const parseLessonContentBlock = (item: { id: number; content: string; fil
 
 /* ════════════════════════════════════════════════════════════
    HERO CARD
-   ─ mobile variant: entire card is one big clickable button.
-     Shows only: Course pill + bold title overlaid on image.
-     No progress bar, no Continue button.
-   ─ desktop variant: image top half + info panel bottom half
-     with module badge, progress bar, and Continue button.
 ════════════════════════════════════════════════════════════ */
 export const HeroCard = ({
   height = 300,
@@ -339,117 +334,102 @@ export const HeroCard = ({
 
   const imgSrc = categoryImage(category);
 
-  /* ── MOBILE: whole card is a button ── */
   if (variant === "mobile") {
     return (
       <button
         type="button"
         onClick={onContinue}
         style={{
-          display: "block",
-          width: "100%",
-          height,
-          borderRadius: 18,
-          overflow: "hidden",
-          position: "relative",
-          border: "none",
-          padding: 0,
-          cursor: "pointer",
+          display: "block", width: "100%", height,
+          borderRadius: 18, overflow: "hidden", position: "relative",
+          border: "none", padding: 0, cursor: "pointer",
           background: category?.background_color || "#071224",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.18)",
-          flexShrink: 0,
-          textAlign: "left",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.18)", flexShrink: 0, textAlign: "left",
         }}
       >
-        {/* Background image */}
         {imgSrc && (
-          <img
-            src={imgSrc}
-            alt={category?.title || "Course"}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
-          />
+          <img src={imgSrc} alt={category?.title || "Course"}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
         )}
-        {/* Bottom gradient scrim */}
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(180deg, transparent 40%, rgba(4,12,28,0.55) 68%, rgba(4,12,28,0.88) 85%, rgba(4,12,28,0.96) 100%)",
           pointerEvents: "none",
         }} />
-        {/* Overlay content */}
         <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "0 16px 18px" }}>
-          {/* Course pill */}
           <div style={{ marginBottom: 7 }}>
             <span style={{
               fontSize: 11, fontWeight: 800, color: "#22c55e",
               background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.45)",
-              borderRadius: 20, padding: "4px 12px",
-              display: "inline-flex", alignItems: "center", gap: 6,
+              borderRadius: 20, padding: "0px 12px",
+              display: "inline-flex", alignItems: "center", gap: 3,
             }}>
               Course
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
+              <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#22c55e" }} />
             </span>
           </div>
-          {/* Title */}
-          <div style={{
-            fontWeight: 900, fontSize: 20, color: "white",
-            letterSpacing: -0.5, lineHeight: 1.2,
-          }}>
-            {category?.title || "Course"}
-          </div>
+          {(() => {
+            const title = category?.title || "Course";
+            const trainingMatch = title.match(/^(.*?)\s*(Training\.?)$/i);
+            return trainingMatch ? (
+              <>
+                <div style={{ fontWeight: 900, fontSize: 24, color: "white", letterSpacing: -0.5, lineHeight: 1.2 }}>{trainingMatch[1]}</div>
+                <div style={{ fontWeight: 900, fontSize: 24, color: "white", letterSpacing: -0.5, lineHeight: 1.2 }}>{trainingMatch[2]}</div>
+              </>
+            ) : (
+              <div style={{ fontWeight: 900, fontSize: 20, color: "white", letterSpacing: -0.5, lineHeight: 1.2 }}>{title}</div>
+            );
+          })()}
         </div>
       </button>
     );
   }
 
-  /* ── DESKTOP: image + info panel ── */
   return (
     <div style={{
       borderRadius: 20, overflow: "hidden", position: "relative",
       height, background: category?.background_color || "#071224",
-      boxShadow: "0 6px 28px rgba(0,0,0,0.20)", flexShrink: 0,
-      cursor: "pointer",
+      boxShadow: "0 6px 28px rgba(0,0,0,0.20)", flexShrink: 0, cursor: "pointer",
     }} onClick={onContinue}>
       {imgSrc && (
         <img src={imgSrc} alt={category?.title || "Course"}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }} />
       )}
-      {/* Full gradient */}
       <div style={{
         position: "absolute", inset: 0,
         background: "linear-gradient(180deg, transparent 30%, rgba(4,12,28,0.5) 58%, rgba(4,12,28,0.92) 78%, rgba(4,12,28,1) 100%)",
         pointerEvents: "none",
       }} />
-      {/* Info panel */}
-      <div style={{
-        position: "absolute", left: 0, right: 0, bottom: 0,
-        padding: "0 20px 20px",
-        display: "flex", flexDirection: "column", gap: 0,
-      }}>
-        {/* Pill */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "0 20px 20px", display: "flex", flexDirection: "column", gap: 0 }}>
         <div style={{ marginBottom: 7 }}>
           <span style={{
             fontSize: 11, fontWeight: 800, color: "#22c55e",
             background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.45)",
-            borderRadius: 20, padding: "4px 12px",
+            borderRadius: 20, padding: "0px 12px",
             display: "inline-flex", alignItems: "center", gap: 6,
           }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e" }} />
             Course
           </span>
         </div>
-        {/* Title */}
-        <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 6 }}>
-          {category?.title || "Course"}
-        </div>
-        {/* Module badge */}
+        {(() => {
+          const title = category?.title || "Course";
+          const trainingMatch = title.match(/^(.*?)\s*(Training\.?)$/i);
+          return trainingMatch ? (
+            <>
+              <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 6 }}>{trainingMatch[1]}</div>
+              <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 6 }}>{trainingMatch[2]}</div>
+            </>
+          ) : (
+            <div style={{ fontWeight: 900, fontSize: 18, color: "white", letterSpacing: -0.4, lineHeight: 1.2, marginBottom: 6 }}>{title}</div>
+          );
+        })()}
         {(moduleNumber || moduleLabel) && (
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
             {moduleNumber && (
-              <span style={{
-                fontSize: 10, fontWeight: 800, color: "#22c55e",
-                background: "rgba(34,197,94,0.14)", border: "1px solid rgba(34,197,94,0.30)",
-                borderRadius: 6, padding: "2px 8px",
-              }}>Module {moduleNumber}</span>
+              <span style={{ fontSize: 10, fontWeight: 800, color: "#22c55e", background: "rgba(34,197,94,0.14)", border: "1px solid rgba(34,197,94,0.30)", borderRadius: 6, padding: "2px 8px" }}>
+                Module {moduleNumber}
+              </span>
             )}
             {moduleLabel && (
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -458,14 +438,12 @@ export const HeroCard = ({
             )}
           </div>
         )}
-        {/* Progress bar */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
           <div style={{ flex: 1, height: 3, background: "rgba(255,255,255,0.18)", borderRadius: 8, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${progress}%`, background: "#22c55e", borderRadius: 8, transition: "width 0.4s ease" }} />
           </div>
           <span style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", flexShrink: 0, fontWeight: 600 }}>{progress}% Complete</span>
         </div>
-        {/* Continue */}
         <button onClick={(e) => { e.stopPropagation(); onContinue(); }} style={{
           alignSelf: "flex-start",
           background: "#22c55e", color: "white", border: "none",
@@ -481,38 +459,31 @@ export const HeroCard = ({
 };
 
 /* ════════ HELP BOX ════════ */
-interface HelpBoxProps { desktop?: boolean }
 export const HelpBox = ({ desktop = true }: HelpBoxProps) => (
   <div style={{
-    background: "#f6faf7", border: "1px solid rgba(52,201,90,0.13)",
+    background: "#EEF0FB", border: "1px solid rgba(99,102,241,0.13)",
     borderRadius: 16, display: "flex", alignItems: "center",
     gap: 12, padding: desktop ? "14px 16px" : "10px 12px",
   }}>
     <div style={{
       flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-      borderRadius: 12, background: "#f0fdf4", border: "1px solid rgba(52,201,90,0.20)",
+      borderRadius: 12, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.18)",
       width: desktop ? 40 : 34, height: desktop ? 40 : 34,
     }}>
       <HeadphonesIcon size={desktop ? 20 : 17} />
     </div>
-    <div
-  style={{
-    fontSize: desktop ? 11.5 : 10.5,
-    color: "#6b7280",
-    lineHeight: 1.4,
-    marginTop: 1,
-  }}
->
-  Have questions?{" "}
-  <span
-    style={{
-      fontWeight: 700,
-      color: "#000000",
-    }}
-  >
-    Simply contact your counsellor on WhatsApp.
-  </span>
-</div>
+    <div style={{
+      fontSize: 15,
+      color: "#6b7280",
+      lineHeight: 1.45,
+      letterSpacing: -0.3,
+      fontWeight: 500,
+    }}>
+      Have questions?{" "}
+      <span style={{ fontWeight: 800, color: "#111827", letterSpacing: -0.3 }}>
+        Simply contact your counsellor on WhatsApp.
+      </span>
+    </div>
   </div>
 );
 
@@ -524,10 +495,12 @@ export const UnlockIcon = ({ size = 18, color = "#111827" }: { size?: number; co
   </svg>
 );
 
-export const ConnectedWordmark = ({ color = "#111827", size = 22 }: { color?: string; size?: number }) => (
-  <span style={{ fontFamily: "'Fraunces','Georgia',serif", fontWeight: 800, fontSize: size, color, letterSpacing: -0.5 }}>
-    Connected.
-  </span>
+export const ConnectedWordmark = ({ color, size }: { color?: string; size?: number }) => (
+  <img
+    src="/images/logo/connected_logo.png"
+    alt="Connected Logo"
+    style={{ width: 120, height: 37, objectFit: "contain", display: "block" }}
+  />
 );
 
 export const LightHeaderBar = ({ children, px = 0 }: { children?: React.ReactNode; px?: number }) => (
@@ -548,9 +521,21 @@ export const GreetingHeader = ({ name, compact = false }: { name: string; compac
     }}>
       Hello {name}.
     </div>
-    <div style={{ fontSize: compact ? 12 : 13, color: "#9ca3af", lineHeight: 1.5, fontWeight: 500 }}>
+    <div style={{
+      fontSize: 15,
+      color: "#6b7280",
+      lineHeight: 1.55,
+      fontWeight: 500,
+      letterSpacing: -0.25,
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+    }}>
       Below you will find{" "}
-      <span style={{ color: "#374151", fontWeight: 800 }}>courses personalized</span>
+      <span style={{
+        color: "#111827",
+        fontWeight: 800,
+        letterSpacing: -0.3,
+        fontFamily: "'Plus Jakarta Sans', sans-serif",
+      }}>courses personalized</span>
       {" "}to your study abroad journey. Enjoy!
     </div>
   </div>
@@ -574,7 +559,32 @@ export const CoursePill = () => (
   </span>
 );
 
-/* ════════ TRAINING CAROUSEL ════════ */
+/* ════════════════════════════════════════════════════════════
+   TRAINING CAROUSEL
+
+   Dot logic — PAGE-BASED (not card-based):
+   ─────────────────────────────────────────
+   visibleCount = how many cards fit in the viewport at once
+     mobile  → 1
+     tablet  → 2
+     desktop → 3
+
+   pageCount = total cards − visibleCount + 1
+     e.g. 4 cards on desktop (3 visible) → 4 − 3 + 1 = 2 dots
+     e.g. 4 cards on mobile  (1 visible) → 4 − 1 + 1 = 4 dots
+     e.g. 3 cards on desktop (3 visible) → 3 − 3 + 1 = 1 dot  → hidden
+
+   Dots appear only when pageCount > 1.
+   Clicking a dot scrolls to that card position.
+════════════════════════════════════════════════════════════ */
+
+/** Cards simultaneously visible per breakpoint. */
+const VISIBLE_CARDS: Record<"mobile" | "tablet" | "desktop", number> = {
+  mobile:  1,
+  tablet:  2,
+  desktop: 3,
+};
+
 export const TrainingCarousel = ({
   categories, loading, progressByCategory, continueByCategory,
   onContinue, emptyText, cardWidth = 260, cardHeight = 300, variant = "mobile",
@@ -587,17 +597,35 @@ export const TrainingCarousel = ({
   emptyText: string;
   cardWidth?: number;
   cardHeight?: number;
-  variant?: "mobile" | "desktop";
+  variant?: "mobile" | "tablet" | "desktop";
 }) => {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const scrollerRef = React.useRef<HTMLDivElement | null>(null);
   const GAP = 12;
 
+  // How many cards are visible at once for this breakpoint
+  const visibleCount = VISIBLE_CARDS[variant];
+
+  // Number of scrollable positions = total − visible + 1
+  // (minimum 1 so we never get 0 or negative)
+  const pageCount = Math.max(1, categories.length - visibleCount + 1);
+
+  // Only render dots when there is more than one page to navigate
+  const showDots = pageCount > 1;
+
   const handleScroll = () => {
     const el = scrollerRef.current;
     if (!el) return;
-    const index = Math.round(el.scrollLeft / (cardWidth + GAP));
-    setActiveIndex(Math.max(0, Math.min(index, categories.length - 1)));
+    const rawIndex = el.scrollLeft / (cardWidth + GAP);
+    const clamped = Math.max(0, Math.min(Math.round(rawIndex), pageCount - 1));
+    setActiveIndex(clamped);
+  };
+
+  const scrollToPage = (pageIndex: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: pageIndex * (cardWidth + GAP), behavior: "smooth" });
+    setActiveIndex(pageIndex);
   };
 
   if (loading) {
@@ -621,6 +649,7 @@ export const TrainingCarousel = ({
 
   return (
     <div>
+      {/* ── Scrollable card strip ── */}
       <div
         ref={scrollerRef}
         onScroll={handleScroll}
@@ -635,24 +664,31 @@ export const TrainingCarousel = ({
           <div key={category.id} style={{ flex: `0 0 ${cardWidth}px`, scrollSnapAlign: "start" }}>
             <HeroCard
               height={cardHeight}
-              variant={variant}
+              variant="mobile"
               onContinue={() => onContinue(category)}
               category={category}
-              progress={progressByCategory[category.id] || 0}
-              moduleNumber={continueByCategory[category.id]?.moduleNumber}
-              moduleName={continueByCategory[category.id]?.moduleName}
             />
           </div>
         ))}
       </div>
-      {categories.length > 1 && (
+
+      {/* ── Page-based dot indicators ── */}
+      {showDots && (
         <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 12 }}>
-          {categories.map((_, index) => (
-            <div key={index} style={{
-              width: index === activeIndex ? 20 : 6, height: 6, borderRadius: 3,
-              background: index === activeIndex ? "#ff5a2c" : "#d1d5db",
-              transition: "width 0.2s, background 0.2s",
-            }} />
+          {Array.from({ length: pageCount }).map((_, index) => (
+            <div
+              key={index}
+              onClick={() => scrollToPage(index)}
+              style={{
+                width: index === activeIndex ? 20 : 6,
+                height: 6,
+                borderRadius: 3,
+                background: index === activeIndex ? "#ff5a2c" : "#d1d5db",
+                transition: "width 0.2s ease, background 0.2s ease",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            />
           ))}
         </div>
       )}
@@ -731,5 +767,6 @@ export const GlobalStyles = () => (
     .hs::-webkit-scrollbar{display:none;} .hs{-ms-overflow-style:none;scrollbar-width:none;}
     button{font-family:'Plus Jakarta Sans',sans-serif;}
     @keyframes pageIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
   `}</style>
 );

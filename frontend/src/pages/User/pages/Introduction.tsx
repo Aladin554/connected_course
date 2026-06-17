@@ -12,12 +12,103 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 
-import { completeLearningLesson, GlobalStyles, LearningCategory, LearningLesson, LearningModule, loadLearningProgress, Page } from "./shared";
+import { completeLearningLesson, GlobalStyles, LearningCategory, LearningLesson, LearningModule, LessonNextAction, loadLearningProgress, Page } from "./shared";
 import HomePage           from "./HomePage";
 import WelcomePage        from "./WelcomePage";
 import CourseOverviewPage from "./CourseOverviewPage";
 import ModuleLessonsPage  from "./ModuleLessonsPage";
 import LessonDetailPage   from "./LessonDetailPage";
+
+function CourseCompleteModal({
+  categoryTitle,
+  onClose,
+}: {
+  categoryTitle: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 80,
+        background: "rgba(7,18,36,0.72)",
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 380,
+          borderRadius: 24,
+          background: "white",
+          overflow: "hidden",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.35)",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            background: "linear-gradient(135deg, #071224 0%, #0d2a4a 100%)",
+            padding: "36px 24px 28px",
+          }}
+        >
+          <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 14 }}>🎉</div>
+          <h2 style={{ margin: 0, color: "white", fontSize: 26, fontWeight: 900, letterSpacing: -0.6 }}>
+            Congratulations!
+          </h2>
+          <p style={{ margin: "10px 0 0", color: "rgba(255,255,255,0.65)", fontSize: 14, lineHeight: 1.5 }}>
+            You have completed <strong style={{ color: "white" }}>{categoryTitle}</strong>.
+          </p>
+        </div>
+        <div style={{ padding: "22px 24px 24px" }}>
+          <p style={{ margin: "0 0 18px", color: "#6b7280", fontSize: 13, lineHeight: 1.6 }}>
+            Great work — you finished every lesson in this course.
+          </p>
+          <button
+            onClick={onClose}
+            style={{
+              width: "100%",
+              padding: "14px",
+              background: "#ff5a2c",
+              color: "white",
+              border: "none",
+              borderRadius: 14,
+              fontSize: 15,
+              fontWeight: 800,
+              cursor: "pointer",
+              boxShadow: "0 6px 20px rgba(255,90,44,.35)",
+            }}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const resolveLessonNextAction = (
+  lessonIndex: number,
+  totalLessons: number,
+  moduleIndex: number,
+  totalModules: number,
+): LessonNextAction => {
+  if (lessonIndex < totalLessons - 1) return "next-lesson";
+  if (moduleIndex < totalModules - 1) return "next-module";
+  return "complete-course";
+};
 
 export default function Introduction() {
   const location = useLocation();
@@ -30,6 +121,9 @@ export default function Introduction() {
   const [selectedLesson, setSelectedLesson] = useState<LearningLesson | null>(null);
   const [selectedLessonIndex, setSelectedLessonIndex] = useState<number>(0);
   const [totalLessonsInModule, setTotalLessonsInModule] = useState<number>(0);
+  const [lessonNextAction, setLessonNextAction] = useState<LessonNextAction>("next-lesson");
+  const [lessonAdvancing, setLessonAdvancing] = useState(false);
+  const [showCourseComplete, setShowCourseComplete] = useState(false);
   const [routeLoading, setRouteLoading] = useState(false);
   const [isDesktop, setIsDesktop] = useState(
     typeof window !== "undefined" ? window.innerWidth >= 768 : false
@@ -52,6 +146,8 @@ export default function Introduction() {
       setSelectedLesson(null);
       setSelectedLessonIndex(0);
       setTotalLessonsInModule(0);
+      setLessonNextAction("next-lesson");
+      setShowCourseComplete(false);
       setPage("home");
       setRouteLoading(false);
     };
@@ -96,6 +192,8 @@ export default function Introduction() {
         setSelectedLesson(null);
         setSelectedLessonIndex(0);
         setTotalLessonsInModule(0);
+        setLessonNextAction("next-lesson");
+        setShowCourseComplete(false);
 
         if (routeKind === "welcome") {
           setPage("welcome");
@@ -173,6 +271,12 @@ export default function Introduction() {
         setSelectedLesson(lesson);
         setSelectedLessonIndex(lessonIndex);
         setTotalLessonsInModule(lessons.length);
+        setLessonNextAction(resolveLessonNextAction(
+          lessonIndex,
+          lessons.length,
+          moduleIndex >= 0 ? moduleIndex : 0,
+          modules.length,
+        ));
         setPage("lesson");
       } catch {
         if (!cancelled) navigate("/introduction", { replace: true });
@@ -198,6 +302,35 @@ export default function Introduction() {
   };
   const showLesson = (lesson: LearningLesson, module = selectedModule, category = selectedCategory) => {
     if (category && module) navigate(`/introduction/category/${category.id}/module/${module.id}/lesson/${lesson.id}`);
+  };
+
+  const handleLessonNext = async () => {
+    if (!selectedCategory || !selectedModule || !selectedLesson || lessonAdvancing) return;
+
+    setLessonAdvancing(true);
+    try {
+      await completeLearningLesson(selectedCategory.id, selectedLesson.id);
+
+      if (lessonNextAction === "complete-course") {
+        setShowCourseComplete(true);
+        return;
+      }
+
+      if (lessonNextAction === "next-module") {
+        showCourse(selectedCategory);
+        return;
+      }
+
+      const lessonsRes = await api.get(`/modules/${selectedModule.id}/lessons`);
+      const lessons: LearningLesson[] = Array.isArray(lessonsRes.data) ? lessonsRes.data : [];
+      const lessonIndex = lessons.findIndex((item) => item.id === selectedLesson.id);
+
+      if (lessonIndex >= 0 && lessonIndex < lessons.length - 1) {
+        showLesson(lessons[lessonIndex + 1], selectedModule, selectedCategory);
+      }
+    } finally {
+      setLessonAdvancing(false);
+    }
   };
 
   if (routeLoading) {
@@ -241,16 +374,13 @@ export default function Introduction() {
       ) : page === "lesson" ? (
         <LessonDetailPage
           onBack      ={() => selectedModule ? showModule(selectedModule) : showCourse()}
-          onNext      ={async () => {
-            if (selectedCategory && selectedModule && selectedLesson) {
-              await completeLearningLesson(selectedCategory.id, selectedLesson.id);
-              showModule(selectedModule, selectedCategory);
-            }
-          }}
+          onNext      ={handleLessonNext}
           isDesktop   ={isDesktop}
           lesson      ={selectedLesson}
           lessonIndex ={selectedLessonIndex}
           totalLessons={totalLessonsInModule}
+          nextAction  ={lessonNextAction}
+          advancing   ={lessonAdvancing}
         />
       ) : (
         /* page === "home" */
@@ -260,6 +390,16 @@ export default function Introduction() {
           onContinue={(category) => {
             if (!category) return;
             showWelcome(category);
+          }}
+        />
+      )}
+
+      {showCourseComplete && selectedCategory && (
+        <CourseCompleteModal
+          categoryTitle={selectedCategory.title}
+          onClose={() => {
+            setShowCourseComplete(false);
+            showCourse(selectedCategory);
           }}
         />
       )}

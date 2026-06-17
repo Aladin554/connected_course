@@ -120,7 +120,7 @@ function Avatar({ user, size, fontSize }: { user: ProfileUser | null; size: numb
   return (
     <div style={{
       width: size, height: size, borderRadius: "50%",
-      background: `linear-gradient(135deg, ${tokens.brand} 0%, #ff8057 100%)`,
+      background: "#000000",
       color: "white", display: "flex", alignItems: "center", justifyContent: "center",
       fontWeight: 900, fontSize, flexShrink: 0, letterSpacing: -0.5, userSelect: "none",
     }}>
@@ -517,10 +517,11 @@ function MobileHome({
             <Section mb={14}>
               <PlainSectionTitle title="Training" />
               <TrainingCarousel
+                variant="mobile"
                 categories={trainingCategories} loading={loadingCategories}
                 progressByCategory={progressByCategory} continueByCategory={continueByCategory}
                 onContinue={onContinue} emptyText="No training courses assigned yet."
-                cardWidth={cardW} cardHeight={220}
+                cardWidth={cardW} cardHeight={390}
               />
             </Section>
 
@@ -566,6 +567,7 @@ function DesktopHome({
             <Section mb={20}>
               <PlainSectionTitle title="Training" />
               <TrainingCarousel
+                variant="desktop"
                 categories={trainingCategories} loading={loadingCategories}
                 progressByCategory={progressByCategory} continueByCategory={continueByCategory}
                 onContinue={onContinue} emptyText="No training courses assigned yet."
@@ -613,6 +615,7 @@ function TabletHome({
             <Section mb={16}>
               <PlainSectionTitle title="Training" />
               <TrainingCarousel
+                variant="tablet"
                 categories={trainingCategories} loading={loadingCategories}
                 progressByCategory={progressByCategory} continueByCategory={continueByCategory}
                 onContinue={onContinue} emptyText="No training courses assigned yet."

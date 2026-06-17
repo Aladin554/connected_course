@@ -83,7 +83,6 @@ export default function LearningContent() {
   const [canEditCourses, setCanEditCourses] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  // Mobile: which column is visible ("modules" | "lessons")
   const [mobileView, setMobileView] = useState<"modules" | "lessons">("modules");
 
   const selectedCategory = useMemo(
@@ -310,11 +309,9 @@ export default function LearningContent() {
     </div>
   );
 
-  // ─── Shared input class ────────────────────────────────────────────────────
   const inputClass =
     "w-full rounded-xl sm:rounded-2xl border-2 border-gray-200 dark:border-gray-700 px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none transition";
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-gray-950 p-3 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
@@ -328,8 +325,6 @@ export default function LearningContent() {
             </h1>
             <StepIndicator />
           </div>
-
-          {/* Course Select */}
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
             <div className="flex-1 w-full">
               <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1.5 sm:mb-2">
@@ -353,7 +348,7 @@ export default function LearningContent() {
           </div>
         </div>
 
-        {/* ── Mobile Tab Switcher (< lg) ── */}
+        {/* ── Mobile Tab Switcher ── */}
         <div className="lg:hidden flex rounded-2xl overflow-hidden border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <button
             onClick={() => setMobileView("modules")}
@@ -391,7 +386,6 @@ export default function LearningContent() {
           {/* ════ MODULES COLUMN ════ */}
           <div className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col overflow-hidden
             ${mobileView !== "modules" ? "hidden lg:flex" : "flex"}`}>
-            {/* Header */}
             <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-violet-600 dark:bg-violet-700 flex flex-col gap-3 sm:gap-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-violet-200">Step 2</p>
@@ -414,14 +408,12 @@ export default function LearningContent() {
               </div>
             </div>
 
-            {/* Helper hint */}
             <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-violet-50 dark:bg-violet-950/40 border-b border-violet-100 dark:border-violet-900 text-xs text-violet-700 dark:text-violet-300 flex items-center gap-2">
               <span>👆</span>
               <span className="hidden sm:inline">Click a module below to see its lessons in Step 3</span>
               <span className="sm:hidden">Tap a module to load its lessons</span>
             </div>
 
-            {/* Module List */}
             <div className="flex-1 overflow-auto divide-y divide-gray-100 dark:divide-gray-800">
               {modules.length === 0 ? (
                 <div className="py-12 sm:py-16 text-center px-4">
@@ -437,7 +429,7 @@ export default function LearningContent() {
                       key={module.id}
                       onClick={() => {
                         setModuleId(String(module.id));
-                        setMobileView("lessons"); // auto-switch on mobile
+                        setMobileView("lessons");
                       }}
                       className={`px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between cursor-pointer transition group
                         ${isSelected
@@ -461,7 +453,6 @@ export default function LearningContent() {
                           </div>
                         </div>
                       </div>
-                      {/* Actions — always visible on mobile, hover on desktop */}
                       {canEditCourses && (
                         <div className={`flex gap-0.5 sm:gap-1 flex-shrink-0 transition
                           ${isSelected ? "opacity-100" : "opacity-100 lg:opacity-0 lg:group-hover:opacity-100"}`}>
@@ -493,7 +484,6 @@ export default function LearningContent() {
           {/* ════ LESSONS COLUMN ════ */}
           <div className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col overflow-hidden
             ${mobileView !== "lessons" ? "hidden lg:flex" : "flex"}`}>
-            {/* Header */}
             <div className={`px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 flex flex-col gap-3 sm:gap-4 transition-colors ${selectedModule ? "bg-emerald-600 dark:bg-emerald-700" : "bg-gray-400 dark:bg-gray-600"}`}>
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Step 3</p>
@@ -520,7 +510,6 @@ export default function LearningContent() {
               </div>
             </div>
 
-            {/* Helper hint */}
             {!selectedModule ? (
               <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 text-xs text-gray-500 flex items-center gap-2">
                 <span>👈</span>
@@ -534,7 +523,6 @@ export default function LearningContent() {
               </div>
             )}
 
-            {/* Lesson List */}
             <div className="flex-1 overflow-auto divide-y divide-gray-100 dark:divide-gray-800">
               {!selectedModule ? (
                 <div className="py-12 sm:py-16 text-center px-4">
@@ -565,9 +553,7 @@ export default function LearningContent() {
                         <div className="font-medium text-gray-800 dark:text-gray-200 text-sm truncate">{lesson.title}</div>
                         <div className="text-xs text-gray-400 mt-0.5">
                           {hasLessonDuration(lesson.duration_mins) && (
-                            <>
-                              {formatLessonDuration(lesson.duration_mins, lesson.duration_unit === "seconds" ? "seconds" : "minutes")}
-                            </>
+                            <>{formatLessonDuration(lesson.duration_mins, lesson.duration_unit === "seconds" ? "seconds" : "minutes")}</>
                           )}
                           {!lesson.is_active && (
                             <span className={`${hasLessonDuration(lesson.duration_mins) ? "ml-2 " : ""}px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500`}>
@@ -577,7 +563,6 @@ export default function LearningContent() {
                         </div>
                       </div>
                     </div>
-                    {/* Actions — always visible on mobile */}
                     {canEditCourses && (
                       <div className="flex gap-0.5 sm:gap-1 flex-shrink-0 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition">
                         <button
@@ -606,15 +591,11 @@ export default function LearningContent() {
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════════════════ */}
-      {/* SLIDE-OVER PANEL — MODULE FORM                                         */}
-      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* ════ SLIDE-OVER — MODULE FORM ════ */}
       {activePanel === "module-form" && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closePanel} />
-          {/* Full-width on mobile, max-w-lg on sm+ */}
           <div className="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 h-full overflow-auto shadow-2xl flex flex-col">
-            {/* Panel Header */}
             <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-violet-600 dark:bg-violet-700 sticky top-0 z-10">
               <div className="flex items-start justify-between gap-4 mb-2 sm:mb-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-violet-200 mt-1">
@@ -633,7 +614,6 @@ export default function LearningContent() {
               </h3>
             </div>
 
-            {/* Context Breadcrumb */}
             <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-violet-50 dark:bg-violet-950/40 border-b border-violet-100 dark:border-violet-900 text-xs text-violet-600 dark:text-violet-400 flex items-center gap-1.5 sm:gap-2 flex-wrap">
               <BookOpen size={12} />
               <span className="font-medium truncate max-w-[120px]">{selectedCategory?.title}</span>
@@ -690,7 +670,6 @@ export default function LearningContent() {
                 </div>
               </div>
 
-              {/* Sticky Save */}
               <div className="sticky bottom-0 bg-white dark:bg-gray-900 pt-3 sm:pt-4 pb-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-gray-100 dark:border-gray-800">
                 <button
                   type="submit"
@@ -706,14 +685,11 @@ export default function LearningContent() {
         </div>
       )}
 
-      {/* ════════════════════════════════════════════════════════════════════════ */}
-      {/* SLIDE-OVER PANEL — LESSON FORM                                         */}
-      {/* ════════════════════════════════════════════════════════════════════════ */}
+      {/* ════ SLIDE-OVER — LESSON FORM ════ */}
       {activePanel === "lesson-form" && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closePanel} />
           <div className="relative w-full sm:max-w-2xl bg-white dark:bg-gray-900 h-full overflow-auto shadow-2xl flex flex-col">
-            {/* Panel Header */}
             <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-emerald-600 dark:bg-emerald-700 sticky top-0 z-10">
               <div className="flex items-start justify-between gap-4 mb-2 sm:mb-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-emerald-200 mt-1">
@@ -732,7 +708,6 @@ export default function LearningContent() {
               </h3>
             </div>
 
-            {/* Context Breadcrumb */}
             <div className="px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-100 dark:border-emerald-900 text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 flex-wrap">
               <BookOpen size={12} />
               <span className="font-medium truncate max-w-[80px]">{selectedCategory?.title}</span>
@@ -757,7 +732,6 @@ export default function LearningContent() {
                 />
               </div>
 
-              {/* Duration + Video — stacked on mobile, side-by-side on sm+ */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
@@ -812,20 +786,14 @@ export default function LearningContent() {
                 />
               </div>
 
-              {/* Strategies */}
+              {/* ── Strategies / Steps ── */}
               <div>
-                <div className="flex justify-between items-center mb-2.5 sm:mb-3">
-                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Strategies / Steps
-                  </label>
-                  <button
-                    type="button"
-                    onClick={addStrategy}
-                    className="text-xs sm:text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1 hover:underline"
-                  >
-                    <Plus size={14} /> Add Step
-                  </button>
-                </div>
+                {/* Section label only — no button here */}
+                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 block mb-2.5 sm:mb-3">
+                  Strategies / Steps
+                </label>
+
+                {/* Steps list */}
                 <div className="space-y-3 sm:space-y-4">
                   {lessonForm.strategies.map((strategy, index) => (
                     <div
@@ -905,6 +873,18 @@ export default function LearningContent() {
                     </div>
                   ))}
                 </div>
+
+                {/* ── Add Step — below steps list, right-aligned ── */}
+                <div className="flex justify-end mt-3">
+                  <button
+                    type="button"
+                    onClick={addStrategy}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm transition"
+                  >
+                    <Plus size={14} />
+                    Add Step
+                  </button>
+                </div>
               </div>
 
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -917,7 +897,6 @@ export default function LearningContent() {
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active Lesson</span>
               </label>
 
-              {/* Sticky Save */}
               <div className="sticky bottom-0 bg-white dark:bg-gray-900 pt-3 sm:pt-4 pb-2 -mx-4 sm:-mx-6 px-4 sm:px-6 border-t border-gray-100 dark:border-gray-800">
                 <button
                   type="submit"

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, BookOpen, Image, FileText, AlertTriangle,
   Plus, Trash2, Save, ToggleLeft, ToggleRight, ChevronDown,
-  GripVertical,
+  GripVertical, Layout,
 } from "lucide-react";
 import api from "../../api/axios";
 import RichTextEditor from "../../components/form/RichTextEditor";
@@ -25,7 +25,6 @@ const emptySlide = (): WelcomeSlideForm => ({
   is_active: true,
 });
 
-// ── Moved OUTSIDE component to prevent remount on every render ──────────────
 const inputClass =
   "w-full border-2 border-gray-200 dark:border-gray-700 rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition";
 
@@ -46,14 +45,18 @@ const Field = ({
     {children}
   </div>
 );
-// ────────────────────────────────────────────────────────────────────────────
 
 export default function CategoryForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEdit = Boolean(id);
 
-  const [form, setForm] = useState({ title: "", description: "", type: "training" as "training" | "resource", is_active: true });
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    type: "training" as "training" | "resource",
+    is_active: true,
+  });
   const [slides, setSlides] = useState<WelcomeSlideForm[]>([emptySlide()]);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
@@ -63,7 +66,8 @@ export default function CategoryForm() {
   const [canEditCourses, setCanEditCourses] = useState(false);
 
   useEffect(() => {
-    api.get("/profile")
+    api
+      .get("/profile")
       .then((res) => {
         const roleId = Number(res.data?.role_id);
         setCanAddCourses(roleId === 1 || Number(res.data?.can_add_courses) === 1);
@@ -88,7 +92,8 @@ export default function CategoryForm() {
 
   useEffect(() => {
     if (!isEdit || !id) return;
-    api.get(`/categories/${id}`)
+    api
+      .get(`/categories/${id}`)
       .then((res) => {
         setForm({
           title: res.data.title || "",
@@ -216,7 +221,6 @@ export default function CategoryForm() {
             <span>Back</span>
           </button>
 
-          {/* Status toggle pill */}
           <button
             type="button"
             onClick={() => setForm({ ...form, is_active: !form.is_active })}
@@ -228,8 +232,7 @@ export default function CategoryForm() {
           >
             {form.is_active
               ? <><ToggleRight size={16} /> Active</>
-              : <><ToggleLeft size={16} /> Inactive</>
-            }
+              : <><ToggleLeft size={16} /> Inactive</>}
           </button>
         </div>
 
@@ -289,16 +292,6 @@ export default function CategoryForm() {
                 </select>
               </Field>
 
-              {/* <Field label="Description">
-                <RichTextEditor
-                  value={form.description}
-                  onChange={(description) => setForm({ ...form, description })}
-                  disabled={submitting}
-                  height={220}
-                />
-              </Field> */}
-
-              {/* Thumbnail */}
               <Field label="Thumbnail Image">
                 <label className="flex items-center gap-3 sm:gap-4 cursor-pointer group">
                   <div
@@ -339,33 +332,24 @@ export default function CategoryForm() {
 
           {/* ── Welcome Pages Card ── */}
           <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
-            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <FileText size={15} className="text-violet-500" />
-                <h2 className="font-bold text-gray-800 dark:text-gray-200 text-sm sm:text-base">
-                  Welcome Pages
-                </h2>
-                <span className="ml-1 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300 text-xs font-bold px-2 py-0.5 rounded-full">
-                  {slides.length}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={addSlide}
-                className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition"
-              >
-                <Plus size={14} />
-                <span className="hidden xs:inline">Add Page</span>
-                <span className="xs:hidden">Add</span>
-              </button>
+            {/* Header — title + count only */}
+            <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+              <Layout size={15} className="text-violet-500" />
+              <h2 className="font-bold text-gray-800 dark:text-gray-200 text-sm sm:text-base">
+                Welcome Pages
+              </h2>
+              <span className="ml-1 bg-violet-100 dark:bg-violet-900/40 text-violet-600 dark:text-violet-300 text-xs font-bold px-2 py-0.5 rounded-full">
+                {slides.length}
+              </span>
             </div>
 
+            {/* Slides accordion list */}
             <div className="divide-y divide-gray-100 dark:divide-gray-800">
               {slides.map((slide, index) => {
                 const isExpanded = expandedSlides.has(index);
                 return (
                   <div key={slide.id ?? index}>
-                    {/* Slide accordion header */}
+                    {/* Accordion header */}
                     <div
                       className={`px-4 sm:px-6 py-3.5 sm:py-4 flex items-center gap-2 sm:gap-3 cursor-pointer select-none transition
                         ${isExpanded
@@ -379,7 +363,6 @@ export default function CategoryForm() {
                         className="text-gray-300 dark:text-gray-700 flex-shrink-0 hidden sm:block"
                       />
 
-                      {/* Page number badge */}
                       <div
                         className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0
                           ${isExpanded
@@ -407,7 +390,6 @@ export default function CategoryForm() {
                         )}
                       </div>
 
-                      {/* Active pill */}
                       <div
                         className={`text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex-shrink-0 hidden xs:flex
                           ${slide.is_active
@@ -426,10 +408,9 @@ export default function CategoryForm() {
                       />
                     </div>
 
-                    {/* Slide body */}
+                    {/* Accordion body */}
                     {isExpanded && (
                       <div className="px-4 sm:px-6 pb-5 sm:pb-6 pt-2 space-y-4 sm:space-y-5 bg-violet-50/40 dark:bg-violet-950/10">
-
                         <Field label="Page Title" required>
                           <input
                             type="text"
@@ -451,7 +432,6 @@ export default function CategoryForm() {
                           />
                         </Field>
 
-                        {/* Warning + position */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                           <Field label="Warning / Note">
                             <textarea
@@ -512,6 +492,18 @@ export default function CategoryForm() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* ── Add Page — bottom of card ── */}
+            <div className="px-4 sm:px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+              <button
+                type="button"
+                onClick={addSlide}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white font-semibold text-sm transition"
+              >
+                <Plus size={14} />
+                Add Page
+              </button>
             </div>
           </div>
 

@@ -14,6 +14,7 @@ import {
   RichTextContent,
   WarningNotice,
   youtubeEmbedUrl,
+  type LessonNextAction,
 } from "./shared";
 
 interface LessonDetailPageProps {
@@ -23,9 +24,25 @@ interface LessonDetailPageProps {
   lesson: LearningLesson | null;
   lessonIndex: number;
   totalLessons: number;
+  nextAction?: LessonNextAction;
+  advancing?: boolean;
 }
 
-export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, totalLessons }: LessonDetailPageProps) {
+const nextButtonLabel: Record<LessonNextAction, string> = {
+  "next-lesson": "Next Lesson",
+  "next-module": "Next Module",
+  "complete-course": "Complete Course",
+};
+
+export default function LessonDetailPage({
+  onBack,
+  onNext,
+  lesson,
+  lessonIndex,
+  totalLessons,
+  nextAction = "next-lesson",
+  advancing = false,
+}: LessonDetailPageProps) {
   const [detail, setDetail] = useState<LearningLesson | null>(lesson);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -167,8 +184,28 @@ export default function LessonDetailPage({ onBack, onNext, lesson, lessonIndex, 
         </div>
 
         <div style={{ padding: "12px 18px 20px", background: "white", borderTop: "1px solid #f5f5f5", flexShrink: 0 }}>
-          <button onClick={onNext} style={{ width: "100%", padding: "15px", background: "#ff5a2c", color: "white", border: "none", borderRadius: 14, fontSize: 15, fontWeight: 800, cursor: "pointer", boxShadow: "0 6px 20px rgba(255,90,44,.35)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            Next Question <ArrowRight />
+          <button
+            onClick={onNext}
+            disabled={advancing}
+            style={{
+              width: "100%",
+              padding: "15px",
+              background: advancing ? "#ffb89c" : "#ff5a2c",
+              color: "white",
+              border: "none",
+              borderRadius: 14,
+              fontSize: 15,
+              fontWeight: 800,
+              cursor: advancing ? "default" : "pointer",
+              boxShadow: advancing ? "none" : "0 6px 20px rgba(255,90,44,.35)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              opacity: advancing ? 0.85 : 1,
+            }}
+          >
+            {advancing ? "Saving..." : nextButtonLabel[nextAction]} <ArrowRight />
           </button>
         </div>
       </div>
