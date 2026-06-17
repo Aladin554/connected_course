@@ -79,6 +79,13 @@ export default function IndustryForm() {
   // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    e.target.value = "";
+
+    if (file && file.size > 10 * 1024 * 1024) {
+      alert("Image must be 10MB or smaller.");
+      return;
+    }
+
     setForm({ ...form, modal_image: file });
     if (file) setPreview(URL.createObjectURL(file));
   };
@@ -98,14 +105,10 @@ export default function IndustryForm() {
       if (form.modal_image) formData.append("modal_image", form.modal_image);
 
       if (isEdit) {
-        await api.post(`/industry/${id}?_method=PUT`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post(`/industry/${id}?_method=PUT`, formData);
         navigate("/dashboard/industry", { state: { message: "Industry updated successfully!", type: "success" } });
       } else {
-        await api.post("/industry", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post("/industry", formData);
         navigate("/dashboard/industry", { state: { message: "Industry created successfully!", type: "success" } });
       }
     } catch (err: any) {

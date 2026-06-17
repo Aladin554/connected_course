@@ -151,7 +151,7 @@ class CategoryController extends Controller
             'type' => ['sometimes', Rule::in(['training', 'resource'])],
             'flag_emoji' => ['nullable', 'string', 'max:32'],
             'description' => ['nullable', 'string'],
-            'thumbnail_image' => ['nullable', 'image', 'max:2048'],
+            'thumbnail_image' => ['nullable', 'image', 'max:10240'],
             'background_color' => ['nullable', 'string', 'max:32'],
             'is_active' => ['sometimes', Rule::in([0, 1, true, false, '0', '1'])],
             'welcome_slides' => ['sometimes', 'array'],

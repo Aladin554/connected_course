@@ -17,6 +17,8 @@ interface WelcomeSlideForm {
   is_active: boolean;
 }
 
+const MAX_THUMBNAIL_BYTES = 10 * 1024 * 1024;
+
 const emptySlide = (): WelcomeSlideForm => ({
   title: "",
   body_content: "",
@@ -125,6 +127,13 @@ export default function CategoryForm() {
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    e.target.value = "";
+
+    if (file && file.size > MAX_THUMBNAIL_BYTES) {
+      alert("Thumbnail must be 10MB or smaller.");
+      return;
+    }
+
     setThumbnail(file);
     setThumbnailPreview(file ? URL.createObjectURL(file) : null);
   };
@@ -157,13 +166,9 @@ export default function CategoryForm() {
     if (isEdit) payload.append("_method", "PUT");
     try {
       if (isEdit) {
-        await api.post(`/categories/${id}`, payload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post(`/categories/${id}`, payload);
       } else {
-        await api.post("/categories", payload, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await api.post("/categories", payload);
       }
       navigate("/dashboard/categories", {
         state: {
@@ -172,7 +177,9 @@ export default function CategoryForm() {
         },
       });
     } catch (err: any) {
-      alert(err.response?.data?.message || "Error saving course");
+      const errors = err.response?.data?.errors;
+      const thumbnailError = errors?.thumbnail_image?.[0];
+      alert(thumbnailError || err.response?.data?.message || "Error saving course");
     } finally {
       setSubmitting(false);
     }
@@ -316,7 +323,7 @@ export default function CategoryForm() {
                       {thumbnail ? thumbnail.name : "Click to upload image"}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      JPG, PNG, WEBP — recommended 16:9
+                      JPG, PNG, WEBP — max 10MB, recommended 16:9
                     </div>
                     <input
                       type="file"

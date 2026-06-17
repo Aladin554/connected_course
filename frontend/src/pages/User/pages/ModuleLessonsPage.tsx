@@ -54,8 +54,7 @@ function LessonRow({
   onLessonClick: (lesson: LearningLesson) => void;
 }) {
   const [hovered, setHovered] = useState(false);
-
-  const orbSize = isDesktop ? 52 : 48;
+  const orbSize = isDesktop ? 48 : 44;
 
   return (
     <div
@@ -66,22 +65,26 @@ function LessonRow({
         display: "flex",
         alignItems: "center",
         gap: isDesktop ? 16 : 14,
-        padding: isDesktop ? "16px 20px" : "14px 16px",
+        padding: isDesktop ? "14px 18px" : "13px 15px",
         background: "white",
-        marginBottom: 12,
+        marginBottom: 10,
         borderRadius: 18,
-        border: current ? "2px solid #ff5a2c" : "1.5px solid #eef2f7",
-        boxShadow: hovered
+        border: current
+          ? "1.5px solid rgba(255,90,44,0.28)"
+          : "1.5px solid rgba(0,0,0,0.06)",
+        boxShadow: hovered && unlocked
           ? "0 8px 24px rgba(0,0,0,0.09)"
           : current
-          ? "0 4px 16px rgba(255,90,44,0.12)"
-          : "0 2px 10px rgba(0,0,0,0.05)",
+          ? "0 4px 16px rgba(255,90,44,0.10)"
+          : "0 2px 8px rgba(0,0,0,0.04)",
         cursor: unlocked ? "pointer" : "default",
+        opacity: unlocked ? 1 : 0.48,
         position: "relative",
         transition: "all 0.18s cubic-bezier(.22,1,.36,1)",
         transform: hovered && unlocked ? "translateY(-2px)" : "none",
       }}
     >
+      {/* Active accent bar */}
       {current && (
         <div
           style={{
@@ -96,6 +99,7 @@ function LessonRow({
         />
       )}
 
+      {/* Status orb — warm palette */}
       <div
         style={{
           width: orbSize,
@@ -106,27 +110,27 @@ function LessonRow({
           alignItems: "center",
           justifyContent: "center",
           background: completed
-            ? "#22c55e"
+            ? "#dcfce7"
             : current
-            ? "#ff5a2c"
-            : "#f3f4f6",
+            ? "#fff1ec"
+            : "#f3f2ef",
           boxShadow: completed
-            ? "0 4px 12px rgba(34,197,94,0.3)"
+            ? "0 3px 10px rgba(34,197,94,0.18)"
             : current
-            ? "0 4px 12px rgba(255,90,44,0.3)"
+            ? "0 3px 10px rgba(255,90,44,0.18)"
             : "none",
         }}
       >
         {completed ? (
-          <CheckIcon size={isDesktop ? 22 : 20} />
+          <CheckIcon size={isDesktop ? 19 : 17} color="#16a34a" />
         ) : current ? (
-          <PlayIcon size={isDesktop ? 20 : 18} />
+          <PlayIcon size={isDesktop ? 17 : 15} color="#ff5a2c" />
         ) : (
           <span
             style={{
-              fontSize: isDesktop ? 16 : 15,
+              fontSize: isDesktop ? 14 : 13,
               fontWeight: 800,
-              color: "#9ca3af",
+              color: "#c4bfb8",
             }}
           >
             {index + 1}
@@ -134,19 +138,21 @@ function LessonRow({
         )}
       </div>
 
+      {/* Text */}
       <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Lesson pill */}
         <div
           style={{
             display: "inline-flex",
             alignItems: "center",
-            padding: "3px 10px",
+            padding: "2px 9px",
             borderRadius: 999,
-            background: current ? "#fff4f0" : "#f8fafc",
-            fontSize: 11,
-            fontWeight: 700,
-            color: current ? "#ff5a2c" : "#9ca3af",
-            marginBottom: 6,
-            letterSpacing: 0.5,
+            background: current ? "#fff4f0" : "#f5f4f1",
+            fontSize: 10.5,
+            fontWeight: 800,
+            color: current ? "#ff5a2c" : "#bbb",
+            marginBottom: 5,
+            letterSpacing: 0.6,
           }}
         >
           LESSON {index + 1}
@@ -154,10 +160,10 @@ function LessonRow({
 
         <div
           style={{
-            fontWeight: 800,
-            fontSize: isDesktop ? 16 : 15,
+            fontWeight: 700,
+            fontSize: isDesktop ? 15 : 14,
             color: unlocked ? "#111827" : "#b0b8c5",
-            lineHeight: 1.35,
+            lineHeight: 1.3,
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -169,11 +175,11 @@ function LessonRow({
 
         {hasLessonDuration(lesson.duration_mins) && (
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <ClockIcon size={12} color={current ? "#ff5a2c" : "#9ca3af"} />
+            <ClockIcon size={12} color={current ? "#ff5a2c" : "#c4bfb8"} />
             <span
               style={{
                 fontSize: 12,
-                color: current ? "#ff5a2c" : "#9ca3af",
+                color: current ? "#ff5a2c" : "#c4bfb8",
                 fontWeight: 600,
               }}
             >
@@ -183,6 +189,7 @@ function LessonRow({
         )}
       </div>
 
+      {/* Right action */}
       {current ? (
         <button
           onClick={(e) => {
@@ -190,7 +197,7 @@ function LessonRow({
             onLessonClick(lesson);
           }}
           style={{
-            padding: isDesktop ? "10px 22px" : "9px 18px",
+            padding: isDesktop ? "9px 20px" : "8px 16px",
             background: "#ff5a2c",
             color: "white",
             border: "none",
@@ -199,7 +206,7 @@ function LessonRow({
             fontWeight: 700,
             cursor: "pointer",
             flexShrink: 0,
-            boxShadow: "0 4px 14px rgba(255,90,44,0.35)",
+            boxShadow: "0 4px 14px rgba(255,90,44,0.32)",
             transition: "all 0.12s",
             letterSpacing: 0.2,
             whiteSpace: "nowrap",
@@ -210,7 +217,7 @@ function LessonRow({
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 4px 14px rgba(255,90,44,0.35)";
+            e.currentTarget.style.boxShadow = "0 4px 14px rgba(255,90,44,0.32)";
           }}
         >
           Continue
@@ -218,8 +225,8 @@ function LessonRow({
       ) : completed ? (
         <div
           style={{
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             borderRadius: "50%",
             background: "#f0fdf4",
             display: "flex",
@@ -228,22 +235,22 @@ function LessonRow({
             flexShrink: 0,
           }}
         >
-          <ChevRight size={16} color="#22c55e" />
+          <ChevRight stroke="#16a34a" />
         </div>
       ) : (
         <div
           style={{
-            width: 32,
-            height: 32,
+            width: 30,
+            height: 30,
             borderRadius: "50%",
-            background: "#f3f4f6",
+            background: "#f3f2ef",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <LockIcon size={14} color="#9ca3af" />
+          <LockIcon size={13} color="#c4bfb8" />
         </div>
       )}
     </div>
@@ -277,22 +284,22 @@ function LessonList({
               display: "flex",
               alignItems: "center",
               gap: 14,
-              padding: isDesktop ? "16px 20px" : "14px 16px",
-              marginBottom: 12,
+              padding: isDesktop ? "14px 18px" : "13px 15px",
+              marginBottom: 10,
               borderRadius: 18,
               background: "white",
-              border: "1.5px solid #eef2f7",
-              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
+              border: "1.5px solid rgba(0,0,0,0.05)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
             }}
           >
             <div
               style={{
-                width: isDesktop ? 52 : 48,
-                height: isDesktop ? 52 : 48,
+                width: isDesktop ? 48 : 44,
+                height: isDesktop ? 48 : 44,
                 borderRadius: "50%",
-                background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                background: "linear-gradient(90deg,#ebe9e4 25%,#f5f3ef 50%,#ebe9e4 75%)",
                 backgroundSize: "200% 100%",
-                animation: "shimmer 1.4s infinite",
+                animation: "shimmer 1.4s ease-in-out infinite",
                 flexShrink: 0,
               }}
             />
@@ -300,33 +307,33 @@ function LessonList({
               <div
                 style={{
                   height: 10,
-                  width: "28%",
+                  width: "24%",
                   borderRadius: 999,
-                  background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                  background: "linear-gradient(90deg,#ebe9e4 25%,#f5f3ef 50%,#ebe9e4 75%)",
                   backgroundSize: "200% 100%",
-                  animation: "shimmer 1.4s infinite",
+                  animation: "shimmer 1.4s ease-in-out infinite",
                   marginBottom: 8,
                 }}
               />
               <div
                 style={{
-                  height: 15,
-                  width: "60%",
+                  height: 13,
+                  width: `${46 + n * 8}%`,
                   borderRadius: 6,
-                  background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                  background: "linear-gradient(90deg,#ebe9e4 25%,#f5f3ef 50%,#ebe9e4 75%)",
                   backgroundSize: "200% 100%",
-                  animation: "shimmer 1.4s infinite",
-                  marginBottom: 6,
+                  animation: "shimmer 1.4s ease-in-out infinite",
+                  marginBottom: 7,
                 }}
               />
               <div
                 style={{
-                  height: 10,
-                  width: "20%",
+                  height: 9,
+                  width: "16%",
                   borderRadius: 6,
-                  background: "linear-gradient(90deg,#f3f4f6 25%,#e9eaec 50%,#f3f4f6 75%)",
+                  background: "linear-gradient(90deg,#ebe9e4 25%,#f5f3ef 50%,#ebe9e4 75%)",
                   backgroundSize: "200% 100%",
-                  animation: "shimmer 1.4s infinite",
+                  animation: "shimmer 1.4s ease-in-out infinite",
                 }}
               />
             </div>
@@ -354,7 +361,7 @@ function LessonList({
             width: 60,
             height: 60,
             borderRadius: 20,
-            background: "#f3f4f6",
+            background: "#f3f2ef",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -417,8 +424,6 @@ function ModuleHeader({
   isDesktop: boolean;
 }) {
   const bgImage = categoryImage(category, 900);
-
-  // Nav height offset: mobile = 64px, desktop = 86px
   const navOffset = isDesktop ? 86 : 64;
 
   return (
@@ -427,7 +432,7 @@ function ModuleHeader({
         position: "relative",
         overflow: "hidden",
         flexShrink: 0,
-        minHeight: isDesktop ? 340 : 300,
+        minHeight: isDesktop ? 255 : 255,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
@@ -459,7 +464,6 @@ function ModuleHeader({
         }}
       />
 
-      {/* Content pushed below nav bar */}
       <div
         style={{
           position: "relative",
@@ -652,7 +656,6 @@ function MobileLayout({
         >
           {moduleLabel(moduleNumber)}
         </span>
-        {/* Spacer to keep title centred */}
         <div style={{ width: 36 }} />
       </div>
 
@@ -819,7 +822,7 @@ function DesktopLayout({
         }}
       >
         <div
-          style={{ maxWidth: 760, margin: "0 auto", padding: "28px 0 60px" }}
+          style={{ maxWidth: 760, margin: "0 auto", padding: "28px 20px 60px" }}
         >
           <LessonList
             lessons={lessons}
@@ -915,8 +918,8 @@ export default function ModuleLessonsPage({
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes shimmer {
-          0%   { background-position: -200% 0; }
-          100% { background-position:  200% 0; }
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
         }
         .hs::-webkit-scrollbar { display: none; }
         .hs { -ms-overflow-style: none; scrollbar-width: none; }

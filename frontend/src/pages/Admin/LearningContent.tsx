@@ -265,13 +265,17 @@ export default function LearningContent() {
   };
 
   const uploadStrategyFile = async (index: number, file: File) => {
+    const maxBytes = 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      alert("File must be 10MB or smaller.");
+      return;
+    }
+
     updateStrategy(index, { uploading: true });
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await api.post("/strategy-files", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/strategy-files", formData);
       updateStrategy(index, {
         file_path: res.data.file_path,
         file_name: res.data.file_name,

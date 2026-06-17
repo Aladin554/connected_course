@@ -83,8 +83,8 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
   const image = useMemo(() => categoryImage(category, 900), [category]);
   const heroBackground = category?.background_color || "#071224";
 
-  // Key change: hero is now much shorter — 120px mobile, 160px desktop
-  const heroHeight = isDesktop ? 160 : 120;
+  // Taller hero so the image shows clearly
+  const heroHeight = isDesktop ? 240 : 200;
 
   return (
     <div style={{
@@ -94,8 +94,15 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
       overflow: "hidden",
     }}>
 
-      {/* ── Hero: short so content gets the space it needs ── */}
-      <div style={{ position: "relative", height: heroHeight, flexShrink: 0, background: heroBackground }}>
+      {/* ── Hero: tall enough to show image, gradient bleeds down ── */}
+      <div style={{
+        position: "relative",
+        height: heroHeight,
+        flexShrink: 0,
+        background: heroBackground,
+        // Extend the hero visually into the scroll area via zIndex layering
+        zIndex: 0,
+      }}>
         {image && (
           <img
             src={image}
@@ -103,9 +110,34 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
             style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 25%" }}
           />
         )}
-        {/* fade to white at bottom */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom,rgba(255,255,255,0) 30%,rgba(255,255,255,1) 100%)" }} />
 
+        {/*
+          Key fix: gradient starts transparent until ~45%, then eases very
+          gradually through many stops — the bottom ~55% of the hero fades.
+          The content area overlaps the hero by 32px (negative marginTop),
+          so the title appears on top of already-white gradient area.
+          No visible edge.
+        */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: [
+            "linear-gradient(to bottom,",
+            "  transparent       0%,",
+            "  transparent       42%,",
+            "  rgba(255,255,255,0.06) 50%,",
+            "  rgba(255,255,255,0.18) 57%,",
+            "  rgba(255,255,255,0.36) 63%,",
+            "  rgba(255,255,255,0.56) 69%,",
+            "  rgba(255,255,255,0.74) 75%,",
+            "  rgba(255,255,255,0.88) 82%,",
+            "  rgba(255,255,255,0.96) 90%,",
+            "  #ffffff              100%",
+            ")",
+          ].join(""),
+        }} />
+
+        {/* Back / close button */}
         <button
           onClick={dot === 0 ? onBack : () => setDot((d) => d - 1)}
           style={{
@@ -118,6 +150,7 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
           {dot === 0 ? <XIcon /> : <ArrowLeft color="#111" size={16} />}
         </button>
 
+        {/* Slide counter */}
         <div style={{
           position: "absolute", top: 14, right: 14,
           background: "rgba(255,255,255,0.9)", borderRadius: 20,
@@ -128,16 +161,21 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
         </div>
       </div>
 
-      {/* ── Scrollable content: flex:1 + minHeight:0 is the key ── */}
+      {/* ── Scrollable content: overlaps hero so title sits on faded area ── */}
       <div
         className="hs"
         style={{
           flex: 1,
-          minHeight: 0,       // ← critical: lets flexbox shrink this below content size
-          overflowY: "auto",  // ← scrolls when text is long
-          padding: isDesktop ? "16px 56px 0" : "14px 22px 0",
+          minHeight: 0,
+          overflowY: "auto",
+          // Negative margin pulls content UP over the hero's white gradient tail
+          marginTop: -32,
+          position: "relative",
+          zIndex: 1,
+          padding: isDesktop ? "0 56px 0" : "0 22px 0",
           maxWidth: isDesktop ? 680 : "100%",
-          margin: isDesktop ? "0 auto" : undefined,
+          margin: isDesktop ? `-32px auto 0` : undefined,
+          marginTop: isDesktop ? undefined : -32,
           width: "100%",
           boxSizing: "border-box",
         }}
@@ -164,7 +202,7 @@ export default function WelcomePage({ onBack, onFinish, isDesktop, category }: W
         <div style={{ height: 24 }} />
       </div>
 
-      {/* ── Footer: always pinned at bottom ── */}
+      {/* ── Footer ── */}
       <div style={{
         flexShrink: 0,
         padding: isDesktop ? "14px 56px 28px" : "10px 22px 20px",
