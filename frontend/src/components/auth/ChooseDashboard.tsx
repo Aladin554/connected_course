@@ -16,8 +16,9 @@ export default function ChooseDashboard() {
       .then((res) => {
         const roleId = Number(res.data?.role_id);
         const panelActive = isPanelActive(res.data);
+        const isAdminRole = roleId === 1 || roleId === 2;
 
-        if (roleId !== 2 || !panelActive) {
+        if (!isAdminRole || !panelActive) {
           navigate("/dashboard", { replace: true });
           return;
         }
@@ -27,6 +28,7 @@ export default function ChooseDashboard() {
           : [];
 
         const adminAccess =
+          roleId === 1 ||
           adminCategories.length > 0 ||
           Number(res.data?.can_view_courses) === 1 ||
           Number(res.data?.can_add_courses) === 1 ||

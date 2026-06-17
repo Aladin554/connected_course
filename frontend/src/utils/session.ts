@@ -5,7 +5,7 @@ export const getAdminHomePath = () => {
   const roleId = Number(sessionStorage.getItem("role_id"));
   const user = getStoredUser<{ panel_status?: number | string | boolean | null }>();
 
-  if (roleId === 2 && isPanelActive(user)) {
+  if ((roleId === 1 || roleId === 2) && isPanelActive(user)) {
     return "/choose-dashboard";
   }
 

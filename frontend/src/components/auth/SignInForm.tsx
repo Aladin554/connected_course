@@ -33,9 +33,11 @@ export default function SignInPage() {
         setLoading(false);
         return;
       }
-      if (roleId && parseInt(roleId, 10) === 3) {
+      const numericRoleId = roleId ? parseInt(roleId, 10) : null;
+
+      if (numericRoleId === 3) {
         navigate("/introduction", { replace: true });
-      } else if (roleId && parseInt(roleId, 10) === 2) {
+      } else if (numericRoleId === 1 || numericRoleId === 2) {
         const user = getStoredUser();
         navigate(isPanelActive(user) ? "/choose-dashboard" : "/dashboard", { replace: true });
       } else {
@@ -85,7 +87,7 @@ export default function SignInPage() {
 
       if (user.role_id === 3) {
         navigate("/introduction", { replace: true });
-      } else if (user.role_id === 2) {
+      } else if (user.role_id === 1 || user.role_id === 2) {
         navigate(isPanelActive(user) ? "/choose-dashboard" : "/dashboard", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });

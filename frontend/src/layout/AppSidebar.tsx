@@ -52,7 +52,7 @@ const AppSidebar: React.FC = () => {
   const profileUser = user ?? getStoredUser();
   const effectiveRoleId = Number(profileUser?.role_id ?? roleId);
   const logoHomePath =
-    effectiveRoleId === 2 && isPanelActive(profileUser)
+    (effectiveRoleId === 1 || effectiveRoleId === 2) && isPanelActive(profileUser)
       ? "/choose-dashboard"
       : "/dashboard";
   const hasCourseAccess =

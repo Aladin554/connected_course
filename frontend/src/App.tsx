@@ -67,7 +67,7 @@ export default function App() {
         <Route
           path="/choose-dashboard"
           element={
-            <ProtectedRoute allowedRoles={[2]} requireActivePanel={true}>
+            <ProtectedRoute allowedRoles={[1, 2]} requireActivePanel={true}>
               <ChooseDashboard />
             </ProtectedRoute>
           }
@@ -82,7 +82,7 @@ export default function App() {
         <Route
           path="/introduction/*"
           element={
-            <ProtectedRoute allowedRoles={[2, 3]} requireActivePanel={true}>
+            <ProtectedRoute allowedRoles={[1, 2, 3]} requireActivePanel={true}>
               <Introduction />
             </ProtectedRoute>
           }

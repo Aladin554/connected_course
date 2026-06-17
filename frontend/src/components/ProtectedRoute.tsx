@@ -5,7 +5,7 @@ import { clearAuthSession, isAuthSessionExpired } from "../utils/session";
 type ProtectedRouteProps = {
   children: ReactNode;
   allowedRoles?: number[]; // roles allowed to access this route
-  requireActivePanel?: boolean; // optional: if true, role 2 must have active panel
+  requireActivePanel?: boolean; // optional: if true, admin roles must have active panel
 };
 
 const ProtectedRoute = ({
@@ -50,8 +50,8 @@ const ProtectedRoute = ({
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Block inactive panel role 2 from routes that require active panel
-  if (roleId === 2 && requireActivePanel && !panelStatus) {
+  // Block inactive admin panels from routes that require active panel access
+  if ((roleId === 1 || roleId === 2) && requireActivePanel && !panelStatus) {
     return <Navigate to="/dashboard" replace />;
   }
 
