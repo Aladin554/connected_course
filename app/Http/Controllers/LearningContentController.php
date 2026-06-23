@@ -246,7 +246,7 @@ class LearningContentController extends Controller
         }
 
         $request->validate([
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ['required', 'file', 'max:5120'],
         ]);
 
         $file = $request->file('file');

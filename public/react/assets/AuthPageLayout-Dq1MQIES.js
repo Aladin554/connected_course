@@ -1,1 +1,0 @@
-import{j as e}from"./index-3yd4nIpT.js";function a({children:r}){return e.jsx("div",{className:"relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0",children:e.jsx("div",{className:"relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0",children:r})})}export{a as A};

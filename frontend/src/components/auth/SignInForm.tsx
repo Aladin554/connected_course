@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import {
-  clearAuthSession,
   getStoredUser,
-  isAuthSessionExpired,
   isPanelActive,
   persistAuthSession,
 } from "../../utils/session";
+import Loader from "../../pages/Loader/Loader";
 
 const MOBILE_BG = "/images/bg-mobile.jpeg";
 const DESKTOP_BG = "/images/bg-desktop.jpeg";
@@ -46,11 +45,6 @@ export default function SignInPage() {
     const roleId = sessionStorage.getItem("role_id");
 
     if (token) {
-      if (isAuthSessionExpired()) {
-        clearAuthSession();
-        setLoading(false);
-        return;
-      }
       const numericRoleId = roleId ? parseInt(roleId, 10) : null;
 
       if (numericRoleId === 3) {
@@ -66,7 +60,7 @@ export default function SignInPage() {
     }
   }, [navigate]);
 
-  if (loading) return null;
+  if (loading) return <Loader message="Loading sign in..." />;
 
   /* ── Animation helpers ────────────────────────────────────────────────── */
 

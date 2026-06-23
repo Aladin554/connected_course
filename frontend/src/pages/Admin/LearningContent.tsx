@@ -265,9 +265,9 @@ export default function LearningContent() {
   };
 
   const uploadStrategyFile = async (index: number, file: File) => {
-    const maxBytes = 10 * 1024 * 1024;
+    const maxBytes = 5 * 1024 * 1024;
     if (file.size > maxBytes) {
-      alert("File must be 10MB or smaller.");
+      alert("File must be 5MB or smaller.");
       return;
     }
 

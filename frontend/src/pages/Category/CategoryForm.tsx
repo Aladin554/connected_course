@@ -17,7 +17,7 @@ interface WelcomeSlideForm {
   is_active: boolean;
 }
 
-const MAX_THUMBNAIL_BYTES = 10 * 1024 * 1024;
+const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024;
 
 const emptySlide = (): WelcomeSlideForm => ({
   title: "",
@@ -130,7 +130,7 @@ export default function CategoryForm() {
     e.target.value = "";
 
     if (file && file.size > MAX_THUMBNAIL_BYTES) {
-      alert("Thumbnail must be 10MB or smaller.");
+      alert("Thumbnail must be 5MB or smaller.");
       return;
     }
 
@@ -323,7 +323,7 @@ export default function CategoryForm() {
                       {thumbnail ? thumbnail.name : "Click to upload image"}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      JPG, PNG, WEBP — max 10MB, recommended 16:9
+                      JPG, PNG, WEBP — max 5MB, recommended 16:9
                     </div>
                     <input
                       type="file"

@@ -36,14 +36,6 @@ class AuthController extends Controller
             ], 403);
         }
 
-        if ($user->role_id === 3 && $user->account_expires_at && $user->account_expires_at->isPast()) {
-            return response()->json([
-                'message' => 'Your 72-hour access has expired. Contact administrator.',
-                'expired_at' => $user->account_expires_at->toDateTimeString(),
-                'force_logout' => true,
-            ], 403);
-        }
-
         if ($this->adminIpAccess->shouldRestrictUser($user)) {
             $clientIp = $this->adminIpAccess->getClientIp($request);
 
@@ -53,11 +45,6 @@ class AuthController extends Controller
                     'your_ip' => $clientIp,
                 ], 403);
             }
-        }
-
-        if ($user->role_id === 3 && is_null($user->account_expires_at)) {
-            $user->account_expires_at = now()->addHours(72);
-            $user->save();
         }
 
         $user->last_login_at = now();
@@ -76,7 +63,7 @@ class AuthController extends Controller
                 'panel_status' => (bool) $user->panel_status,
                 'report_status' => (int) $user->report_status,
                 'last_login_at' => $user->last_login_at->toDateTimeString(),
-                'account_expires_at' => $user->role_id === 3 ? $user->account_expires_at?->toDateTimeString() : null,
+                'account_expires_at' => null,
             ],
         ]);
     }

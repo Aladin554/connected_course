@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { clearAuthSession, isAuthSessionExpired } from "../utils/session";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -16,19 +15,11 @@ const ProtectedRoute = ({
   const [token, setToken] = useState<string | null>(null);
   const [roleId, setRoleId] = useState<number | null>(null);
   const [panelStatus, setPanelStatus] = useState<boolean | null>(null);
-  const [expired, setExpired] = useState(false);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
     const storedToken = sessionStorage.getItem("token");
-    if (storedToken && isAuthSessionExpired()) {
-      clearAuthSession();
-      setExpired(true);
-      setLoading(false);
-      return;
-    }
-
     const storedRole = sessionStorage.getItem("role_id");
     const storedUser = sessionStorage.getItem("user");
     const panel = storedUser ? JSON.parse(storedUser).panel_status : null;
@@ -42,7 +33,7 @@ const ProtectedRoute = ({
   if (loading) return null;
 
   // Not logged in
-  if (!token || expired) return <Navigate to="/signin" replace />;
+  if (!token) return <Navigate to="/signin" replace />;
 
   // Role restriction
   if (allowedRoles && roleId !== null && !allowedRoles.includes(roleId)) {

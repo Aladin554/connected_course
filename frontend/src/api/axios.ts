@@ -1,5 +1,5 @@
 import axios from "axios";
-import { clearAuthSession, isAuthSessionExpired } from "../utils/session";
+import { clearAuthSession } from "../utils/session";
 
 // Create an axios instance
 const api = axios.create({
@@ -9,12 +9,6 @@ const api = axios.create({
 // Attach token automatically
 api.interceptors.request.use(
   (config) => {
-    if (isAuthSessionExpired()) {
-      clearAuthSession();
-      window.location.href = "/signin";
-      return Promise.reject(new axios.Cancel("Session expired"));
-    }
-
     const token = sessionStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
