@@ -12,6 +12,8 @@ import {
 
 const MOBILE_BG = "/images/bg-mobile.jpeg";
 const DESKTOP_BG = "/images/bg-desktop.jpeg";
+const MOBILE_BG_WEBP = "/images/bg-mobile.webp";
+const DESKTOP_BG_WEBP = "/images/bg-desktop.webp";
 
 export default function SignInPage() {
   const [view, setView] = useState("splash");
@@ -20,8 +22,24 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [sliding, setSliding] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [bgLoaded, setBgLoaded] = useState(false);
   const formRef = useRef(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const isDesktop = window.matchMedia("(min-width: 1024px)").matches;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "image";
+    link.href = isDesktop ? DESKTOP_BG_WEBP : MOBILE_BG_WEBP;
+    link.type = "image/webp";
+    link.setAttribute("fetchpriority", "high");
+    document.head.appendChild(link);
+
+    return () => {
+      link.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const token = sessionStorage.getItem("token");
@@ -140,10 +158,9 @@ export default function SignInPage() {
         .mobile-bg {
           position: fixed;
           inset: 0;
-          background-image: url('${MOBILE_BG}');
-          background-size: cover;
-          background-position: center top;
+          background: #0a0e1a;
           z-index: 0;
+          overflow: hidden;
         }
         .mobile-bg::after {
           content: '';
@@ -157,6 +174,27 @@ export default function SignInPage() {
             rgba(10,14,26,0.97) 80%,
             rgba(10,14,26,1.0) 100%
           );
+        }
+
+        .auth-bg-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          opacity: 0;
+          transition: opacity 0.24s ease;
+        }
+        .auth-bg-img.ready {
+          opacity: 1;
+        }
+        .mobile-bg .auth-bg-img {
+          object-position: center top;
+        }
+        .mobile-bg picture,
+        .desktop-left-img picture {
+          width: 100%;
+          height: 100%;
+          display: block;
         }
 
         /* ── Splash ── */
@@ -312,10 +350,12 @@ export default function SignInPage() {
         .desktop-left-img {
           position: absolute;
           inset: 0;
-          background-image: url('${DESKTOP_BG}');
-          background-size: cover;
-          background-position: center center;
+          background: #0a0e1a;
           z-index: 0;
+          overflow: hidden;
+        }
+        .desktop-left-img .auth-bg-img {
+          object-position: center center;
         }
         .desktop-left-img::after {
           content: '';
@@ -491,7 +531,20 @@ export default function SignInPage() {
 
       {/* ── MOBILE ─────────────────────────────────── */}
       <div className="mobile-wrap">
-        <div className="mobile-bg" />
+        <div className="mobile-bg">
+          <picture>
+            <source srcSet={MOBILE_BG_WEBP} type="image/webp" />
+            <img
+              src={MOBILE_BG}
+              alt=""
+              className={`auth-bg-img ${bgLoaded ? "ready" : ""}`}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+              onLoad={() => setBgLoaded(true)}
+            />
+          </picture>
+        </div>
 
         {/* Splash is always mounted so the bg image doesn't flash away */}
         <div className="splash-content" style={{ display: view === "login" ? "none" : "flex" }}>
@@ -566,7 +619,20 @@ export default function SignInPage() {
       <div className="desktop-wrap">
         {/* Left: Image card */}
         <div className="desktop-left-card">
-          <div className="desktop-left-img" />
+          <div className="desktop-left-img">
+            <picture>
+              <source srcSet={DESKTOP_BG_WEBP} type="image/webp" />
+              <img
+                src={DESKTOP_BG}
+                alt=""
+                className={`auth-bg-img ${bgLoaded ? "ready" : ""}`}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                onLoad={() => setBgLoaded(true)}
+              />
+            </picture>
+          </div>
 
           <div className="desktop-brand-top">
             <img
