@@ -674,8 +674,8 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
   }, []);
 
   useEffect(() => {
-    // Preload thumbnails so reloads don't show "pop-in" images.
-    categories.forEach((c) => preloadImage(categoryImage(c)));
+    // Preload card-sized thumbnails so reloads don't show "pop-in" images.
+    categories.forEach((c) => preloadImage(categoryImage(c, 540)));
   }, [categories]);
 
   useEffect(() => {

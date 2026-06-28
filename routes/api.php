@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\AuthController;
 
 use App\Http\Controllers\RoleController;
@@ -16,7 +17,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-Route::get('/storage/{path}', function (string $path) {
+Route::get('/storage/{path}', function (Request $request, string $path) {
     $root = realpath(storage_path('app/public'));
     $file = realpath($root.DIRECTORY_SEPARATOR.str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path));
 
@@ -28,7 +29,56 @@ Route::get('/storage/{path}', function (string $path) {
         404
     );
 
-    return response()->file($file);
+    $width = (int) $request->query('w', 0);
+    $isImage = str_starts_with((string) mime_content_type($file), 'image/');
+
+    if (
+        $width >= 120
+        && $width <= 1600
+        && $isImage
+        && function_exists('imagecreatefromstring')
+        && function_exists('imagescale')
+        && function_exists('imagewebp')
+    ) {
+        $cachePath = 'image-cache/'.md5($file.'|'.filemtime($file).'|'.$width).'.webp';
+        $cacheDisk = Storage::disk('public');
+
+        if (!$cacheDisk->exists($cachePath)) {
+            $source = @imagecreatefromstring((string) file_get_contents($file));
+            if ($source) {
+                $sourceWidth = imagesx($source);
+                $sourceHeight = imagesy($source);
+
+                if ($sourceWidth > $width) {
+                    $height = max(1, (int) round($sourceHeight * ($width / $sourceWidth)));
+                    $resized = imagescale($source, $width, $height, IMG_BICUBIC_FIXED);
+
+                    if ($resized) {
+                        ob_start();
+                        imagewebp($resized, null, 78);
+                        $encoded = ob_get_clean();
+                        if ($encoded !== false) {
+                            $cacheDisk->put($cachePath, $encoded);
+                        }
+                        imagedestroy($resized);
+                    }
+                }
+
+                imagedestroy($source);
+            }
+        }
+
+        if ($cacheDisk->exists($cachePath)) {
+            return response($cacheDisk->get($cachePath), 200, [
+                'Content-Type' => 'image/webp',
+                'Cache-Control' => 'public, max-age=31536000, immutable',
+            ]);
+        }
+    }
+
+    return response()->file($file, [
+        'Cache-Control' => 'public, max-age=604800',
+    ]);
 })->where('path', '.*');
 
 // ==================================================================

@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   categoryImage,
+  categoryImageSet,
   CheckIcon,
   ChevRight,
   LearningCategory,
@@ -199,6 +200,8 @@ export default function CourseOverviewPage({
           {image && (
             <FadeInImage
               src={image}
+              srcSet={categoryImageSet(category, [480, 720, 900, 1200])}
+              sizes="100vw"
               alt={category?.title || ""}
               eager
               style={{

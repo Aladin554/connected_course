@@ -264,11 +264,25 @@ export const SectionHeader = ({ title, action }: SectionHeaderProps) => (
   </div>
 );
 
-export const categoryImage = (category?: LearningCategory | null) => {
+const withImageWidth = (src: string, width?: number) => {
+  if (!width || width <= 0) return src;
+  const joiner = src.includes("?") ? "&" : "?";
+  return `${src}${joiner}w=${Math.round(width)}`;
+};
+
+export const categoryImage = (category?: LearningCategory | null, width?: number) => {
   if (!category?.thumbnail_image) return null;
-  return category.thumbnail_image.startsWith("http")
+  const src = category.thumbnail_image.startsWith("http")
     ? category.thumbnail_image
     : `/api/storage/${category.thumbnail_image}`;
+  return category.thumbnail_image.startsWith("http") ? src : withImageWidth(src, width);
+};
+
+export const categoryImageSet = (category?: LearningCategory | null, widths = [360, 540, 720, 960]) => {
+  if (!category?.thumbnail_image || category.thumbnail_image.startsWith("http")) return undefined;
+  return widths
+    .map((width) => `${categoryImage(category, width)} ${width}w`)
+    .join(", ");
 };
 
 export const preloadImage = (src?: string | null) => {
@@ -284,32 +298,78 @@ export const FadeInImage = ({
   src,
   alt,
   eager = false,
+  srcSet,
+  sizes,
   style,
   imgStyle,
 }: {
   src: string;
   alt: string;
   eager?: boolean;
+  srcSet?: string;
+  sizes?: string;
   style?: React.CSSProperties;
   imgStyle?: React.CSSProperties;
 }) => {
   const [loaded, setLoaded] = React.useState(false);
+  const [failed, setFailed] = React.useState(false);
+  const fallbackSrc = React.useMemo(() => src.replace(/[?&]w=\d+\b/, ""), [src]);
+  const currentSrc = failed ? fallbackSrc : src;
+  const imageOnlyStyle: React.CSSProperties = {
+    objectFit: style?.objectFit,
+    objectPosition: style?.objectPosition,
+    filter: style?.filter,
+  };
+  const wrapperStyle: React.CSSProperties = { ...style };
+
+  delete wrapperStyle.objectFit;
+  delete wrapperStyle.objectPosition;
+  delete wrapperStyle.filter;
 
   return (
-    <img
-      src={src}
-      alt={alt}
-      onLoad={() => setLoaded(true)}
-      decoding="async"
-      loading={eager ? "eager" : "lazy"}
-      fetchPriority={eager ? "high" : "auto"}
+    <span
+      aria-busy={!loaded}
       style={{
-        ...style,
-        opacity: loaded ? 1 : 0,
-        transition: "opacity 220ms ease",
-        ...imgStyle,
+        display: "block",
+        overflow: "hidden",
+        background: "linear-gradient(90deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.10) 100%)",
+        backgroundSize: "220% 100%",
+        animation: loaded ? undefined : "imageShimmer 1.15s ease-in-out infinite",
+        ...wrapperStyle,
       }}
-    />
+    >
+      <style>{`
+        @keyframes imageShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+      <img
+        src={currentSrc}
+        srcSet={failed ? undefined : srcSet}
+        sizes={sizes}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (!failed && fallbackSrc !== src) {
+            setLoaded(false);
+            setFailed(true);
+          }
+        }}
+        decoding="async"
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : "auto"}
+        style={{
+          display: "block",
+          width: "100%",
+          height: "100%",
+          opacity: loaded ? 1 : 0,
+          transition: "opacity 220ms ease",
+          ...imageOnlyStyle,
+          ...imgStyle,
+        }}
+      />
+    </span>
   );
 };
 
@@ -380,7 +440,7 @@ export const HeroCard = ({
     return moduleName;
   })();
 
-  const imgSrc = categoryImage(category);
+  const imgSrc = categoryImage(category, variant === "desktop" ? 720 : 540);
 
   if (variant === "mobile") {
     return (
@@ -398,6 +458,8 @@ export const HeroCard = ({
         {imgSrc && (
           <FadeInImage
             src={imgSrc}
+            srcSet={categoryImageSet(category, [320, 480, 640, 800])}
+            sizes="(min-width: 1024px) 360px, 100vw"
             alt={category?.title || "Course"}
             eager
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
@@ -446,6 +508,8 @@ export const HeroCard = ({
       {imgSrc && (
         <FadeInImage
           src={imgSrc}
+          srcSet={categoryImageSet(category, [360, 540, 720, 900])}
+          sizes="(min-width: 1024px) 420px, 100vw"
           alt={category?.title || "Course"}
           eager
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}

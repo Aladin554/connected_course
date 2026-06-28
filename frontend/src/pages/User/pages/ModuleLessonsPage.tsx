@@ -17,6 +17,7 @@ import {
   RichTextContent,
   WarningNotice,
   categoryImage,
+  categoryImageSet,
   FadeInImage,
 } from "./shared";
 
@@ -444,6 +445,8 @@ function ModuleHeader({
       {bgImage && (
         <FadeInImage
           src={bgImage}
+          srcSet={categoryImageSet(category, [480, 720, 900, 1200])}
+          sizes="100vw"
           alt=""
           eager
           style={{
