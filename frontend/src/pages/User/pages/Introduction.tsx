@@ -94,7 +94,17 @@ export default function Introduction() {
       setRouteLoading(true);
 
       try {
-        const categoriesRes = await api.get("/my-categories");
+        const wantsModule = routeKind === "module" && !!moduleId;
+        const wantsLesson = wantsModule && segments[4] === "lesson" && !!lessonId;
+
+        const [categoriesRes, modulesRes, completedLessonIds, currentLessonsRes] = await Promise.all([
+          api.get("/my-categories"),
+          wantsModule
+            ? api.get(`/categories/${categoryId}/modules`, { params: { with_lessons: 1 } })
+            : Promise.resolve(null),
+          wantsModule ? loadLearningProgress(categoryId) : Promise.resolve<number[]>([]),
+          wantsLesson ? api.get(`/modules/${moduleId}/lessons`) : Promise.resolve(null),
+        ]);
         if (cancelled) return;
         const categories = Array.isArray(categoriesRes.data) ? categoriesRes.data : [];
         const category = categories.find((item: LearningCategory) => item.id === categoryId);
@@ -126,12 +136,9 @@ export default function Introduction() {
           return;
         }
 
-        const modulesRes = await api.get(`/categories/${category.id}/modules`, { params: { with_lessons: 1 } });
-        if (cancelled) return;
-        const modules = Array.isArray(modulesRes.data) ? modulesRes.data : [];
+        const modules = Array.isArray(modulesRes?.data) ? modulesRes.data : [];
         const module = modules.find((item: LearningModule) => item.id === moduleId);
         const moduleIndex = modules.findIndex((item: LearningModule) => item.id === moduleId);
-        const completedLessonIds = await loadLearningProgress(category.id);
 
         if (!module) {
           navigate(`/introduction/category/${category.id}/course`, { replace: true });
@@ -163,9 +170,7 @@ export default function Introduction() {
           return;
         }
 
-        const lessonsRes = await api.get(`/modules/${module.id}/lessons`);
-        if (cancelled) return;
-        const lessons = Array.isArray(lessonsRes.data) ? lessonsRes.data : [];
+        const lessons = Array.isArray(currentLessonsRes?.data) ? currentLessonsRes.data : [];
         const lesson = lessons.find((item: LearningLesson) => item.id === lessonId);
         const lessonIndex = lessons.findIndex((item: LearningLesson) => item.id === lessonId);
 
