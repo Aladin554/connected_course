@@ -8,16 +8,16 @@
 //   home ──onContinue──► welcome ──onFinish──► course ──onModuleClick──► module ──onLessonClick──► lesson
 //   Each page has an onBack that reverses the step.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 
 import { completeLearningLesson, GlobalStyles, LearningCategory, LearningLesson, LearningModule, LessonNextAction, loadLearningProgress, Page } from "./shared";
-import HomePage           from "./HomePage";
-import WelcomePage        from "./WelcomePage";
-import CourseOverviewPage from "./CourseOverviewPage";
-import ModuleLessonsPage  from "./ModuleLessonsPage";
-import LessonDetailPage   from "./LessonDetailPage";
+const HomePage           = lazy(() => import("./HomePage"));
+const WelcomePage        = lazy(() => import("./WelcomePage"));
+const CourseOverviewPage = lazy(() => import("./CourseOverviewPage"));
+const ModuleLessonsPage  = lazy(() => import("./ModuleLessonsPage"));
+const LessonDetailPage   = lazy(() => import("./LessonDetailPage"));
 
 const resolveLessonNextAction = (
   lessonIndex: number,
@@ -264,7 +264,7 @@ export default function Introduction() {
   return (
     <>
       <GlobalStyles />
-
+      <Suspense fallback={<div style={{ display: "flex", minHeight: "100dvh", alignItems: "center", justifyContent: "center", background: "#071224", color: "white", fontWeight: 800 }}>Loading...</div>}>
       {page === "welcome" ? (
         <WelcomePage
           onBack   ={showHome}
@@ -314,7 +314,7 @@ export default function Introduction() {
           }}
         />
       )}
-
+      </Suspense>
     </>
   );
 }
