@@ -48,23 +48,17 @@ export default function CourseOverviewPage({
 
     setLoading(true);
     api
-      .get(`/categories/${category.id}/modules`)
+      .get(`/categories/${category.id}/modules`, { params: { with_lessons: 1 } })
       .then(async (res) => {
         const rows: LearningModule[] = Array.isArray(res.data) ? res.data : [];
         setModules(rows);
         setCompletedLessonIds(await loadLearningProgress(category.id));
 
-        const lessonPairs = await Promise.all(
-          rows.map(async (m) => {
-            try {
-              const r = await api.get(`/modules/${m.id}/lessons`);
-              return [m.id, Array.isArray(r.data) ? r.data : []] as const;
-            } catch {
-              return [m.id, []] as const;
-            }
-          })
-        );
-        setModuleLessons(Object.fromEntries(lessonPairs));
+        const lessonMap: Record<number, LearningLesson[]> = {};
+        rows.forEach((m) => {
+          lessonMap[m.id] = (m.lessons as LearningLesson[]) || [];
+        });
+        setModuleLessons(lessonMap);
       })
       .catch(() => {
         setModules([]);

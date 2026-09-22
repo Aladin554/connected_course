@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\AuthController;
@@ -31,15 +33,21 @@ Route::get('/storage/{path}', function (Request $request, string $path) {
 
     $width = (int) $request->query('w', 0);
     $isImage = str_starts_with((string) mime_content_type($file), 'image/');
-
-    if (
-        $width >= 120
-        && $width <= 1600
-        && $isImage
-        && function_exists('imagecreatefromstring')
+    $gdAvailable = function_exists('imagecreatefromstring')
         && function_exists('imagescale')
-        && function_exists('imagewebp')
-    ) {
+        && function_exists('imagewebp');
+
+    if ($width >= 120 && $width <= 1600 && $isImage && !$gdAvailable) {
+        // This route is hit for every image on every page, so without a throttle
+        // a missing GD extension would write one warning per image request.
+        if (Cache::add('gd-missing-warning-logged', true, now()->addMinutes(10))) {
+            Log::warning('Image resize skipped: PHP GD extension is not available on this server. Serving full-size originals until it is installed.', [
+                'example_path' => $path,
+            ]);
+        }
+    }
+
+    if ($width >= 120 && $width <= 1600 && $isImage && $gdAvailable) {
         $cachePath = 'image-cache/'.md5($file.'|'.filemtime($file).'|'.$width).'.webp';
         $cacheDisk = Storage::disk('public');
 

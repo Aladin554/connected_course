@@ -27,6 +27,7 @@ export interface LearningModule {
   is_active: boolean;
   lessons_count?: number;
   all_lessons_count?: number;
+  lessons?: { id: number; module_id: number }[];
 }
 export interface LearningLesson {
   id: number;

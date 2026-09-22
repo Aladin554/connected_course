@@ -18,7 +18,7 @@ class LearningContentController extends Controller
 {
     use ChecksAdminCategoryAccess;
 
-    public function categoryModules(Category $category): JsonResponse
+    public function categoryModules(Request $request, Category $category): JsonResponse
     {
         $canManage = $this->canAdministerCategory($category);
         $canViewAdmin = $this->canViewAdminCategory($category);
@@ -28,18 +28,33 @@ class LearningContentController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        // Optionally eager-load a lightweight lesson id list alongside each module,
+        // so callers that only need lesson counts/ids for progress tracking can
+        // avoid firing a separate /modules/{id}/lessons request per module.
+        $withLessons = $request->boolean('with_lessons');
+        $lessonsRelation = $canManage ? 'allLessons' : 'lessons';
+
         if ($canManage || $canViewAdmin) {
             $modules = ($canManage ? $category->allCourseModules() : $category->courseModules())
-                ->withCount($canManage ? 'allLessons' : 'lessons')
+                ->withCount($lessonsRelation)
+                ->when($withLessons, fn ($query) => $query->with(["{$lessonsRelation}:id,module_id"]))
                 ->orderBy('created_at')
                 ->orderBy('id')
                 ->get();
         } else {
             $modules = $category->courseModules()
                 ->withCount('lessons')
+                ->when($withLessons, fn ($query) => $query->with(['lessons:id,module_id']))
                 ->orderBy('created_at')
                 ->orderBy('id')
                 ->get();
+        }
+
+        if ($withLessons && $lessonsRelation !== 'lessons') {
+            $modules->each(function ($module) use ($lessonsRelation) {
+                $module->setRelation('lessons', $module->getRelation($lessonsRelation));
+                $module->unsetRelation($lessonsRelation);
+            });
         }
 
         return response()->json($modules);

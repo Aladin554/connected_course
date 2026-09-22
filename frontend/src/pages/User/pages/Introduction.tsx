@@ -126,7 +126,7 @@ export default function Introduction() {
           return;
         }
 
-        const modulesRes = await api.get(`/categories/${category.id}/modules`);
+        const modulesRes = await api.get(`/categories/${category.id}/modules`, { params: { with_lessons: 1 } });
         if (cancelled) return;
         const modules = Array.isArray(modulesRes.data) ? modulesRes.data : [];
         const module = modules.find((item: LearningModule) => item.id === moduleId);
@@ -138,12 +138,9 @@ export default function Introduction() {
           return;
         }
 
-        const moduleLessonPairs = await Promise.all(
-          modules.slice(0, Math.max(moduleIndex, 0)).map(async (item: LearningModule) => {
-            const lessonsRes = await api.get(`/modules/${item.id}/lessons`);
-            return Array.isArray(lessonsRes.data) ? lessonsRes.data : [];
-          })
-        );
+        const moduleLessonPairs = modules
+          .slice(0, Math.max(moduleIndex, 0))
+          .map((item: LearningModule) => (item.lessons as LearningLesson[]) || []);
         const moduleUnlocked = moduleIndex === 0 || moduleLessonPairs.every((lessons: LearningLesson[]) =>
           lessons.length > 0 && lessons.every((item) => completedLessonIds.includes(item.id))
         );
