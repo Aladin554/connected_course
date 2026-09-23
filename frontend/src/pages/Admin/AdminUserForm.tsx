@@ -269,7 +269,7 @@ export default function AdminUserForm() {
     const accent = activeColor === "blue" ? "accent-blue-600" : "accent-emerald-600";
 
     if (list.length === 0) {
-      return <p className="text-sm text-gray-400 dark:text-gray-500">No courses found.</p>;
+      return <p className="text-sm text-gray-500 dark:text-gray-400">No courses found.</p>;
     }
 
     return (
@@ -320,7 +320,7 @@ export default function AdminUserForm() {
           <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
             {sectionTitle}
           </h2>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {sectionSubtitle}
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function AdminUserForm() {
       <div className="px-6 py-6 space-y-6">
         {/* Training subsection */}
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 mb-3 flex items-center gap-2">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-sky-700 dark:text-sky-400 mb-3 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-sky-500"></span>
             Training
           </h3>
@@ -453,7 +453,7 @@ export default function AdminUserForm() {
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
                     Password{" "}
                     {isEdit && (
-                      <span className="text-xs font-normal text-gray-400">(leave blank to keep unchanged)</span>
+                      <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(leave blank to keep unchanged)</span>
                     )}
                   </label>
                   <input
@@ -476,6 +476,7 @@ export default function AdminUserForm() {
                   <select
                     value={form.roleId}
                     onChange={(e) => setForm({ ...form, roleId: e.target.value })}
+                    aria-label="Role"
                     className={inputClass(errors.roleId)}
                   >
                     <option value="">Select a role</option>
@@ -542,7 +543,7 @@ export default function AdminUserForm() {
                   {errors.allowed_ips && (
                     <p className="text-red-500 text-xs mt-1.5">{errors.allowed_ips}</p>
                   )}
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     Leave empty to allow access from any IP address.
                   </p>
                 </div>
@@ -556,7 +557,7 @@ export default function AdminUserForm() {
                   <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                     Admin Panel — Course Permissions
                   </h2>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Control access to Course and Learning Content in the admin panel.
                   </p>
                 </div>
@@ -570,7 +571,7 @@ export default function AdminUserForm() {
                     />
                     <div>
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Can view</span>
-                      <span className="text-xs text-gray-400">Show Course &amp; Learning Content in sidebar and allow page access</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Show Course &amp; Learning Content in sidebar and allow page access</span>
                     </div>
                   </label>
                   <label className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
@@ -582,7 +583,7 @@ export default function AdminUserForm() {
                     />
                     <div>
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Can add</span>
-                      <span className="text-xs text-gray-400">Create courses, modules, and lessons</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Create courses, modules, and lessons</span>
                     </div>
                   </label>
                   <label className="flex items-center gap-3 px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition">
@@ -594,7 +595,7 @@ export default function AdminUserForm() {
                     />
                     <div>
                       <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Can edit</span>
-                      <span className="text-xs text-gray-400">Update courses and learning content (delete is superadmin only)</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Update courses and learning content (delete is superadmin only)</span>
                     </div>
                   </label>
                 </div>

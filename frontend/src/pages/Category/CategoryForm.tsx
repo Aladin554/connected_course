@@ -292,6 +292,7 @@ export default function CategoryForm() {
                       type: e.target.value === "resource" ? "resource" : "training",
                     })
                   }
+                  aria-label="Course Type"
                   className={inputClass}
                 >
                   <option value="training">Training</option>
@@ -322,7 +323,7 @@ export default function CategoryForm() {
                     <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 group-hover:underline truncate">
                       {thumbnail ? thumbnail.name : "Click to upload image"}
                     </div>
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       JPG, PNG, WEBP — max 5MB, recommended 16:9
                     </div>
                     <input
@@ -458,12 +459,13 @@ export default function CategoryForm() {
                                     .value as WelcomeSlideForm["warning_position"],
                                 })
                               }
+                              aria-label="Warning Position"
                               className={inputClass}
                             >
                               <option value="after_title">After title</option>
                               <option value="after_description">After description</option>
                             </select>
-                            <p className="text-xs text-gray-400 mt-1.5">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">
                               Controls where the warning banner appears on this page.
                             </p>
                           </Field>

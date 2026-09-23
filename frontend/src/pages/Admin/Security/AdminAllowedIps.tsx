@@ -312,6 +312,7 @@ export default function AdminAllowedIps() {
               setPerPage(Number(event.target.value));
               setCurrentPage(1);
             }}
+            aria-label="Items per page"
             className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-6 py-2 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value={5}>5</option>

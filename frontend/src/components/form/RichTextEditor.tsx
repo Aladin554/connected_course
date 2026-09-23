@@ -96,6 +96,7 @@ export default function RichTextEditor({
       {required && (
         <input
           tabIndex={-1}
+          aria-hidden="true"
           autoComplete="off"
           value={value.replace(/<[^>]*>/g, "").trim()}
           required

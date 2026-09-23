@@ -231,7 +231,7 @@ export default function SignInPage() {
         .btn-start {
           width: 100%;
           padding: 18px;
-          background: #f97316;
+          background: #c2410c;
           color: #fff;
           border: none;
           border-radius: 50px;
@@ -241,7 +241,7 @@ export default function SignInPage() {
           letter-spacing: 0.1px;
           transition: background 0.2s, transform 0.1s;
         }
-        .btn-start:hover { background: #ea6c0a; }
+        .btn-start:hover { background: #9a3412; }
         .btn-start:active { transform: scale(0.99); }
 
         /* ── Mobile login sheet ── */
@@ -435,7 +435,7 @@ export default function SignInPage() {
         .form-title-dot { color: #f97316; }
         .form-sub {
           font-size: 14px;
-          color: rgba(255,255,255,0.4);
+          color: rgba(255,255,255,0.55);
           line-height: 1.55;
           margin-bottom: 22px;
         }
@@ -508,7 +508,7 @@ export default function SignInPage() {
         .btn-signin {
           width: 100%;
           height: 58px;
-          background: #f97316;
+          background: #c2410c;
           color: #fff;
           border: none;
           border-radius: 14px;
@@ -518,7 +518,7 @@ export default function SignInPage() {
           letter-spacing: 0.2px;
           transition: background 0.2s, transform 0.1s;
         }
-        .btn-signin:hover { background: #ea6c0a; }
+        .btn-signin:hover { background: #9a3412; }
         .btn-signin:active { transform: scale(0.99); }
         .btn-signin:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
       `}</style>
@@ -765,6 +765,7 @@ function LoginForm({
             type="button"
             className="eye-btn"
             onClick={() => setShowPassword(!showPassword)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (
               <svg

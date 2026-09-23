@@ -17,11 +17,11 @@ interface User {
 const Avatar = ({ name }: { name: string }) => {
   const initials = name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const palettes = [
-    ["bg-blue-100 dark:bg-blue-900/40", "text-blue-600 dark:text-blue-300"],
-    ["bg-emerald-100 dark:bg-emerald-900/40", "text-emerald-600 dark:text-emerald-300"],
+    ["bg-blue-100 dark:bg-blue-900/40", "text-blue-700 dark:text-blue-300"],
+    ["bg-emerald-100 dark:bg-emerald-900/40", "text-emerald-700 dark:text-emerald-300"],
     ["bg-violet-100 dark:bg-violet-900/40", "text-violet-600 dark:text-violet-300"],
-    ["bg-amber-100 dark:bg-amber-900/40", "text-amber-600 dark:text-amber-300"],
-    ["bg-rose-100 dark:bg-rose-900/40", "text-rose-600 dark:text-rose-300"],
+    ["bg-amber-100 dark:bg-amber-900/40", "text-amber-700 dark:text-amber-300"],
+    ["bg-rose-100 dark:bg-rose-900/40", "text-rose-700 dark:text-rose-300"],
   ];
   const [bg, text] = palettes[name.charCodeAt(0) % palettes.length];
   return (
@@ -273,6 +273,7 @@ export default function AdminUsers() {
               {/* Mobile filter toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label="Toggle filters"
                 className={`sm:hidden flex items-center gap-1.5 px-.5 py-2 rounded-xl border-2 text-sm font-semibold transition flex-shrink-0 ${
                   showFilters || activeFilterCount > 0
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400"
@@ -292,6 +293,7 @@ export default function AdminUsers() {
                 <select
                   value={roleFilter}
                   onChange={(e) => { setRoleFilter(e.target.value as any); setCurrentPage(1); }}
+                  aria-label="Filter by role"
                   className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="all">All roles</option>
@@ -301,6 +303,7 @@ export default function AdminUsers() {
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as any)}
+                  aria-label="Sort order"
                   className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="desc">Newest first</option>
@@ -311,6 +314,7 @@ export default function AdminUsers() {
                   <select
                     value={perPage}
                     onChange={(e) => { setPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                    aria-label="Items per page"
                     className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                   >
                     <option value={10}>10</option>
@@ -327,6 +331,7 @@ export default function AdminUsers() {
                 <select
                   value={roleFilter}
                   onChange={(e) => { setRoleFilter(e.target.value as any); setCurrentPage(1); }}
+                  aria-label="Filter by role"
                   className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-2 py-2 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="all">All roles</option>
@@ -336,6 +341,7 @@ export default function AdminUsers() {
                 <select
                   value={sortOrder}
                   onChange={(e) => setSortOrder(e.target.value as any)}
+                  aria-label="Sort order"
                   className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-2 py-2 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value="desc">Newest first</option>
@@ -344,6 +350,7 @@ export default function AdminUsers() {
                 <select
                   value={perPage}
                   onChange={(e) => { setPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                  aria-label="Items per page"
                   className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-2 py-2 text-xs bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value={10}>10 / page</option>
@@ -360,7 +367,7 @@ export default function AdminUsers() {
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-800">
                   <th className="px-6 py-3.5 text-center text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 w-10">
-                    <input type="checkbox" checked={selectAll} onChange={toggleSelectAll} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+                    <input type="checkbox" checked={selectAll} onChange={toggleSelectAll} aria-label="Select all users" className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
                   </th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">User</th>
                   <th className="px-6 py-3.5 text-left text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Role</th>
@@ -373,7 +380,7 @@ export default function AdminUsers() {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
+                  Array.from({ length: Math.min(perPage, 8) }).map((_, i) => (
                     <tr key={i}>
                       {Array.from({ length: desktopColCount }).map((__, j) => (
                         <td key={j} className="px-6 py-4">
@@ -394,14 +401,14 @@ export default function AdminUsers() {
                   paginated.map((user) => (
                     <tr key={user.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition">
                       <td className="px-6 py-4 text-center">
-                        <input type="checkbox" checked={selected.includes(user.id)} onChange={() => toggleSelect(user.id)} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+                        <input type="checkbox" checked={selected.includes(user.id)} onChange={() => toggleSelect(user.id)} aria-label={`Select ${user.first_name} ${user.last_name}`} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar name={`${user.first_name} ${user.last_name}`} />
                           <div>
                             <div className="font-semibold text-gray-900 dark:text-gray-100">{user.first_name} {user.last_name}</div>
-                            <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{user.email}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{user.email}</div>
                           </div>
                         </div>
                       </td>
@@ -417,7 +424,7 @@ export default function AdminUsers() {
                         <td className="px-6 py-4">
                           <button
                             onClick={() => togglePermission(user)}
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${Number(user.can_create_users) === 1 ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200" : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-200"}`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition ${Number(user.can_create_users) === 1 ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200" : "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-200"}`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full ${Number(user.can_create_users) === 1 ? "bg-emerald-500" : "bg-red-400"}`} />
                             {Number(user.can_create_users) === 1 ? "Allowed" : "Denied"}
@@ -442,12 +449,13 @@ export default function AdminUsers() {
           {/* ── Mobile Cards ── */}
           <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
             {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="px-4 py-4 flex items-center gap-3">
+              Array.from({ length: Math.min(perPage, 8) }).map((_, i) => (
+                <div key={i} className="px-4 py-3.5 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="h-4 w-36 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
                     <div className="h-3 w-48 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
+                    <div className="h-3 w-32 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse mt-2" />
                   </div>
                 </div>
               ))
@@ -462,7 +470,7 @@ export default function AdminUsers() {
                 <div key={user.id} className="px-4 py-3.5 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 transition">
                   <div className="flex items-center gap-3">
                     {/* checkbox + avatar */}
-                    <input type="checkbox" checked={selected.includes(user.id)} onChange={() => toggleSelect(user.id)} className="w-4 h-4 rounded accent-blue-600 cursor-pointer flex-shrink-0" />
+                    <input type="checkbox" checked={selected.includes(user.id)} onChange={() => toggleSelect(user.id)} aria-label={`Select ${user.first_name} ${user.last_name}`} className="w-4 h-4 rounded accent-blue-600 cursor-pointer flex-shrink-0" />
                     <Avatar name={`${user.first_name} ${user.last_name}`} />
 
                     {/* main info */}
@@ -473,16 +481,16 @@ export default function AdminUsers() {
                         </span>
                         {/* action buttons top-right */}
                         <div className="flex gap-1 flex-shrink-0">
-                          <button onClick={() => navigate(`/dashboard/admin-users/${user.id}/edit`)} className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition">
+                          <button onClick={() => navigate(`/dashboard/admin-users/${user.id}/edit`)} aria-label="Edit user" className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition">
                             <Edit size={14} />
                           </button>
-                          <button onClick={() => confirmDelete(user.id)} className="p-1.5 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition">
+                          <button onClick={() => confirmDelete(user.id)} aria-label="Delete user" className="p-1.5 rounded-lg text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition">
                             <Trash2 size={14} />
                           </button>
                         </div>
                       </div>
 
-                      <div className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                         {user.email}
                       </div>
 
@@ -497,14 +505,14 @@ export default function AdminUsers() {
                         {currentUser?.role_id === 1 && (
                           <button
                             onClick={() => togglePermission(user)}
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold transition ${Number(user.can_create_users) === 1 ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400"}`}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold transition ${Number(user.can_create_users) === 1 ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400"}`}
                           >
                             <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${Number(user.can_create_users) === 1 ? "bg-emerald-500" : "bg-red-400"}`} />
                             {Number(user.can_create_users) === 1 ? "Allowed" : "Denied"}
                           </button>
                         )}
 
-                        <span className="text-xs text-gray-400 dark:text-gray-500 ml-auto">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
                           {formatDate(user.created_at)}
                         </span>
                       </div>
@@ -528,6 +536,7 @@ export default function AdminUsers() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
+                  aria-label="Previous page"
                   className="p-1.5 sm:p-2 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <ChevronLeft size={15} />
@@ -550,6 +559,7 @@ export default function AdminUsers() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
+                  aria-label="Next page"
                   className="p-1.5 sm:p-2 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <ChevronRight size={15} />

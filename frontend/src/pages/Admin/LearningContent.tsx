@@ -337,6 +337,7 @@ export default function LearningContent() {
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
+                aria-label="Select Course"
                 className="w-full rounded-xl sm:rounded-2xl border-2 border-blue-300 dark:border-blue-700 bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-100 px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 {categories.map(cat => (
@@ -364,7 +365,7 @@ export default function LearningContent() {
           >
             <Layers size={15} />
             Modules
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${mobileView === "modules" ? "bg-white/20 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${mobileView === "modules" ? "bg-white/8 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}>
               {modules.length}
             </span>
           </button>
@@ -372,13 +373,13 @@ export default function LearningContent() {
             onClick={() => setMobileView("lessons")}
             className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition
               ${mobileView === "lessons"
-                ? "bg-emerald-600 text-white"
+                ? "bg-emerald-700 text-white"
                 : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
           >
             <PlayCircle size={15} />
             Lessons
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${mobileView === "lessons" ? "bg-white/20 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}>
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${mobileView === "lessons" ? "bg-white/8 text-white" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}>
               {lessons.length}
             </span>
           </button>
@@ -392,8 +393,8 @@ export default function LearningContent() {
             ${mobileView !== "modules" ? "hidden lg:flex" : "flex"}`}>
             <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-violet-600 dark:bg-violet-700 flex flex-col gap-3 sm:gap-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-violet-200">Step 2</p>
-                <span className="text-xs text-violet-300 font-medium">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-100">Step 2</p>
+                <span className="text-xs text-violet-100 font-medium">
                   {modules.length} module{modules.length !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -404,7 +405,7 @@ export default function LearningContent() {
                 {canAddCourses && (
                   <button
                     onClick={openNewModulePanel}
-                    className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
+                    className="flex items-center gap-1.5 sm:gap-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
                   >
                     <Plus size={14} /> New Module
                   </button>
@@ -422,8 +423,8 @@ export default function LearningContent() {
               {modules.length === 0 ? (
                 <div className="py-12 sm:py-16 text-center px-4">
                   <Layers className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
-                  <p className="text-gray-400 font-medium text-sm">No modules yet</p>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">Click "New Module" to get started</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">No modules yet</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Click "New Module" to get started</p>
                 </div>
               ) : (
                 modules.map((module, idx) => {
@@ -447,7 +448,7 @@ export default function LearningContent() {
                           <div className={`font-semibold text-sm sm:text-base truncate ${isSelected ? "text-violet-700 dark:text-violet-300" : "text-gray-800 dark:text-gray-200"}`}>
                             {module.title || `Module ${idx + 1}`}
                           </div>
-                          <div className="text-xs text-gray-400 mt-0.5">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             {module.all_lessons_count ?? module.lessons_count ?? 0} lessons
                             {!module.is_active && (
                               <span className="ml-2 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-gray-500">
@@ -488,10 +489,10 @@ export default function LearningContent() {
           {/* ════ LESSONS COLUMN ════ */}
           <div className={`bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col overflow-hidden
             ${mobileView !== "lessons" ? "hidden lg:flex" : "flex"}`}>
-            <div className={`px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 flex flex-col gap-3 sm:gap-4 transition-colors ${selectedModule ? "bg-emerald-600 dark:bg-emerald-700" : "bg-gray-400 dark:bg-gray-600"}`}>
+            <div className={`px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 flex flex-col gap-3 sm:gap-4 transition-colors ${selectedModule ? "bg-emerald-700 dark:bg-emerald-800" : "bg-gray-500 dark:bg-gray-600"}`}>
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Step 3</p>
-                <span className="text-xs text-white/60 font-medium">
+                <p className="text-xs font-semibold uppercase tracking-wider text-white">Step 3</p>
+                <span className="text-xs text-white font-medium">
                   {lessons.length} lesson{lessons.length !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -506,7 +507,7 @@ export default function LearningContent() {
                   <button
                     onClick={openNewLessonPanel}
                     disabled={!selectedModule}
-                    className="flex items-center gap-1.5 sm:gap-2 bg-white/20 hover:bg-white/30 active:bg-white/40 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
+                    className="flex items-center gap-1.5 sm:gap-2 bg-white/8 hover:bg-white/20 active:bg-white/30 disabled:opacity-40 disabled:cursor-not-allowed text-white px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition flex-shrink-0"
                   >
                     <Plus size={14} /> New Lesson
                   </button>
@@ -531,8 +532,8 @@ export default function LearningContent() {
               {!selectedModule ? (
                 <div className="py-12 sm:py-16 text-center px-4">
                   <PlayCircle className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
-                  <p className="text-gray-400 font-medium text-sm">No module selected</p>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">
+                  <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">No module selected</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
                     <span className="hidden sm:inline">Pick a module on the left to view lessons</span>
                     <span className="sm:hidden">Switch to the Modules tab to pick one</span>
                   </p>
@@ -540,8 +541,8 @@ export default function LearningContent() {
               ) : lessons.length === 0 ? (
                 <div className="py-12 sm:py-16 text-center px-4">
                   <PlayCircle className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-3 text-gray-300 dark:text-gray-700" />
-                  <p className="text-gray-400 font-medium text-sm">No lessons yet</p>
-                  <p className="text-xs sm:text-sm text-gray-400 mt-1">Click "New Lesson" to add one</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium text-sm">No lessons yet</p>
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">Click "New Lesson" to add one</p>
                 </div>
               ) : (
                 lessons.map((lesson, idx) => (
@@ -555,7 +556,7 @@ export default function LearningContent() {
                       </div>
                       <div className="min-w-0">
                         <div className="font-medium text-gray-800 dark:text-gray-200 text-sm truncate">{lesson.title}</div>
-                        <div className="text-xs text-gray-400 mt-0.5">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                           {hasLessonDuration(lesson.duration_mins) && (
                             <>{formatLessonDuration(lesson.duration_mins, lesson.duration_unit === "seconds" ? "seconds" : "minutes")}</>
                           )}
@@ -602,7 +603,7 @@ export default function LearningContent() {
           <div className="relative w-full sm:max-w-lg bg-white dark:bg-gray-900 h-full overflow-auto shadow-2xl flex flex-col">
             <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-violet-600 dark:bg-violet-700 sticky top-0 z-10">
               <div className="flex items-start justify-between gap-4 mb-2 sm:mb-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-violet-200 mt-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-100 mt-1">
                   {editingModuleId ? "Editing Module" : "New Module"}
                 </p>
                 <button
@@ -694,9 +695,9 @@ export default function LearningContent() {
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closePanel} />
           <div className="relative w-full sm:max-w-2xl bg-white dark:bg-gray-900 h-full overflow-auto shadow-2xl flex flex-col">
-            <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-emerald-600 dark:bg-emerald-700 sticky top-0 z-10">
+            <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-3 sm:pb-4 bg-emerald-700 dark:bg-emerald-800 sticky top-0 z-10">
               <div className="flex items-start justify-between gap-4 mb-2 sm:mb-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-200 mt-1">
+                <p className="text-xs font-semibold uppercase tracking-wider text-white mt-1">
                   {editingLessonId ? "Editing Lesson" : "New Lesson"}
                 </p>
                 <button
@@ -739,7 +740,7 @@ export default function LearningContent() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
-                    Duration <span className="text-xs font-normal text-gray-400">(optional)</span>
+                    Duration <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(optional)</span>
                   </label>
                   <div className="flex gap-2">
                     <input
@@ -766,7 +767,7 @@ export default function LearningContent() {
                 </div>
                 <div>
                   <label className="text-sm font-semibold block mb-1.5 text-gray-700 dark:text-gray-300">
-                    YouTube Video ID / URL <span className="text-xs font-normal text-gray-400">(optional)</span>
+                    YouTube Video ID / URL <span className="text-xs font-normal text-gray-500 dark:text-gray-400">(optional)</span>
                   </label>
                   <input
                     value={lessonForm.video_value}
@@ -883,7 +884,7 @@ export default function LearningContent() {
                   <button
                     type="button"
                     onClick={addStrategy}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-semibold text-sm transition"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-semibold text-sm transition"
                   >
                     <Plus size={14} />
                     Add Step
@@ -905,7 +906,7 @@ export default function LearningContent() {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-semibold flex items-center justify-center gap-2 disabled:opacity-70 transition shadow-lg shadow-emerald-200 dark:shadow-none text-sm sm:text-base"
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-semibold flex items-center justify-center gap-2 disabled:opacity-70 transition shadow-lg shadow-emerald-200 dark:shadow-none text-sm sm:text-base"
                 >
                   <Save size={18} />
                   {isSaving ? "Saving…" : editingLessonId ? "Update Lesson" : "Create Lesson"}

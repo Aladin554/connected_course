@@ -167,6 +167,7 @@ export default function AdminCategories() {
                     setPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
+                  aria-label="Items per page"
                   className="border-2 border-gray-200 dark:border-gray-700 rounded-xl px-.5 py-2 text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 >
                   <option value={10}>10</option>
@@ -174,7 +175,7 @@ export default function AdminCategories() {
                   <option value={50}>50</option>
                 </select>
               </div>
-              <span className="text-xs sm:text-sm text-gray-400">
+              <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                 <strong className="text-gray-700 dark:text-gray-200">{totalRows}</strong> total
               </span>
             </div>
@@ -207,7 +208,7 @@ export default function AdminCategories() {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {loading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
+                  Array.from({ length: Math.min(perPage, 8) }).map((_, i) => (
                     <tr key={i}>
                       {Array.from({ length: 6 }).map((__, j) => (
                         <td key={j} className="px-6 py-4">
@@ -337,7 +338,7 @@ export default function AdminCategories() {
           {/* ── Mobile Cards (< md) ── */}
           <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800">
             {loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
+              Array.from({ length: Math.min(perPage, 8) }).map((_, i) => (
                 <div key={i} className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />

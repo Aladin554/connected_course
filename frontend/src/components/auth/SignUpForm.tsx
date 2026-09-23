@@ -117,7 +117,11 @@ export default function SignUpForm() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Checkbox checked={isChecked} onChange={setIsChecked} />
+                <Checkbox
+                  checked={isChecked}
+                  onChange={setIsChecked}
+                  ariaLabel="I agree to the Terms and Conditions and Privacy Policy"
+                />
                 <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
                   By creating an account, you agree to the{" "}
                   <span className="text-gray-800 dark:text-white/90">
@@ -142,7 +146,7 @@ export default function SignUpForm() {
               Already have an account?{" "}
               <Link
                 to="/signin"
-                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                className="text-brand-500 underline hover:text-brand-600 dark:text-brand-400"
               >
                 Sign In
               </Link>

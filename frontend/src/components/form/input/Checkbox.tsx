@@ -2,6 +2,7 @@ import clsx from "clsx"; // Install with: npm install clsx
 
 interface CheckboxProps {
   label?: string;
+  ariaLabel?: string;
   checked: boolean;
   className?: string;
   id?: string;
@@ -11,6 +12,7 @@ interface CheckboxProps {
 
 const Checkbox: React.FC<CheckboxProps> = ({
   label,
+  ariaLabel,
   checked,
   id,
   onChange,
@@ -27,6 +29,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
       <input
         id={id}
         type="checkbox"
+        aria-label={!label ? ariaLabel : undefined}
         className={clsx(
           "w-4 h-4 border-gray-300 rounded focus:ring-2 focus:ring-brand-500",
           "dark:bg-gray-700 dark:border-gray-600 dark:checked:bg-brand-500 dark:checked:border-brand-500",

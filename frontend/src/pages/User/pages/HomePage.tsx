@@ -27,7 +27,7 @@ const tokens = {
   bg:           "#f1f3f6",
   border:       "rgba(0,0,0,0.07)",
   text:         "#111827",
-  textMuted:    "#6b7280",
+  textMuted:    "#4b5563",
   textSubtle:   "#9ca3af",
   shadow:       "0 2px 12px rgba(0,0,0,0.07)",
   shadowMd:     "0 8px 32px rgba(0,0,0,0.10)",

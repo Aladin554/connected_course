@@ -11,6 +11,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\LearningContentController;
+use App\Http\Controllers\AdminAllowedIpController;
 
 // ==================================================================
 // 1. PUBLIC ROUTES – No auth, no IP restriction
@@ -130,6 +131,9 @@ Route::middleware(['auth:sanctum', 'admin.ip'])->group(function () {
 
     // Roles
     Route::get('/roles', [RoleController::class, 'index']);
+
+    // Superadmin-only IP allowlist for the admin panel
+    Route::apiResource('/admin-allowed-ips', AdminAllowedIpController::class);
     Route::get('/show-ip', fn (Request $request) => $request->ip());
 
     // Learning categories

@@ -149,6 +149,7 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(index, menuType)}
+                aria-label={nav.name}
                 className={`menu-item group flex items-center w-full ${
                   isOpen ? "menu-item-active" : "menu-item-inactive"
                 } ${!isExpanded && !isHovered ? "lg:justify-center" : "lg:justify-start"}`}
@@ -175,6 +176,7 @@ const AppSidebar: React.FC = () => {
               nav.path && (
                 <Link
                   to={nav.path}
+                  aria-label={nav.name}
                   className={`menu-item group flex items-center ${
                     isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                   }`}
@@ -264,7 +266,7 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered && !isMobileOpen ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to={logoHomePath} className="group">
+        <Link to={logoHomePath} className="group" aria-label="Connected Education home">
     {isExpanded || isHovered || isMobileOpen ? (
       <>
         {/* LIGHT MODE */}
@@ -313,7 +315,7 @@ const AppSidebar: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-500 dark:text-gray-400 ${
                   !isExpanded && !isHovered && !isMobileOpen ? "lg:justify-center" : "justify-start"
                 }`}
               >
@@ -329,7 +331,7 @@ const AppSidebar: React.FC = () => {
             {othersItems.length > 0 && (
               <div>
                 <h2
-                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-500 dark:text-gray-400 ${
                     !isExpanded && !isHovered && !isMobileOpen ? "lg:justify-center" : "justify-start"
                   }`}
                 >

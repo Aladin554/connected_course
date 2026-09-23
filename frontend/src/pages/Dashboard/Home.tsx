@@ -18,7 +18,7 @@ export default function Home() {
       </div>
 
       <div className="grid grid-cols-12 gap-3 md:gap-6">
-        <div className="col-span-12 rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-white/80">
+        <div className="col-span-12 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-8 text-center text-gray-500 dark:text-white/80">
           New dashboard content will go here.
         </div>
       </div>

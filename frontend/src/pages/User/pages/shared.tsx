@@ -595,7 +595,7 @@ export const HelpBox = ({ desktop = true }: HelpBoxProps) => (
     </div>
     <div style={{
       fontSize: 15,
-      color: "#6b7280",
+      color: "#4b5563",
       lineHeight: 1.45,
       letterSpacing: -0.3,
       fontWeight: 500,
@@ -644,7 +644,7 @@ export const GreetingHeader = ({ name, compact = false }: { name: string; compac
     </div>
     <div style={{
       fontSize: 15,
-      color: "#6b7280",
+      color: "#4b5563",
       lineHeight: 1.55,
       fontWeight: 500,
       letterSpacing: -0.25,
