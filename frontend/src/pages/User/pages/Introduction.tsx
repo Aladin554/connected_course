@@ -264,6 +264,7 @@ export default function Introduction() {
   return (
     <>
       <GlobalStyles />
+      <main>
       <Suspense fallback={<div style={{ display: "flex", minHeight: "100dvh", alignItems: "center", justifyContent: "center", background: "#071224", color: "white", fontWeight: 800 }}>Loading...</div>}>
       {page === "welcome" ? (
         <WelcomePage
@@ -315,6 +316,7 @@ export default function Introduction() {
         />
       )}
       </Suspense>
+      </main>
     </>
   );
 }
