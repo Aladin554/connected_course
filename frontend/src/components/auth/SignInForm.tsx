@@ -542,16 +542,14 @@ export default function SignInPage() {
 
         {/* Splash is always mounted so the bg image doesn't flash away */}
         <div className="splash-content" style={{ display: view === "login" ? "none" : "flex" }}>
-          <img
-            src="/images/logo/connected_logo_dark.png"
-            alt="Connected"
-            style={{
-              width: "140px",
-              objectFit: "contain",
-              display: "block",
-              margin: "0 auto 16px",
-            }}
-          />
+          <picture style={{ display: "block", width: "140px", margin: "0 auto 16px" }}>
+            <source srcSet="/images/logo/connected_logo_dark.webp" type="image/webp" />
+            <img
+              src="/images/logo/connected_logo_dark.png"
+              alt="Connected"
+              style={{ width: "100%", objectFit: "contain", display: "block" }}
+            />
+          </picture>
           <h1 className="splash-headline">Your Future.</h1>
           <span className="splash-headline-orange">Any Destination.</span>
           <p className="splash-body">
@@ -629,11 +627,14 @@ export default function SignInPage() {
           </div>
 
           <div className="desktop-brand-top">
-            <img
-              src="/images/logo/connected_logo_dark.png"
-              alt="Connected Logo Dark"
-              style={{ width: "215px", height: "45px", objectFit: "contain" }}
-            />
+            <picture>
+              <source srcSet="/images/logo/connected_logo_dark.webp" type="image/webp" />
+              <img
+                src="/images/logo/connected_logo_dark.png"
+                alt="Connected Logo Dark"
+                style={{ width: "215px", height: "45px", objectFit: "contain" }}
+              />
+            </picture>
           </div>
 
           <div className="desktop-hero-bottom">

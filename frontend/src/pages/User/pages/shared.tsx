@@ -617,11 +617,14 @@ export const UnlockIcon = ({ size = 18, color = "#111827" }: { size?: number; co
 );
 
 export const ConnectedWordmark = ({ color, size }: { color?: string; size?: number }) => (
-  <img
-    src="/images/logo/connected_logo.png"
-    alt="Connected Logo"
-    style={{ width: 120, height: 37, objectFit: "contain", display: "block" }}
-  />
+  <picture>
+    <source srcSet="/images/logo/connected_logo.webp" type="image/webp" />
+    <img
+      src="/images/logo/connected_logo.png"
+      alt="Connected Logo"
+      style={{ width: 120, height: 37, objectFit: "contain", display: "block" }}
+    />
+  </picture>
 );
 
 export const LightHeaderBar = ({ children, px = 0 }: { children?: React.ReactNode; px?: number }) => (

@@ -270,17 +270,23 @@ const AppSidebar: React.FC = () => {
     {isExpanded || isHovered || isMobileOpen ? (
       <>
         {/* LIGHT MODE */}
-        <img
-          src="/images/logo/connected_logo.png"
-          alt="Connected Logo"
-          className="dark:hidden transition-transform duration-300 group-hover:scale-105 w-[150px] h-[29px]"
-        />
+        <picture className="dark:hidden">
+          <source srcSet="/images/logo/connected_logo.webp" type="image/webp" />
+          <img
+            src="/images/logo/connected_logo.png"
+            alt="Connected Logo"
+            className="transition-transform duration-300 group-hover:scale-105 w-[150px] h-[29px]"
+          />
+        </picture>
 
-        <img
-          src="/images/logo/connected_logo_dark.png"
-          alt="Connected Logo Dark"
-          className="hidden dark:block transition-transform duration-300 group-hover:scale-105 w-[166px] h-[43px]"
-        />
+        <picture className="hidden dark:block">
+          <source srcSet="/images/logo/connected_logo_dark.webp" type="image/webp" />
+          <img
+            src="/images/logo/connected_logo_dark.png"
+            alt="Connected Logo Dark"
+            className="transition-transform duration-300 group-hover:scale-105 w-[166px] h-[43px]"
+          />
+        </picture>
       </>
     ) : (
       // COLLAPSED ICON
