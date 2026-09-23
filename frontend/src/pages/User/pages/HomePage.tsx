@@ -685,11 +685,13 @@ export default function HomePage({ tab, setTab, onContinue }: LayoutProps) {
       const results = await Promise.all(
         categories.map(async (category) => {
           try {
-            const modulesRes = await api.get(`/categories/${category.id}/modules`, { params: { with_lessons: 1 } });
+            const [modulesRes, completedIds] = await Promise.all([
+              api.get(`/categories/${category.id}/modules`, { params: { with_lessons: 1 } }),
+              loadLearningProgress(category.id),
+            ]);
             const modules: LearningModule[] = Array.isArray(modulesRes.data) ? modulesRes.data : [];
             const lessonGroups = modules.map((module) => (module.lessons as LearningLesson[]) || []);
             const lessonIds    = lessonGroups.flat().map((l: LearningLesson) => l.id);
-            const completedIds = await loadLearningProgress(category.id);
             const completedCount = lessonIds.filter((id) => completedIds.includes(id)).length;
             const progress = lessonIds.length > 0 ? Math.round((completedCount / lessonIds.length) * 100) : 0;
             const continueIndex = modules.findIndex((_m, index) => {
