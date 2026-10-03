@@ -63,6 +63,8 @@ export interface HeroCardProps {
   moduleNumber?: number | null;
   moduleName?: string | null;
   variant?: "mobile" | "tablet" | "desktop";
+  /** Load the image immediately at high priority (cards visible on first paint). */
+  eager?: boolean;
 }
 export interface HelpBoxProps  { desktop: boolean }
 export interface LayoutProps   { tab: string; setTab: (t: string) => void; onContinue: (category?: LearningCategory) => void }
@@ -327,24 +329,19 @@ export const FadeInImage = ({
   delete wrapperStyle.objectPosition;
   delete wrapperStyle.filter;
 
+  // Static placeholder: an animated background-position shimmer repaints on the
+  // main thread every frame for every card, which showed up as blocking time on
+  // mobile. The image fades in over it once loaded.
   return (
     <span
       aria-busy={!loaded}
       style={{
         display: "block",
         overflow: "hidden",
-        background: "linear-gradient(90deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.26) 50%, rgba(255,255,255,0.10) 100%)",
-        backgroundSize: "220% 100%",
-        animation: loaded ? undefined : "imageShimmer 1.15s ease-in-out infinite",
+        background: "linear-gradient(90deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.20) 50%, rgba(255,255,255,0.10) 100%)",
         ...wrapperStyle,
       }}
     >
-      <style>{`
-        @keyframes imageShimmer {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
-        }
-      `}</style>
       <img
         src={currentSrc}
         srcSet={failed ? undefined : srcSet}
@@ -372,6 +369,27 @@ export const FadeInImage = ({
       />
     </span>
   );
+};
+
+// The home page's first paint (hero card image) waits on /my-categories. Starting
+// that request while the HomePage chunk is still downloading saves a round trip;
+// the prefetched result is handed out once, later calls fetch fresh data.
+let myCategoriesPrefetch: Promise<LearningCategory[]> | null = null;
+
+const fetchMyCategories = () =>
+  api.get("/my-categories").then((res) => (Array.isArray(res.data) ? res.data : []) as LearningCategory[]);
+
+export const prefetchMyCategories = () => {
+  if (myCategoriesPrefetch) return;
+  myCategoriesPrefetch = fetchMyCategories();
+  // If nobody takes it (user navigates away first), don't surface an unhandled rejection.
+  myCategoriesPrefetch.catch(() => {});
+};
+
+export const takeMyCategories = (): Promise<LearningCategory[]> => {
+  const pending = myCategoriesPrefetch;
+  myCategoriesPrefetch = null;
+  return pending ?? fetchMyCategories();
 };
 
 export const progressKey = (categoryId: number) => `learning-progress:${categoryId}`;
@@ -434,6 +452,7 @@ export const HeroCard = ({
   moduleNumber,
   moduleName,
   variant = "mobile",
+  eager = true,
 }: HeroCardProps) => {
   const moduleLabel = (() => {
     if (!moduleName) return null;
@@ -462,7 +481,7 @@ export const HeroCard = ({
             srcSet={categoryImageSet(category, [320, 480, 640, 800])}
             sizes="(min-width: 1024px) 360px, 100vw"
             alt={category?.title || "Course"}
-            eager
+            eager={eager}
             style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
           />
         )}
@@ -512,7 +531,7 @@ export const HeroCard = ({
           srcSet={categoryImageSet(category, [360, 540, 720, 900])}
           sizes="(min-width: 1024px) 420px, 100vw"
           alt={category?.title || "Course"}
-          eager
+          eager={eager}
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center top" }}
         />
       )}
@@ -753,12 +772,19 @@ export const TrainingCarousel = ({
   };
 
   if (loading) {
+    // Same total height as the loaded strip (card + 2px padding + 18px dot row)
+    // so the sections below don't jump when the cards arrive. The distinct key
+    // makes React mount a fresh strip instead of morphing this node into it,
+    // which the browser would otherwise count as the carousel itself moving.
     return (
-      <div style={{ height: cardHeight, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", background: "#f9fafb", borderRadius: 18, gap: 8, fontSize: 13 }}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
-        Loading…
+      <div key="carousel-loading">
+        <div style={{ height: cardHeight, display: "flex", alignItems: "center", justifyContent: "center", color: "#9ca3af", background: "#f9fafb", borderRadius: 18, gap: 8, fontSize: 13 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+          Loading…
+        </div>
+        <div style={{ height: 20 }} />
       </div>
     );
   }
@@ -772,7 +798,7 @@ export const TrainingCarousel = ({
   }
 
   return (
-    <div>
+    <div key="carousel-strip">
       {/* ── Scrollable card strip ── */}
       <div
         ref={scrollerRef}
@@ -784,13 +810,16 @@ export const TrainingCarousel = ({
           marginLeft: -16, marginRight: -16, paddingLeft: 16, paddingRight: 16,
         }}
       >
-        {categories.map((category) => (
+        {categories.map((category, index) => (
           <div key={category.id} style={{ flex: `0 0 ${cardWidth}px`, scrollSnapAlign: "start" }}>
             <HeroCard
               height={cardHeight}
               variant="mobile"
               onContinue={() => onContinue(category)}
               category={category}
+              // Only on-screen cards compete for bandwidth with the first image (LCP);
+              // the rest load as the carousel scrolls toward them.
+              eager={index < visibleCount}
             />
           </div>
         ))}
@@ -885,7 +914,6 @@ export const ResourceGrid = ({ categories, loading, onContinue, emptyText }: {
 /* ════════ GLOBAL STYLES ════════ */
 export const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,500..900&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Plus Jakarta Sans',sans-serif;background:#071224;-webkit-font-smoothing:antialiased;}
     .hs::-webkit-scrollbar{display:none;} .hs{-ms-overflow-style:none;scrollbar-width:none;}

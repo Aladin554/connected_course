@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -36,18 +35,22 @@ const AdminCategories = lazy(() => import("./pages/Category/CategoriesList"));
 const CategoryForm = lazy(() => import("./pages/Category/CategoryForm"));
 const LearningContent = lazy(() => import("./pages/Admin/LearningContent"));
 const Introduction = lazy(() => import("./pages/User/pages/Introduction"));
+// Only admin/auth pages raise toasts; keep react-toastify out of the entry bundle.
+const ToastContainer = lazy(() => import("react-toastify").then((m) => ({ default: m.ToastContainer })));
 
 export default function App() {
   return (
     <Router>
       <ScrollToTop />
 
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar
-        toastStyle={{ zIndex: 100000 }}
-      />
+      <Suspense fallback={null}>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar
+          toastStyle={{ zIndex: 100000 }}
+        />
+      </Suspense>
 
       <Suspense fallback={null}>
         <Routes>

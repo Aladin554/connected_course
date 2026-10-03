@@ -12,12 +12,20 @@ import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 
-import { completeLearningLesson, GlobalStyles, LearningCategory, LearningLesson, LearningModule, LessonNextAction, loadLearningProgress, Page } from "./shared";
-const HomePage           = lazy(() => import("./HomePage"));
+import { completeLearningLesson, GlobalStyles, LearningCategory, LearningLesson, LearningModule, LessonNextAction, loadLearningProgress, Page, prefetchMyCategories } from "./shared";
+const loadHomePage       = () => import("./HomePage");
+const HomePage           = lazy(loadHomePage);
 const WelcomePage        = lazy(() => import("./WelcomePage"));
 const CourseOverviewPage = lazy(() => import("./CourseOverviewPage"));
 const ModuleLessonsPage  = lazy(() => import("./ModuleLessonsPage"));
 const LessonDetailPage   = lazy(() => import("./LessonDetailPage"));
+
+// The learner home is the usual landing page: start fetching its chunk as soon
+// as this one evaluates, instead of waiting for the first render to request it.
+if (typeof window !== "undefined" && /^\/introduction\/?$/.test(window.location.pathname)) {
+  void loadHomePage();
+  prefetchMyCategories();
+}
 
 const resolveLessonNextAction = (
   lessonIndex: number,
