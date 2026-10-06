@@ -307,6 +307,8 @@ export default function Introduction() {
           onFinishCourse={() => selectedCategory && showCourse(selectedCategory)}
           isDesktop   ={isDesktop}
           lesson      ={selectedLesson}
+          moduleTitle ={selectedModule?.title}
+          moduleNumber={selectedModuleNumber}
           lessonIndex ={selectedLessonIndex}
           totalLessons={totalLessonsInModule}
           nextAction  ={lessonNextAction}
