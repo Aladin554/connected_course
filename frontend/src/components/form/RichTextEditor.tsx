@@ -88,7 +88,9 @@ export default function RichTextEditor({
             }
           `,
 
-          valid_elements: "*[*]",
+          // "#" keeps empty blocks as "&nbsp;" so blank lines (Enter twice) survive on the learner pages.
+          valid_elements:
+            "#p[*],#h1[*],#h2[*],#h3[*],#h4[*],#h5[*],#h6[*],#pre[*],#div[*],#td[*],#th[*],*[*]",
           extended_valid_elements: "*[*]",
         }}
       />

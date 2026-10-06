@@ -407,7 +407,9 @@ export default function LessonDetailPage({
           height: "100dvh",
           background: "#0d1f35",
           animation: "pageIn .35s cubic-bezier(.22,1,.36,1)",
-          overflow: "hidden",
+          // Very short screens (landscape phones) scroll the whole page once the panel hits its min height.
+          overflowX: "hidden",
+          overflowY: "auto",
         }}
       >
         {/* Header */}
@@ -489,7 +491,9 @@ export default function LessonDetailPage({
           <div
             style={{
               position: "relative",
-              margin: "0 18px 0",
+              // Cap the 16:9 video at 45% of the screen height so it can't squeeze the lesson panel to nothing on wide screens.
+              width: "min(calc(100% - 36px), calc(45dvh * 16 / 9))",
+              margin: "0 auto",
               borderRadius: 14,
               overflow: "hidden",
               flexShrink: 0,
@@ -518,6 +522,21 @@ export default function LessonDetailPage({
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
+              {/* Swallows clicks on YouTube's title/channel bar so learners don't leave for youtube.com. */}
+              <div
+                aria-hidden="true"
+                onContextMenu={(e) => e.preventDefault()}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: "min(72px, 24%)",
+                  zIndex: 1,
+                  background: "transparent",
+                  cursor: "default",
+                }}
+              />
             </div>
           </div>
         )}
@@ -526,7 +545,7 @@ export default function LessonDetailPage({
         <div
           style={{
             flex: 1,
-            minHeight: 0,
+            minHeight: 260,
             background: "white",
             borderRadius: "20px 20px 0 0",
             marginTop: embedUrl ? 14 : 0,

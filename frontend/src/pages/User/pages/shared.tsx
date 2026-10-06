@@ -234,10 +234,14 @@ export const WarningNotice = ({ message }: { message?: string | null }) => {
     </div>
   );
 };
+// Older saves stored blank editor lines as "<p></p>", which collapse to zero height.
+const keepBlankLines = (html: string) =>
+  html.replace(/<(p|h[1-6]|div|pre)(\s[^>]*)?>(?:\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi, "<$1$2>&nbsp;</$1>");
+
 export const RichTextContent = ({ html, emptyText, style }: { html?: string | null; emptyText?: string; style?: React.CSSProperties }) => {
-  const content = (html || "").trim();
+  const content = keepBlankLines((html || "").trim());
   if (!content) return emptyText ? <p style={style}>{emptyText}</p> : null;
-  return <div style={style}>{parse(content)}</div>;
+  return <div className="rich-text" style={style}>{parse(content)}</div>;
 };
 export const XIcon = ({ color = "#666" }: { color?: string }) => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -920,5 +924,21 @@ export const GlobalStyles = () => (
     button{font-family:'Plus Jakarta Sans',sans-serif;}
     @keyframes pageIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
     @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    /* Same block spacing as the TinyMCE editor, so 1 Enter / 2 Enters look the same here as while writing. */
+    .rich-text p,.rich-text pre{margin:1em 0;}
+    .rich-text h1{font-size:2em;margin:.67em 0;font-weight:700;}
+    .rich-text h2{font-size:1.5em;margin:.83em 0;font-weight:700;}
+    .rich-text h3{font-size:1.17em;margin:1em 0;font-weight:700;}
+    .rich-text h4{font-size:1em;margin:1.33em 0;font-weight:700;}
+    .rich-text h5{font-size:.83em;margin:1.67em 0;font-weight:700;}
+    .rich-text h6{font-size:.67em;margin:2.33em 0;font-weight:700;}
+    .rich-text blockquote{margin:1em 40px;}
+    .rich-text ul{list-style:disc;padding-left:24px;margin:.5rem 0;}
+    .rich-text ol{list-style:decimal;padding-left:24px;margin:.5rem 0;}
+    .rich-text li{display:list-item;margin-bottom:4px;}
+    .rich-text td,.rich-text th{padding:.4rem;}
+    .rich-text a{text-decoration:underline;}
+    .rich-text>:first-child{margin-top:0;}
+    .rich-text>:last-child{margin-bottom:0;}
   `}</style>
 );
