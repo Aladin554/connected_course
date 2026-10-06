@@ -404,12 +404,11 @@ export default function LessonDetailPage({
         style={{
           display: "flex",
           flexDirection: "column",
-          height: "100dvh",
+          // The whole page scrolls as one; no inner scroll area.
+          minHeight: "100dvh",
           background: "#0d1f35",
           animation: "pageIn .35s cubic-bezier(.22,1,.36,1)",
-          // Very short screens (landscape phones) scroll the whole page once the panel hits its min height.
-          overflowX: "hidden",
-          overflowY: "auto",
+          overflowX: "clip",
         }}
       >
         {/* Header */}
@@ -545,19 +544,14 @@ export default function LessonDetailPage({
         <div
           style={{
             flex: 1,
-            minHeight: 260,
             background: "white",
             borderRadius: "20px 20px 0 0",
             marginTop: embedUrl ? 14 : 0,
             display: "flex",
             flexDirection: "column",
-            overflow: "hidden",
           }}
         >
-          <div
-            style={{ flex: 1, overflowY: "auto", padding: "16px 18px 0" }}
-            className="hs"
-          >
+          <div style={{ flex: 1, padding: "16px 18px 0" }}>
             <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 14 }}>
               Expand the sections below to learn more.
             </p>
@@ -658,9 +652,12 @@ export default function LessonDetailPage({
             <div style={{ height: 16 }} />
           </div>
 
-          {/* CTA button */}
+          {/* CTA button: stays pinned to the bottom of the screen while the page scrolls */}
           <div
             style={{
+              position: "sticky",
+              bottom: 0,
+              zIndex: 2,
               padding: "12px 18px 20px",
               background: "white",
               borderTop: "1px solid #f5f5f5",
