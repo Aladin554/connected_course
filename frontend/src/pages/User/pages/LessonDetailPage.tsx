@@ -91,7 +91,8 @@ function LessonVideo({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
             />
-            {/* Swallows clicks on YouTube's title/channel bar so learners don't leave for youtube.com. */}
+            {/* Swallows clicks on YouTube's title/channel bar so learners don't leave for youtube.com.
+                Stops short of the right edge, where the player puts its volume, CC and settings buttons. */}
             <div
               aria-hidden="true"
               onContextMenu={(e) => e.preventDefault()}
@@ -99,7 +100,7 @@ function LessonVideo({
                 position: "absolute",
                 top: 0,
                 left: 0,
-                right: 0,
+                right: "min(260px, 40%)",
                 height: "min(72px, 24%)",
                 zIndex: 1,
                 background: "transparent",
