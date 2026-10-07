@@ -100,7 +100,7 @@ function LessonVideo({
                 position: "absolute",
                 top: 0,
                 left: 0,
-                right: "min(260px, 40%)",
+                right: "min(200px, 40%)",
                 height: "min(72px, 24%)",
                 zIndex: 1,
                 background: "transparent",
