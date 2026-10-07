@@ -13,6 +13,7 @@ import {
   RichTextContent,
   WarningNotice,
   youtubeEmbedUrl,
+  youtubeThumbnail,
   type LessonNextAction,
   NavHomeIcon,        // ← Added
 } from "./shared";
@@ -35,6 +36,137 @@ const nextButtonLabel: Record<LessonNextAction, string> = {
   "next-module": "Next Module",
   "complete-course": "Complete Course",
 };
+
+// ── Lesson video ──────────────────────────────────────────────────────────────
+// Shows our own poster + play button until clicked, so YouTube's idle overlay
+// (share button, "Watch on YouTube") never appears; then loads the player autoplaying.
+function LessonVideo({
+  embedUrl,
+  thumbnail,
+  title,
+}: {
+  embedUrl: string;
+  thumbnail: string | null;
+  title: string;
+}) {
+  const [playing, setPlaying] = useState(false);
+  const [poster, setPoster] = useState(
+    thumbnail ? thumbnail.replace("hqdefault", "maxresdefault") : null
+  );
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        // Cap the 16:9 video at 70% of the screen height so it stays fully visible on wide screens.
+        width: "min(calc(100% - 24px), calc(70dvh * 16 / 9))",
+        margin: "0 auto",
+        borderRadius: 14,
+        overflow: "hidden",
+        flexShrink: 0,
+        background: "#071224",
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          paddingBottom: "56.25%",
+          height: 0,
+          background: "#000",
+        }}
+      >
+        {playing ? (
+          <>
+            <iframe
+              src={`${embedUrl}&autoplay=1&playsinline=1&iv_load_policy=3`}
+              title={title}
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                border: 0,
+              }}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+            {/* Swallows clicks on YouTube's title/channel bar so learners don't leave for youtube.com. */}
+            <div
+              aria-hidden="true"
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: "min(72px, 24%)",
+                zIndex: 1,
+                background: "transparent",
+                cursor: "default",
+              }}
+            />
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setPlaying(true)}
+            aria-label={`Play ${title}`}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              padding: 0,
+              border: 0,
+              cursor: "pointer",
+              background: "#000",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {poster && (
+              <img
+                src={poster}
+                alt=""
+                // maxresdefault doesn't exist for every video; YouTube then serves a 120px placeholder.
+                onLoad={(e) => {
+                  if (e.currentTarget.naturalWidth <= 120 && thumbnail) setPoster(thumbnail);
+                }}
+                onError={() => setPoster(thumbnail !== poster ? thumbnail : null)}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            )}
+            <span
+              style={{
+                position: "relative",
+                width: 68,
+                height: 48,
+                borderRadius: 14,
+                background: "#ff0000",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 6px 20px rgba(0,0,0,.35)",
+              }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="white" aria-hidden="true">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── Confetti particle type ────────────────────────────────────────────────────
 interface Particle {
@@ -487,57 +619,12 @@ export default function LessonDetailPage({
 
         {/* Video */}
         {embedUrl && (
-          <div
-            style={{
-              position: "relative",
-              // Cap the 16:9 video at 45% of the screen height so it can't squeeze the lesson panel to nothing on wide screens.
-              width: "min(calc(100% - 36px), calc(45dvh * 16 / 9))",
-              margin: "0 auto",
-              borderRadius: 14,
-              overflow: "hidden",
-              flexShrink: 0,
-              background: "#071224",
-            }}
-          >
-            <div
-              style={{
-                position: "relative",
-                width: "100%",
-                paddingBottom: "56.25%",
-                height: 0,
-                background: "#000",
-              }}
-            >
-              <iframe
-                src={embedUrl}
-                title={detail?.title || "Lesson video"}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  border: 0,
-                }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-              {/* Swallows clicks on YouTube's title/channel bar so learners don't leave for youtube.com. */}
-              <div
-                aria-hidden="true"
-                onContextMenu={(e) => e.preventDefault()}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: "min(72px, 24%)",
-                  zIndex: 1,
-                  background: "transparent",
-                  cursor: "default",
-                }}
-              />
-            </div>
-          </div>
+          <LessonVideo
+            key={embedUrl}
+            embedUrl={embedUrl}
+            thumbnail={youtubeThumbnail(detail?.video_value)}
+            title={detail?.title || "Lesson video"}
+          />
         )}
 
         {/* White content panel */}
