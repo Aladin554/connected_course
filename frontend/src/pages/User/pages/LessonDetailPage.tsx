@@ -107,6 +107,21 @@ function LessonVideo({
                 cursor: "default",
               }}
             />
+            {/* Same for the YouTube logo in the bottom-right corner; sits below the progress bar and fullscreen button. */}
+            <div
+              aria-hidden="true"
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                right: 0,
+                width: "min(180px, 30%)",
+                height: "min(56px, 14%)",
+                zIndex: 1,
+                background: "transparent",
+                cursor: "default",
+              }}
+            />
           </>
         ) : (
           <button
